@@ -15,7 +15,9 @@ class RoleMiddleware
             return redirect()->route('login.show');
         }
 
-        if (Auth::user() -> Role !== $role) {
+        $roles = explode(',', $role);
+
+        if (!in_array(Auth::user()->Role, $roles)) {
             abort(403, 'Unauthorized');
         }
 

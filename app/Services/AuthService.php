@@ -24,7 +24,29 @@ class AuthService
             return ['error' => 'User not found'];
         }
 
-        if (!Hash::check($password, $user->Password)) {
+        // 1. Try standard Bcrypt check
+        $isValid = false;
+        try {
+            if (Hash::check($password, $user->Password)) {
+                $isValid = true;
+            }
+        } catch (\Exception $e) {
+            // Hash::check might throw an exception if the format is fundamentally wrong
+        }
+
+        // 2. Try legacy SHA-256 check if Bcrypt failed
+        if (!$isValid) {
+            $legacyHash = hash('sha256', $password);
+            if ($user->Password === $legacyHash) {
+                $isValid = true;
+                
+                // Upgrade to Bcrypt for future logins
+                $user->Password = $password; // This triggers the setPasswordAttribute mutator (Bcrypt)
+                $user->save();
+            }
+        }
+
+        if (!$isValid) {
             return ['error' => 'Invalid password'];
         }
 
