@@ -28,6 +28,7 @@ class ProcurementController extends Controller
             'contract_end_date' => 'nullable|date',
             'contract_amount' => 'nullable|numeric',
             'document_type' => 'nullable|string',
+            'photo' => 'nullable|file|image|max:5120',
             'items' => 'required|array|min:1',
             'items.*.itemId' => 'required|integer',
             'items.*.quantity' => 'required|numeric|min:1',
@@ -38,6 +39,13 @@ class ProcurementController extends Controller
         $user = Auth::user();
 
         try {
+            if ($request->hasFile('photo')) {
+                $photo = $request->file('photo');
+                $filename = time() . '_' . $photo->getClientOriginalName();
+                $photo->move(public_path('assets/img/uploads/procurement'), $filename);
+                $data['photo_path'] = 'assets/img/uploads/procurement/' . $filename;
+            }
+
             $po = $this->procurementService->createProcurementOrder($data, $user->UserID);
             return response()->json(['success' => true, 'procurementOrder' => $po]);
         } catch (\Exception $e) {

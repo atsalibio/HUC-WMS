@@ -47,7 +47,7 @@ class PatientRequisitionService
                 'Diagnosis' => $data['diagnosis'] ?? null,
                 'Notes' => $data['notes'] ?? null,
                 'ContactInfo' => $data['contactInfo'] ?? null,
-                'IDProof' => $data['idProof'] ?? null,
+                'IDProof' => $data['idProofPath'] ?? null,
             ]);
 
             $reqNum = 'PREQ-' . date('Y') . '-' . str_pad($requisition->PatientReqID, 5, '0', STR_PAD_LEFT);

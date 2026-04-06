@@ -210,8 +210,8 @@
                                 <input type="text" x-model="formData.contactInfo" placeholder="Mobile / Address for follow-up" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-3xl font-bold dark:text-white focus:ring-4 focus:ring-rose-500/10 transition-all">
                             </div>
                             <div class="space-y-4">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID Proof Reference</label>
-                                <input type="text" x-model="formData.idProof" placeholder="ID Number / Barangay Cert Ref" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-3xl font-bold dark:text-white focus:ring-4 focus:ring-rose-500/10 transition-all">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ID Proof (Photo/Document)</label>
+                                <input type="file" @change="formData.idProof = $event.target.files[0]" class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-3xl font-bold dark:text-white focus:ring-4 focus:ring-rose-500/10 transition-all">
                             </div>
                         </div>
 
@@ -301,7 +301,18 @@
                                     </div>
                                     <div>
                                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">ID Proof Reference</label>
-                                        <p class="font-bold text-slate-800 dark:text-slate-200" x-text="activeReq.IDProof || 'Not Provided'"></p>
+                                        <template x-if="activeReq.IDProof && activeReq.IDProof.startsWith('assets/img')">
+                                            <div class="mt-2 group/img relative overflow-hidden rounded-2xl border-2 border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+                                                <img :src="'/' + activeReq.IDProof" class="w-full h-auto max-h-48 object-contain bg-slate-50 dark:bg-slate-900">
+                                                <a :href="'/' + activeReq.IDProof" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-2">
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                    <span class="text-[9px] font-black uppercase tracking-widest">Open Full View</span>
+                                                </a>
+                                            </div>
+                                        </template>
+                                        <template x-if="!activeReq.IDProof || !activeReq.IDProof.startsWith('assets/img')">
+                                            <p class="font-bold text-slate-800 dark:text-slate-200" x-text="activeReq.IDProof || 'Not Provided'"></p>
+                                        </template>
                                     </div>
                                 </div>
                             </div>
@@ -477,22 +488,39 @@ function patientReqManager() {
                 return;
             }
 
+            const submissionData = new FormData();
+            submissionData.append('patientId', this.formData.patientId);
+            submissionData.append('healthCenterId', this.formData.healthCenterId);
+            submissionData.append('diagnosis', this.formData.diagnosis);
+            submissionData.append('notes', this.formData.notes);
+            submissionData.append('contactInfo', this.formData.contactInfo);
+            
+            if (this.formData.idProof instanceof File) {
+                submissionData.append('idProof', this.formData.idProof);
+            }
+
+            this.formData.items.forEach((item, index) => {
+                submissionData.append(`items[${index}][itemId]`, item.itemId);
+                submissionData.append(`items[${index}][quantity]`, item.quantity);
+            });
+
             try {
                 const response = await fetch('/patient-requisitions', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify(this.formData)
+                    body: submissionData
                 });
                 
                 const result = await response.json();
-                if (result.success) {
+                if (response.ok && result.success) {
                     alert('Requisition created successfully!');
                     location.reload();
                 } else {
-                    alert('Error: ' + result.message);
+                    alert('Error: ' + (result.message || 'Validation failed. Check file size/type.'));
+                    console.error(result.errors);
                 }
             } catch (error) {
                 alert('Connection error');

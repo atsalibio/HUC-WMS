@@ -21,6 +21,7 @@ class ProcurementOrder extends Model
         'PODate',
         'StatusType',
         'DocumentType',
+        'PhotoPath',
     ];
 
     protected $casts = [

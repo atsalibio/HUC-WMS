@@ -44,7 +44,11 @@ class InventoryController extends Controller
             ];
         }
 
-        return view('pages.inventory', compact('aggregatedInventory', 'batchesByItem'));
+        return view('pages.inventory', [
+            'aggregatedInventory' => $aggregatedInventory,
+            'batchesByItem' => $batchesByItem,
+            'currentPage' => 'inventory'
+        ]);
     }
 
     public function storeItem(Request $request)
@@ -92,7 +96,6 @@ class InventoryController extends Controller
                     [
                         'ItemType' => $itemData['ItemType'],
                         'UnitOfMeasure' => $itemData['UnitOfMeasure'] ?? 'Unit',
-                        'Description' => 'Imported via DPRI Scanner'
                     ]
                 );
                 $importedCount++;

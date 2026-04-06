@@ -142,11 +142,11 @@
                             </div>
 
                             <div class="mt-4 p-8 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-[2rem] text-center hover:border-teal-500/50 transition-all group">
-                                <input type="file" @change="handleFileUpload($event)" class="hidden" id="refFile">
-                                <label for="refFile" class="cursor-pointer">
+                                <input type="file" @change="handlePhotoUpload($event)" class="hidden" id="refPhoto" accept="image/*">
+                                <label for="refPhoto" class="cursor-pointer">
                                     <div class="text-slate-400 group-hover:text-teal-500 transition-colors">
-                                        <svg class="w-8 h-8 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                                        <p class="text-[10px] font-black uppercase tracking-widest" x-text="formData.fileName || 'Attach Document Ref'"></p>
+                                        <svg class="w-8 h-8 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        <p class="text-[10px] font-black uppercase tracking-widest" x-text="formData.photoName || 'Upload Reference Photo'"></p>
                                     </div>
                                 </label>
                             </div>
@@ -273,6 +273,18 @@
                               :class="selectedOrder ? getStatusClass(selectedOrder.StatusType) : ''"
                               x-text="selectedOrder ? selectedOrder.StatusType : 'N/A'"></span>
                     </div>
+
+                    <template x-if="selectedOrder && selectedOrder.PhotoPath">
+                        <div class="md:col-span-3 p-8 bg-slate-50 dark:bg-slate-900/50 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Reference Document Photo</p>
+                            <div class="relative group/img overflow-hidden rounded-2xl border-4 border-white dark:border-slate-800 shadow-lg">
+                                <img :src="'/' + selectedOrder.PhotoPath" class="w-full h-auto max-h-64 object-contain transition-transform duration-500 group-hover/img:scale-105">
+                                <a :href="'/' + selectedOrder.PhotoPath" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase tracking-widest">
+                                    Open Full Size
+                                </a>
+                            </div>
+                        </div>
+                    </template>
                 </div>
 
                 <div class="space-y-6">
@@ -400,8 +412,17 @@ document.addEventListener('alpine:init', () => {
                 contractNumber: '',
                 contractStartDate: '',
                 contractEndDate: '',
-                items: [{ itemId: '', quantity: 1, unitCost: 0, batchId: '', lotNumber: '', expiryDate: '' }]
+                items: [{ itemId: '', quantity: 1, unitCost: 0, batchId: '', lotNumber: '', expiryDate: '' }],
+                photoFile: null,
+                photoName: ''
             };
+        },
+        handlePhotoUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                this.formData.photoFile = file;
+                this.formData.photoName = file.name;
+            }
         },
         async submitPO() {
             if ((!this.formData.supplier_id && !this.formData.supplierName) || this.formData.items.length === 0) {
@@ -409,20 +430,41 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
             try {
+                const submissionData = new FormData();
+                submissionData.append('supplier_id', this.formData.supplier_id);
+                submissionData.append('supplier_name', this.formData.supplierName);
+                submissionData.append('supplier_address', this.formData.supplierAddress);
+                submissionData.append('health_center_id', this.formData.health_center_id);
+                submissionData.append('contract_number', this.formData.contractNumber);
+                submissionData.append('contract_start_date', this.formData.contractStartDate);
+                submissionData.append('contract_end_date', this.formData.contractEndDate);
+                submissionData.append('document_type', this.formData.refFileType);
+                
+                if (this.formData.photoFile) {
+                    submissionData.append('photo', this.formData.photoFile);
+                }
+
+                this.formData.items.forEach((item, index) => {
+                    submissionData.append(`items[${index}][itemId]`, item.itemId);
+                    submissionData.append(`items[${index}][quantity]`, item.quantity);
+                    submissionData.append(`items[${index}][unitCost]`, item.unitCost);
+                });
+
                 const response = await fetch('/procurement/orders', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify(this.formData)
+                    body: submissionData
                 });
                 const result = await response.json();
-                if (result.success) {
+                if (response.ok && result.success) {
                     alert('Order created successfully!');
                     location.reload();
                 } else {
-                    alert('Error: ' + (result.message || 'Unknown error'));
+                    alert('Error: ' + (result.message || 'Validation failed. Check file size.'));
+                    console.error(result.errors);
                 }
             } catch (error) {
                 alert('Connection error. Please try again.');

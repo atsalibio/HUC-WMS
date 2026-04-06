@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\System\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Models\System\SecurityLog;
+use Illuminate\Support\Facades\Request;
 
 class AuthService
 {
@@ -51,6 +53,15 @@ class AuthService
         }
 
         Auth::login($user);
+        
+        SecurityLog::create([
+            'UserID' => $user->UserID,
+            'ActionType' => 'Login',
+            'ActionDescription' => 'User logged in successfully via web gateway.',
+            'ModuleAffected' => 'Authentication',
+            'IPAddress' => Request::ip(),
+            'ActionDate' => now()
+        ]);
 
         return ['success' => true, 'user' => $user];
     }
@@ -76,6 +87,17 @@ class AuthService
 
     public function logout()
     {
+        $user = Auth::user();
+        if ($user) {
+            SecurityLog::create([
+                'UserID' => $user->UserID,
+                'ActionType' => 'Logout',
+                'ActionDescription' => 'User session terminated successfully.',
+                'ModuleAffected' => 'Authentication',
+                'IPAddress' => Request::ip(),
+                'ActionDate' => now()
+            ]);
+        }
         Auth::logout();
     }
 }

@@ -33,7 +33,44 @@ DROP TABLE IF EXISTS Supplier;
 DROP TABLE IF EXISTS HealthCenters;
 DROP TABLE IF EXISTS Users;
 
--- 1. User Table
+-- 1. HealthCenters Table
+CREATE TABLE HealthCenters (
+    HealthCenterID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Address TEXT,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 2. Supplier Table
+CREATE TABLE Supplier (
+    SupplierID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(200) NOT NULL,
+    Address TEXT,
+    ContactInfo VARCHAR(200),
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 3. Item Table
+CREATE TABLE Item (
+    ItemID INT AUTO_INCREMENT PRIMARY KEY,
+    ItemName VARCHAR(200) NOT NULL,
+    Brand VARCHAR(150) NULL,
+    ItemType VARCHAR(50),
+    UnitOfMeasure VARCHAR(50),
+    DosageUnit VARCHAR(100) NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 4. Warehouse Table
+CREATE TABLE Warehouse (
+    WarehouseID INT AUTO_INCREMENT PRIMARY KEY,
+    WarehouseName VARCHAR(200) NOT NULL,
+    Location TEXT,
+    WarehouseType VARCHAR(100),
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 5. User Table
 CREATE TABLE Users (
     UserID INT AUTO_INCREMENT PRIMARY KEY,
     Username VARCHAR(100) UNIQUE NOT NULL,
@@ -49,43 +86,6 @@ CREATE TABLE Users (
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (HealthCenterID) REFERENCES HealthCenters(HealthCenterID) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 2. HealthCenters Table
-CREATE TABLE HealthCenters (
-    HealthCenterID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL,
-    Address TEXT,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 3. Supplier Table
-CREATE TABLE Supplier (
-    SupplierID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(200) NOT NULL,
-    Address TEXT,
-    ContactInfo VARCHAR(200),
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 4. Item Table
-CREATE TABLE Item (
-    ItemID INT AUTO_INCREMENT PRIMARY KEY,
-    ItemName VARCHAR(200) NOT NULL,
-    Brand VARCHAR(150) NULL,
-    ItemType VARCHAR(50),
-    UnitOfMeasure VARCHAR(50),
-    DosageUnit VARCHAR(100) NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 5. Warehouse Table
-CREATE TABLE Warehouse (
-    WarehouseID INT AUTO_INCREMENT PRIMARY KEY,
-    WarehouseName VARCHAR(200) NOT NULL,
-    Location TEXT,
-    WarehouseType VARCHAR(100),
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 6. CentralInventoryBatch Table
@@ -117,7 +117,7 @@ CREATE TABLE Contract (
     FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 8. ProcurementOrder Table
+-- 8. ProcurementOrder Table (Remains same)
 CREATE TABLE ProcurementOrder (
     POID INT AUTO_INCREMENT PRIMARY KEY,
     UserID INT,
@@ -129,6 +129,7 @@ CREATE TABLE ProcurementOrder (
     PONumber VARCHAR(100) UNIQUE, -- Generated e.g. PO-2026-0001
     PODate DATETIME NOT NULL,
     StatusType VARCHAR(50) DEFAULT 'Pending',
+    PhotoPath VARCHAR(255),
     DocumentType VARCHAR(100),
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE SET NULL,
@@ -244,8 +245,10 @@ CREATE TABLE InventoryAdjustment (
     AdjustmentID INT AUTO_INCREMENT PRIMARY KEY,
     BatchID INT NOT NULL,
     UserID INT NOT NULL,
+    AdjustmentType VARCHAR(50), -- Disposal, Return, Correction
     AdjustmentQuantity INT NOT NULL,
     Reason VARCHAR(255),
+    EvidencePath VARCHAR(255),
     AdjustmentDate DATETIME,
     FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE

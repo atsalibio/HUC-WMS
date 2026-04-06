@@ -68,10 +68,18 @@ class PatientRequisitionController extends Controller
             'healthCenterId' => 'nullable|integer',
             'diagnosis' => 'nullable|string',
             'notes' => 'nullable|string',
+            'idProof' => 'nullable|file|image|max:5120',
             'items' => 'required|array|min:1',
             'items.*.itemId' => 'required|integer',
             'items.*.quantity' => 'required|numeric|min:1',
         ]);
+
+        if ($request->hasFile('idProof')) {
+            $file = $request->file('idProof');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('assets/img/uploads/patients'), $filename);
+            $data['idProofPath'] = 'assets/img/uploads/patients/' . $filename;
+        }
 
         // Enforce HealthCenterID exclusivity
         if ($user->Role === 'Health Center Staff') {

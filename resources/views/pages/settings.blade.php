@@ -118,7 +118,7 @@
                     {id: 'security', label: 'Security', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'},
                     {id: 'notifications', label: 'Notifications', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9'},
                     {id: 'appearance', label: 'Appearance', icon: 'M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z'},
-                    {id: 'activity', label: 'Activity Log', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'}
+                    {id: 'activity', label: 'Login Log', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'}
                 ]">
                     <button @click="activeTab = tab.id" 
                         :class="activeTab === tab.id ? 'bg-slate-900 text-white dark:bg-teal-600 shadow-xl shadow-teal-500/10' : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50 hover:text-slate-600 dark:hover:text-slate-200'"
@@ -231,8 +231,8 @@
                 <div class="bg-white dark:bg-slate-800 rounded-[3rem] shadow-xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
                     <div class="px-10 py-8 border-b border-slate-50 dark:border-slate-700/30 flex items-center justify-between">
                         <div>
-                            <h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Audit Archive</h3>
-                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest mt-1">End-to-end Activity Trace</p>
+                            <h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Login Log</h3>
+                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest mt-1">Authentication & Security Audit</p>
                         </div>
                         <div class="flex p-1.5 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800">
                             <button @click="subTab = 'transaction'" :class="subTab === 'transaction' ? 'bg-white dark:bg-slate-800 text-teal-600 shadow-lg' : 'text-slate-400'" class="px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Transactions</button>

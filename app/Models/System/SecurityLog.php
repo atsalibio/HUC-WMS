@@ -13,7 +13,6 @@ class SecurityLog extends Model
     protected $fillable = [
         'UserID',
         'ActionType',
-        'Description',
         'ActionDescription',
         'IPAddress',
         'ModuleAffected',

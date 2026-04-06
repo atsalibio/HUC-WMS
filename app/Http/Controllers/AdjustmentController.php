@@ -16,16 +16,22 @@ class AdjustmentController extends Controller
     {
         $items = Item::all();
         $inventory = Batch::where('QuantityOnHand', '>', 0)->get();
-        $requisitions = Requisition::with(['healthCenter', 'user', 'items.item'])
+        $requisitions = Requisition::with(['healthCenter', 'user', 'items.item', 'issuances.items.batch.item'])
             ->whereIn('StatusType', ['Completed', 'Issued'])
             ->orderBy('RequestDate', 'desc')
             ->get();
             
-        $history = Adjustment::with(['batch.item', 'user', 'requisition'])
-            ->orderBy('created_at', 'desc')
+        $history = Adjustment::with(['batch.item', 'user'])
+            ->orderBy('AdjustmentDate', 'desc')
             ->get();
 
-        return view('pages.adjustments', compact('items', 'inventory', 'requisitions', 'history'));
+        return view('pages.adjustments', [
+            'items' => $items,
+            'inventory' => $inventory,
+            'requisitions' => $requisitions,
+            'history' => $history,
+            'currentPage' => 'adjustments'
+        ]);
     }
 
     public function storeDisposal(Request $request)
@@ -46,17 +52,20 @@ class AdjustmentController extends Controller
 
             $evidencePath = null;
             if ($request->hasFile('photo')) {
-                $evidencePath = $request->file('photo')->store('adjustments/disposals', 'public');
+                $photo = $request->file('photo');
+                $filename = time() . '_' . $photo->getClientOriginalName();
+                $photo->move(public_path('assets/img/uploads/adjustments'), $filename);
+                $evidencePath = 'assets/img/uploads/adjustments/' . $filename;
             }
 
             Adjustment::create([
                 'BatchID' => $batch->BatchID,
+                'UserID' => Auth::id(),
                 'AdjustmentType' => 'Disposal',
-                'QuantityAdjusted' => $request->quantity * -1,
+                'AdjustmentQuantity' => $request->quantity * -1,
                 'Reason' => $request->reason,
-                'Remarks' => $request->remarks,
                 'EvidencePath' => $evidencePath,
-                'AdjustedBy' => Auth::id()
+                'AdjustmentDate' => now(),
             ]);
 
             $batch->decrement('QuantityOnHand', $request->quantity);
@@ -81,11 +90,12 @@ class AdjustmentController extends Controller
                 
                 Adjustment::create([
                     'BatchID' => $batch->BatchID,
-                    'RequisitionID' => $request->requisitionId,
+                    'UserID' => Auth::id(),
                     'AdjustmentType' => 'Return',
-                    'QuantityAdjusted' => $item['quantity'],
+                    'AdjustmentQuantity' => $item['quantity'],
                     'Reason' => $request->reason,
-                    'AdjustedBy' => Auth::id()
+                    'RequisitionID' => $request->requisitionId,
+                    'AdjustmentDate' => now(),
                 ]);
 
                 $batch->increment('QuantityOnHand', $item['quantity']);
@@ -112,11 +122,11 @@ class AdjustmentController extends Controller
 
             Adjustment::create([
                 'BatchID' => $batch->BatchID,
+                'UserID' => Auth::id(),
                 'AdjustmentType' => 'Correction',
-                'QuantityAdjusted' => $request->quantity,
+                'AdjustmentQuantity' => $request->quantity,
                 'Reason' => $request->reason,
-                'Remarks' => $request->remarks,
-                'AdjustedBy' => Auth::id()
+                'AdjustmentDate' => now(),
             ]);
 
             if ($request->quantity > 0) {

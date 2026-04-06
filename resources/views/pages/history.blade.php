@@ -160,10 +160,17 @@ function historyManager() {
         tabs: [
             { id: 'summary', label: 'Item Summaries' },
             { id: 'item_additions', label: 'Central Arrivals' },
-            { id: 'warehouse_issuances', label: 'Warehouse Issuances' },
-            { id: 'procurement_orders', label: 'Procurement Logs' },
+            { id: 'hc_arrivals', label: 'HC Arrivals' },
+            { id: 'warehouse_issuances', label: 'Issuances' },
+            { id: 'requisitions', label: 'Requisitions' },
+            { id: 'procurement_orders', label: 'Procurement' },
             { id: 'patient_list', label: 'Patient Distributions' },
-            { id: 'adjustments', label: 'Stock Adjustments' }
+            { id: 'adjustments', label: 'Adjustments' },
+            { id: 'security_log', label: 'Security Log' },
+            { id: 'login_log', label: 'Login Log' },
+            { id: 'patient_log', label: 'Patient Log' },
+            { id: 'inventory_count', label: 'Central Stocks' },
+            { id: 'hc_inventory_count', label: 'HC Stocks' }
         ],
         historyData: [],
         searchQuery: '',

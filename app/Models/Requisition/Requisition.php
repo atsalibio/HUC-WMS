@@ -36,4 +36,9 @@ class Requisition extends Model
     {
         return $this->belongsTo(\App\Models\System\User::class, 'UserID');
     }
+
+    public function issuances()
+    {
+        return $this->hasMany(\App\Models\Issuance\Issuance::class, 'RequisitionID');
+    }
 }

@@ -10,6 +10,9 @@ use App\Models\Issuance\Issuance;
 use App\Models\Requisition\Requisition;
 use App\Models\HealthCenter\HCPatientRequisition;
 use App\Models\Procurement\ProcurementOrder;
+use App\Models\System\SecurityLog;
+use App\Models\System\TransactionLog;
+use App\Models\HealthCenter\HCInventoryBatch;
 use Illuminate\Support\Facades\DB;
 
 class MonitoringController extends Controller
@@ -100,7 +103,7 @@ class MonitoringController extends Controller
                         return [
                             'Date' => $adj->AdjustmentDate,
                             'ItemName' => $adj->batch?->item?->ItemName,
-                            'Quantity' => $adj->QuantityAdjusted,
+                            'Quantity' => $adj->AdjustmentQuantity,
                             'Reason' => $adj->Reason,
                             'Reference' => $adj->AdjustmentType,
                             'User' => $adj->user?->FName . ' ' . $adj->user?->LName
@@ -120,6 +123,126 @@ class MonitoringController extends Controller
                             'HealthCenter' => $po->supplier?->Name ?? 'Contractor',
                             'Reference' => $po->PONumber,
                             'User' => $po->user?->FName . ' ' . $po->user?->LName
+                        ];
+                    });
+                break;
+
+            case 'security_log':
+                $data = SecurityLog::with('user')
+                    ->orderBy('ActionDate', 'desc')
+                    ->get()
+                    ->transform(function($log) {
+                        return [
+                            'Date' => $log->ActionDate,
+                            'ItemName' => $log->ActionType,
+                            'Quantity' => 0,
+                            'HealthCenter' => $log->ModuleAffected,
+                            'Reference' => $log->IPAddress,
+                            'Reason' => $log->ActionDescription,
+                            'User' => $log->user ? ($log->user->FName . ' ' . $log->user->LName) : 'System'
+                        ];
+                    });
+                break;
+
+            case 'patient_log':
+                $data = TransactionLog::where('ReferenceType', 'LIKE', '%Patient%')
+                    ->with('user')
+                    ->orderBy('ActionDate', 'desc')
+                    ->get()
+                    ->transform(function($log) {
+                        return [
+                            'Date' => $log->ActionDate,
+                            'ItemName' => $log->ActionType,
+                            'Quantity' => 0,
+                            'HealthCenter' => $log->ReferenceID,
+                            'Reference' => $log->ReferenceType,
+                            'Reason' => $log->ActionDetails,
+                            'User' => $log->user ? ($log->user->FName . ' ' . $log->user->LName) : 'System'
+                        ];
+                    });
+                break;
+
+            case 'inventory_count':
+                $data = Batch::with('item')
+                    ->select('ItemID', DB::raw('SUM(QuantityOnHand) as total_qty'), DB::raw('MAX(DateReceived) as last_arrival'))
+                    ->groupBy('ItemID')
+                    ->get()
+                    ->transform(function($b) {
+                        return [
+                            'Date' => $b->last_arrival,
+                            'ItemName' => $b->item?->ItemName,
+                            'Quantity' => $b->total_qty,
+                            'HealthCenter' => 'Central Warehouse',
+                            'Reference' => 'Audit Count',
+                            'User' => 'System'
+                        ];
+                    });
+                break;
+
+            case 'hc_inventory_count':
+                $data = HCInventoryBatch::with(['item', 'healthCenter'])
+                    ->select('HealthCenterID', 'ItemID', DB::raw('SUM(QuantityOnHand) as total_qty'), DB::raw('MAX(DateReceivedAtHC) as last_arrival'))
+                    ->groupBy('HealthCenterID', 'ItemID')
+                    ->get()
+                    ->transform(function($b) {
+                        return [
+                            'Date' => $b->last_arrival,
+                            'ItemName' => $b->item?->ItemName,
+                            'Quantity' => $b->total_qty,
+                            'HealthCenter' => $b->healthCenter?->Name,
+                            'Reference' => 'HC Audit',
+                            'User' => 'System'
+                        ];
+                    });
+                break;
+
+            case 'hc_arrivals':
+                $data = HCInventoryBatch::with(['item', 'healthCenter'])
+                    ->whereNotNull('DateReceivedAtHC')
+                    ->orderBy('DateReceivedAtHC', 'desc')
+                    ->get()
+                    ->transform(function($b) {
+                        return [
+                            'Date' => $b->DateReceivedAtHC,
+                            'ItemName' => $b->item?->ItemName,
+                            'Quantity' => $b->QuantityReceived,
+                            'HealthCenter' => $b->healthCenter?->Name,
+                            'Reference' => 'Arrival',
+                            'User' => 'System'
+                        ];
+                    });
+                break;
+
+            case 'requisitions':
+                $data = Requisition::with(['healthCenter', 'user'])
+                    ->orderBy('RequestDate', 'desc')
+                    ->get()
+                    ->transform(function($req) {
+                        return [
+                            'Date' => $req->RequestDate,
+                            'ItemName' => $req->RequisitionNumber,
+                            'Quantity' => $req->items->sum('QuantityRequested'),
+                            'HealthCenter' => $req->healthCenter?->Name,
+                            'Reference' => $req->StatusType,
+                            'User' => $req->user?->FName . ' ' . $req->user?->LName
+                        ];
+                    });
+                break;
+            
+            case 'login_log':
+                $data = SecurityLog::with('user')
+                    ->whereIn('ActionType', ['Login', 'Logout'])
+                    ->orderBy('ActionDate', 'desc')
+                    ->get()
+                    ->transform(function($log) {
+                        return [
+                            'Date' => $log->ActionDate,
+                            'ItemName' => $log->ActionType,
+                            'Quantity' => 0,
+                            'HealthCenter' => $log->IPAddress,
+                            'Reference' => $log->IPAddress,
+                            'Reason' => 'Session Gateway',
+                            'User' => $log->user ? ($log->user->FName . ' ' . $log->user->LName) : 'System'
                         ];
                     });
                 break;

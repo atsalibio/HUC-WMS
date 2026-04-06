@@ -33,8 +33,10 @@ class SettingsController extends Controller
         SecurityLog::create([
             'UserID' => $user->UserID,
             'ActionType' => 'Profile Updated',
-            'Description' => 'User updated their personal profile details.',
-            'IPAddress' => $request->ip()
+            'ActionDescription' => 'User updated their personal profile details in settings.',
+            'ModuleAffected' => 'Account Settings',
+            'IPAddress' => $request->ip(),
+            'ActionDate' => now()
         ]);
 
         return response()->json(['success' => true, 'message' => 'Profile updated successfully!']);
@@ -65,8 +67,10 @@ class SettingsController extends Controller
         SecurityLog::create([
             'UserID' => $user->UserID,
             'ActionType' => 'Password Changed',
-            'Description' => 'User successfully changed their account password.',
-            'IPAddress' => $request->ip()
+            'ActionDescription' => 'User successfully changed their account password in security settings.',
+            'ModuleAffected' => 'Security Settings',
+            'IPAddress' => $request->ip(),
+            'ActionDate' => now()
         ]);
 
         return response()->json(['success' => true, 'message' => 'Password updated successfully!']);
@@ -80,6 +84,7 @@ class SettingsController extends Controller
         $user = Auth::user();
         
         $securityLogs = SecurityLog::where('UserID', $user->UserID)
+            ->whereIn('ActionType', ['Login', 'Logout', 'Profile Updated', 'Password Changed'])
             ->latest('ActionDate')
             ->limit(20)
             ->get();

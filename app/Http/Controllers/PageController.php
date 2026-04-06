@@ -67,7 +67,12 @@ class PageController extends Controller
         if ($page === 'settings') {
             $user = Auth::user();
             $data['logs'] = \App\Models\System\TransactionLog::where('UserID', $user->UserID)->with(['user'])->latest('ActionDate')->limit(10)->get();
-            $data['securityLogs'] = \App\Models\System\SecurityLog::where('UserID', $user->UserID)->with(['user'])->latest('ActionDate')->limit(10)->get();
+            $data['securityLogs'] = \App\Models\System\SecurityLog::where('UserID', $user->UserID)
+                ->whereIn('ActionType', ['Login', 'Logout', 'Profile Updated', 'Password Changed'])
+                ->with(['user'])
+                ->latest('ActionDate')
+                ->limit(10)
+                ->get();
         }
 
         if ($page === 'receiving') {

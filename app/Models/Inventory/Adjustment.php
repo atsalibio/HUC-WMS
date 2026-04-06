@@ -8,18 +8,19 @@ use App\Models\Requisition\Requisition;
 
 class Adjustment extends Model
 {
-    protected $table = 'inventory_adjustments';
+    protected $table = 'InventoryAdjustment';
     protected $primaryKey = 'AdjustmentID';
+    public $timestamps = false;
 
     protected $fillable = [
         'BatchID',
-        'RequisitionID',
-        'AdjustmentType', // 'Disposal', 'Return', 'Correction'
-        'QuantityAdjusted',
+        'UserID',
+        'AdjustmentType',
+        'AdjustmentQuantity',
         'Reason',
-        'Remarks',
         'EvidencePath',
-        'AdjustedBy'
+        'RequisitionID',
+        'AdjustmentDate'
     ];
 
     public function batch()

@@ -111,7 +111,7 @@
                             <select x-model="returnObj.requisitionId" @change="updateReturnItems" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
                                 <option value="">Select source...</option>
                                 <template x-for="req in requisitions" :key="req.RequisitionID">
-                                    <option :value="req.RequisitionID" x-text="`${req.RequisitionNumber} - ${req.health_center?.Name}`"></option>
+                                    <option :value="req.RequisitionID" x-text="`${req.RequisitionNumber || ('ID: ' + req.RequisitionID)} - ${req.health_center?.Name}`"></option>
                                 </template>
                             </select>
                         </div>
@@ -221,11 +221,11 @@
                                     <p class="text-[10px] font-bold text-slate-400 font-mono tracking-tighter" x-text="'Batch: ' + log.BatchID"></p>
                                 </td>
                                 <td class="px-8 py-6 text-center">
-                                    <p class="text-sm font-black" :class="log.QuantityAdjusted < 0 ? 'text-red-500' : 'text-teal-600'" x-text="log.QuantityAdjusted"></p>
+                                    <p class="text-sm font-black" :class="log.AdjustmentQuantity < 0 ? 'text-red-500' : 'text-teal-600'" x-text="log.AdjustmentQuantity"></p>
                                 </td>
                                 <td class="px-8 py-6">
                                     <p class="text-xs font-bold text-slate-600 dark:text-slate-400" x-text="log.Reason"></p>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" x-text="new Date(log.created_at).toLocaleDateString()"></p>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" x-text="new Date(log.AdjustmentDate).toLocaleDateString()"></p>
                                 </td>
                                 <td class="px-8 py-6">
                                     <div class="flex items-center gap-2">
@@ -237,9 +237,12 @@
                                 </td>
                                 <td class="px-8 py-6 text-right">
                                     <template x-if="log.EvidencePath">
-                                        <a :href="'/storage/' + log.EvidencePath" target="_blank" class="w-10 h-10 inline-flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-teal-600 hover:border-teal-500/30 transition-all">
-                                            🖼️
-                                        </a>
+                                        <div class="group/img relative w-12 h-12 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm float-right">
+                                            <img :src="'/' + log.EvidencePath" class="w-full h-full object-cover">
+                                            <a :href="'/' + log.EvidencePath" target="_blank" class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            </a>
+                                        </div>
                                     </template>
                                 </td>
                             </tr>
@@ -287,19 +290,36 @@ function adjustmentManager() {
         },
 
         updateReturnItems() {
+            console.log('Selected Requisition ID:', this.returnObj.requisitionId);
             const req = this.requisitions.find(r => r.RequisitionID == this.returnObj.requisitionId);
-            if (req && req.items) {
+            console.log('Full Requisition Data:', req);
+
+            if (req && req.issuances && req.issuances.length > 0) {
+                this.filteredReturnItems = req.issuances.flatMap(iss => 
+                    iss.items.map(i => ({
+                        id: i.IssuanceItemID,
+                        name: i.batch?.item?.ItemName || 'Item',
+                        batchId: i.BatchID,
+                        issuedQty: i.QuantityIssued,
+                        qty: i.QuantityIssued,
+                        selected: true
+                    }))
+                );
+            } else if (req && req.items) {
+                // Fallback to requisition items if no issuance found (though BatchID will be missing)
+                console.warn('No issuances found for this requisition, falling back to basic items');
                 this.filteredReturnItems = req.items.map(i => ({
-                    id: i.IssuanceItemID || Math.random(),
+                    id: i.RequisitionItemID || Math.random(),
                     name: i.item?.ItemName || 'Item',
-                    batchId: i.BatchID || 'N/A',
-                    issuedQty: i.QuantityIssued || i.QuantityRequested,
-                    qty: i.QuantityIssued || i.QuantityRequested,
+                    batchId: null,
+                    issuedQty: i.QuantityRequested,
+                    qty: i.QuantityRequested,
                     selected: true
                 }));
             } else {
                 this.filteredReturnItems = [];
             }
+            console.log('Mapped Return Items:', this.filteredReturnItems);
         },
 
         async submitDisposal() {
@@ -313,12 +333,20 @@ function adjustmentManager() {
             try {
                 const response = await fetch('/adjustments/disposal', {
                     method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    headers: { 
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
                     body: formData
                 });
                 const result = await response.json();
-                if (result.success) { alert('Disposal logged!'); location.reload(); }
-                else { alert('Error: ' + result.message); }
+                if (response.ok && result.success) { 
+                    alert('Disposal logged!'); 
+                    location.reload(); 
+                } else { 
+                    alert('Error: ' + (result.message || 'Validation failed. Check file size/type.')); 
+                    console.error(result.errors);
+                }
             } catch (e) { alert('Connection error'); }
         },
 

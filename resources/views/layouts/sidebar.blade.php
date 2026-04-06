@@ -8,6 +8,7 @@
         ['label' => 'Patient Approvals', 'id' => 'patient_requisitions_hp', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>', 'roles' => ['Administrator', 'Head Pharmacist']],
         ['label' => 'Requisitions', 'id' => 'requisitions', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>', 'roles' => ['Administrator', 'Health Center Staff', 'Head Pharmacist']],
         ['label' => 'Procurement Orders', 'id' => 'procurement-orders', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>', 'roles' => ['Administrator', 'Warehouse Staff', 'Head Pharmacist']],
+        ['label' => 'Suppliers', 'id' => 'suppliers', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>', 'roles' => ['Administrator', 'Head Pharmacist', 'Warehouse Staff', 'Accounting Office User', 'CMO/GSO/COA User', 'Health Center Staff']],
         ['label' => 'Receiving', 'id' => 'receiving', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>', 'roles' => ['Administrator', 'Warehouse Staff']],
         ['label' => 'DPRI Import', 'id' => 'dpri_import', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>', 'roles' => ['Administrator', 'Head Pharmacist']],
         ['label' => 'Main Inventory', 'id' => 'inventory', 'icon' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>', 'roles' => ['Administrator', 'Warehouse Staff', 'Head Pharmacist', 'Accounting Office User', 'CMO/GSO/COA User']],
@@ -33,7 +34,17 @@
             @foreach ($menuItems as $item)
                 @if (in_array($userRole, $item['roles']))
                     @php
-                        $link = $item['id'] === 'dashboard' ? route('dashboard') : route('page.show', ['page' => $item['id']]);
+                        if ($item['id'] === 'dashboard') {
+                            $link = route('dashboard');
+                        } elseif ($item['id'] === 'suppliers') {
+                            $link = route('suppliers.index');
+                        } elseif ($item['id'] === 'adjustments') {
+                            $link = route('pages.adjustments');
+                        } elseif ($item['id'] === 'inventory') {
+                            $link = route('pages.inventory');
+                        } else {
+                            $link = route('page.show', ['page' => $item['id']]);
+                        }
                     @endphp
                     <a href="{{ $link }}" 
                        class="group flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 

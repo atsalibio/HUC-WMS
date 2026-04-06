@@ -40,6 +40,7 @@ class ProcurementService
                 'PODate' => Carbon::now(),
                 'StatusType' => 'Pending',
                 'DocumentType' => $data['document_type'] ?? 'PO',
+                'PhotoPath' => $data['photo_path'] ?? null,
             ]);
 
             foreach ($data['items'] as $item) {
