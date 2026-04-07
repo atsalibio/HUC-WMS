@@ -7,7 +7,7 @@
                     {{ ucfirst(str_replace('_', ' ', $currentPage ?? 'Dashboard')) }}
                 </p>
                 <h2 class="text-sm font-bold text-slate-800 dark:text-white leading-none flex items-center gap-2">
-                    Iloilo City Healthcare Monitoring
+                    Iloilo City Warehouse Management System
                     @if(optional($user)->healthCenter)
                         <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
                         <span class="text-indigo-500 font-black tracking-tight">{{ $user->healthCenter->Name }}</span>

@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Receiving extends Model
 {
-    protected $table = 'receivings';
-    protected $primaryKey = 'id';
+    protected $table = 'Receiving';
+    protected $primaryKey = 'ReceivingID';
     public $timestamps = true;
 
     protected $fillable = [

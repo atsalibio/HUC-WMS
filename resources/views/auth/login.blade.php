@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Login to the Iloilo City Pharmacy Warehouse Management System. Manage medical supplies inventory efficiently.">
-    <title>Login | HUC Warehouse Management System</title>
+    <title>Login | Iloilo City Warehouse Management System</title>
 
     <link rel="icon" href="{{ asset('assets/img/logo.png') }}" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -458,10 +458,10 @@
         <!-- Left Panel - Branding -->
         <div class="brand-panel">
             <div class="logo-wrap">
-                <img src="{{ asset('assets/img/logo.png') }}" alt="HUC WMS Logo">
+                <img src="{{ asset('assets/img/logo.png') }}" alt="Iloilo City WMS Logo">
             </div>
             <p class="subtitle">Iloilo City Government</p>
-            <h1>Iloilo City Pharmacy</h1>
+            <h1>Iloilo City WMS</h1>
             <p class="tagline">
                 A comprehensive, end-to-end inventory management system designed for modern healthcare.
             </p>
@@ -477,8 +477,8 @@
         <div class="form-panel">
             <!-- Mobile-only branding -->
             <div class="mobile-brand">
-                <img src="{{ asset('assets/img/logo.png') }}" alt="HUC WMS Logo">
-                <span>Iloilo City Pharmacy</span>
+                <img src="{{ asset('assets/img/logo.png') }}" alt="Iloilo City WMS Logo">
+                <span>Iloilo City WMS</span>
             </div>
 
             <h2 class="heading">Welcome Back</h2>

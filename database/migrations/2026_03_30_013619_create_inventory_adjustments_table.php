@@ -11,18 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('inventory_adjustments', function (Blueprint $table) {
-            $table->id('AdjustmentID');
-            $table->string('BatchID')->nullable();
-            $table->unsignedBigInteger('RequisitionID')->nullable();
-            $table->string('AdjustmentType'); // 'Disposal', 'Return', 'Correction'
-            $table->integer('QuantityAdjusted');
-            $table->string('Reason');
-            $table->text('Remarks')->nullable();
-            $table->string('EvidencePath')->nullable();
-            $table->unsignedBigInteger('AdjustedBy');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('InventoryAdjustment')) {
+            Schema::create('InventoryAdjustment', function (Blueprint $table) {
+                $table->id('AdjustmentID');
+                $table->string('BatchID')->nullable();
+                $table->unsignedBigInteger('RequisitionID')->nullable();
+                $table->string('AdjustmentType'); // 'Disposal', 'Return', 'Correction'
+                $table->integer('QuantityAdjusted');
+                $table->string('Reason');
+                $table->text('Remarks')->nullable();
+                $table->string('EvidencePath')->nullable();
+                $table->unsignedBigInteger('AdjustedBy')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

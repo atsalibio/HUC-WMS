@@ -1,4 +1,4 @@
-# HUC-WMS (Warehouse Management System)
+# ILOILO CITY WAREHOUSE MANAGEMENT SYSTEM
 
 A Laravel-based Warehouse Management System for Health Units and Centers (HUC).
 
