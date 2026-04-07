@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\System\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Models\System\SecurityLog;
+use Illuminate\Support\Facades\Request;
 
 class AuthService
 {
@@ -24,11 +26,42 @@ class AuthService
             return ['error' => 'User not found'];
         }
 
-        if (!Hash::check($password, $user->Password)) {
+        // 1. Try standard Bcrypt check
+        $isValid = false;
+        try {
+            if (Hash::check($password, $user->Password)) {
+                $isValid = true;
+            }
+        } catch (\Exception $e) {
+            // Hash::check might throw an exception if the format is fundamentally wrong
+        }
+
+        // 2. Try legacy SHA-256 check if Bcrypt failed
+        if (!$isValid) {
+            $legacyHash = hash('sha256', $password);
+            if ($user->Password === $legacyHash) {
+                $isValid = true;
+                
+                // Upgrade to Bcrypt for future logins
+                $user->Password = $password; // This triggers the setPasswordAttribute mutator (Bcrypt)
+                $user->save();
+            }
+        }
+
+        if (!$isValid) {
             return ['error' => 'Invalid password'];
         }
 
         Auth::login($user);
+        
+        SecurityLog::create([
+            'UserID' => $user->UserID,
+            'ActionType' => 'Login',
+            'ActionDescription' => 'User logged in successfully via web gateway.',
+            'ModuleAffected' => 'Authentication',
+            'IPAddress' => Request::ip(),
+            'ActionDate' => now()
+        ]);
 
         return ['success' => true, 'user' => $user];
     }
@@ -54,6 +87,17 @@ class AuthService
 
     public function logout()
     {
+        $user = Auth::user();
+        if ($user) {
+            SecurityLog::create([
+                'UserID' => $user->UserID,
+                'ActionType' => 'Logout',
+                'ActionDescription' => 'User session terminated successfully.',
+                'ModuleAffected' => 'Authentication',
+                'IPAddress' => Request::ip(),
+                'ActionDate' => now()
+            ]);
+        }
         Auth::logout();
     }
 }

@@ -1,147 +1,113 @@
-{{-- resources/views/layouts/partials/header.blade.php --}}
-@php
-use App\Services\System\NotificationService;
-use App\Services\System\HealthCenterService;
+<header class="sticky top-0 z-40 w-full h-16 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 transition-all duration-300">
+    <div class="h-full px-6 flex items-center justify-between">
+        <!-- Dashboard Breadcrumbs / Search Area -->
+        <div class="flex items-center gap-8">
+            <div class="hidden lg:flex flex-col">
+                <p class="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none mb-1">
+                    {{ ucfirst(str_replace('_', ' ', $currentPage ?? 'Dashboard')) }}
+                </p>
+                <h2 class="text-sm font-bold text-slate-800 dark:text-white leading-none flex items-center gap-2">
+                    Iloilo City Warehouse Management System
+                    @if(optional($user)->healthCenter)
+                        <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                        <span class="text-indigo-500 font-black tracking-tight">{{ $user->healthCenter->Name }}</span>
+                    @endif
+                </h2>
+            </div>
 
-$user = auth()->user();
-
-// Fetch notifications via service
-$notificationService = app(NotificationService::class);
-$notifications = $notificationService->getNotificationsForUser($user);
-$unreadCount = $notifications->where('isRead', false)->count();
-
-// Health center info
-$healthCenterService = app(HealthCenterService::class);
-$hcName = $user->HealthCenterID ? $healthCenterService->getName($user->HealthCenterID) : null;
-$allHCs = $user->Role === 'Administrator' ? $healthCenterService->getAll() : [];
-@endphp
-
-<style>[x-cloak]{ display: none !important; }</style>
-
-<header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60">
-    <div class="px-6 py-3.5 flex justify-between items-center">
-
-        {{-- Left: Mobile Menu + Page Title + Health Center --}}
-        <div class="flex items-center space-x-4">
-            {{-- Mobile Menu Button --}}
-            <button class="md:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-            </button>
-
-            {{-- Page Icon + Title --}}
-            @php
-                $pageIcons = [
-                    'dashboard' => 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
-                    'profile' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-                    'settings' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
-                ];
-                $currentIcon = $pageIcons[$page ?? 'dashboard'] ?? $pageIcons['dashboard'];
-            @endphp
-            <h1 class="text-xl font-bold text-slate-800 dark:text-white font-display tracking-tight flex items-center">
-                <div class="p-1.5 bg-teal-50 dark:bg-teal-900/30 rounded-lg mr-3">
-                    <svg class="w-5 h-5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $currentIcon }}"></path>
-                    </svg>
+            <!-- Global Search Placeholder (Functional UI) -->
+            <div class="relative group hidden md:block">
+                <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none transition-colors group-focus-within:text-indigo-500 text-slate-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
-                {{ $pageTitle ?? 'Overview' }}
-            </h1>
-
-            {{-- Health Center Badge --}}
-            @if($hcName)
-                <div class="hidden lg:flex items-center px-3 py-1 bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800 rounded-full ml-4">
-                    <span class="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-tighter mr-2">Center:</span>
-                    <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ $hcName }}</span>
-                </div>
-            @endif
-
-            {{-- Admin Health Center Switch --}}
-            @if($user->Role === 'Administrator')
-                <div class="hidden xl:block ml-4">
-                    <select onchange="switchHealthCenter(this.value)" class="text-[11px] bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg py-1 px-2 focus:ring-primary focus:border-primary outline-none transition-all">
-                        <option value="">Switch Health Center...</option>
-                        @foreach($allHCs as $hc)
-                            <option value="{{ $hc->HealthCenterID }}" @selected($user->HealthCenterID == $hc->HealthCenterID)>{{ $hc->Name }}</option>
-                        @endforeach
-                        <option value="none" @selected(empty($user->HealthCenterID))>None (Central Only)</option>
-                    </select>
-                </div>
-                <script>
-                    function switchHealthCenter(hcId) {
-                        fetch("{{ route('api.switchHealthCenter') }}", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
-                            body: JSON.stringify({ healthCenterId: hcId })
-                        })
-                        .then(r => r.json())
-                        .then(data => {
-                            if(data.success) location.reload();
-                            else alert('Failed to switch health center: ' + data.message);
-                        });
-                    }
-                </script>
-            @endif
+                <input type="text" placeholder="Global search..." 
+                       class="w-64 pl-10 pr-4 py-2 bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-xl text-xs font-semibold focus:ring-4 focus:ring-indigo-500/10 focus:bg-white dark:focus:bg-slate-800 transition-all outline-none text-slate-600 dark:text-slate-300">
+            </div>
         </div>
 
-        {{-- Right Side: Notifications & Profile --}}
-        <div class="flex items-center gap-3">
-
-            {{-- Notifications --}}
-            <div class="relative" x-data="{ open: false }">
-                <button @click="open = !open" class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                    <svg class="w-6 h-6 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 01-6 0v-1m6 0H9"></path>
-                    </svg>
-                    @if($unreadCount)
-                        <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-red-600 rounded-full">{{ $unreadCount }}</span>
-                    @endif
+        <!-- Action Items (Right) -->
+        <div class="flex items-center gap-2">
+            <!-- Notifications Dropdown (Alpine.js) -->
+            <div x-data="notificationHandler()" x-init="init()" class="relative">
+                <button @click="open = !open" 
+                         class="p-2.5 rounded-xl text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all relative">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <template x-if="notifications.length > 0">
+                        <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 group-hover:scale-110 transition-transform pulse-slow"></span>
+                    </template>
                 </button>
-                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-50">
-                    <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-1 font-bold text-slate-600 dark:text-slate-300">Notifications</div>
-                    <ul class="max-h-96 overflow-y-auto">
-                        @forelse($notifications as $notif)
-                            <li class="px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 {{ !$notif->isRead ? 'font-bold' : '' }}">
-                                {{ $notif->Title }} <br>
-                                <span class="text-xs text-slate-400 dark:text-slate-500">{{ $notif->Timestamp }}</span>
-                            </li>
-                        @empty
-                            <li class="px-4 py-2 text-sm text-slate-500">No notifications</li>
-                        @endforelse
-                    </ul>
-                    @if($unreadCount)
-                        <div class="px-4 py-2 border-t border-slate-100 dark:border-slate-800 text-center">
-                            <button onclick="markAllAsRead()" class="text-xs text-teal-600 dark:text-teal-400 font-bold hover:underline">Mark all as read</button>
-                        </div>
-                    @endif
+                
+                <div x-show="open" @click.away="open = false" 
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                     class="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden" x-cloak>
+                    <div class="px-5 py-4 border-b border-slate-50 dark:border-slate-700/50 flex justify-between items-center">
+                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Recent Alerts</span>
+                        <template x-if="notifications.length > 0">
+                            <span class="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/10 text-[10px] font-black text-indigo-500 rounded-full" x-text="'New (' + notifications.length + ')'"></span>
+                        </template>
+                    </div>
+                    <div class="max-h-96 overflow-y-auto">
+                        <template x-for="note in notifications" :key="note.id">
+                            <div @click="handleNotificationClick(note)" 
+                                 class="p-4 border-b border-slate-50 dark:border-slate-700/30 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer group">
+                                <div class="flex gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                                         :class="note.priority === 'High' ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/10' : (note.priority === 'Normal' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10' : 'bg-slate-100 text-slate-600 dark:bg-slate-900/50')">
+                                        <template x-if="note.priority === 'High'">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        </template>
+                                        <template x-if="note.priority !== 'High'">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        </template>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-xs font-black text-slate-800 dark:text-white mb-0.5 group-hover:text-indigo-500 transition-colors" x-text="note.title || 'Notification'"></p>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2" x-text="note.message"></p>
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-1" x-text="new Date(note.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="notifications.length === 0">
+                            <div class="p-8 text-center">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">No new alerts</p>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
 
-            {{-- Profile Dropdown --}}
-            <div x-data="{ open: false }" @click.outside="open = false" class="relative">
-                <button @click="open = !open" :class="{ 'bg-slate-100 dark:bg-slate-800': open }" class="flex items-center space-x-3 p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200">
-                    <div class="w-8 h-8 rounded-lg bg-teal-600 text-white flex items-center justify-center font-bold text-xs ring-2 ring-teal-600/20 shadow-lg shadow-teal-600/10">
-                        {{ substr($user->FName, 0, 1) . substr($user->LName, 0, 1) }}
+            <!-- Profile Overview (Quick glance) -->
+            <div class="ml-2 flex items-center gap-3 pl-3 border-l border-slate-100 dark:border-slate-800" x-data="{ openProfile: false }">
+                <div class="hidden sm:block text-right">
+                    <p class="text-xs font-bold text-slate-800 dark:text-white leading-none mb-1 truncate max-w-[120px]">
+                        {{ (optional($user)->FName ?? 'Guest') . ' ' . (optional($user)->LName ?? 'User') }}
+                    </p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                        {{ optional($user)->Role ?? 'Staff' }}
+                    </p>
+                </div>
+                <div @click="openProfile = !openProfile" class="w-10 h-10 rounded-xl bg-slate-900 dark:bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-slate-900/10 dark:shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer relative">
+                    {{ substr(optional($user)->FName ?? 'U', 0, 1) }}
+                    
+                    <!-- Profile Dropdown -->
+                    <div x-show="openProfile" @click.away="openProfile = false" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         class="absolute right-0 top-12 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden" x-cloak>
+                        <div class="p-2">
+                           <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full px-4 py-3 text-left text-xs font-black text-rose-500 uppercase tracking-widest hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all flex items-center gap-3">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                    Sign Out
+                                </button>
+                           </form>
+                        </div>
                     </div>
-                    <div class="text-left hidden md:block">
-                        <p class="text-xs font-bold text-slate-800 dark:text-white leading-tight">{{ $user->FName }}</p>
-                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{{ $user->Role }}</p>
-                    </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400 transition-transform duration-200" :class="{'rotate-180': open}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </button>
-
-                <div x-show="open" x-transition class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl py-2 border border-slate-200 dark:border-slate-800 z-50">
-                    <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
-                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest">User Menu</p>
-                    </div>
-                    <a href="{{ route('profile') }}" class="flex items-center px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-teal-600 transition-colors">My Profile</a>
-                    <a href="{{ route('settings') }}" class="flex items-center px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-teal-600 transition-colors">Account Settings</a>
-                    <div class="border-t border-slate-100 dark:border-slate-800 my-1"></div>
-                    <form method="POST" action="{{ route('logout') }}">@csrf
-                        <button type="submit" class="flex items-center w-full text-left px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">Sign Out</button>
-                    </form>
                 </div>
             </div>
         </div>
@@ -149,13 +115,48 @@ $allHCs = $user->Role === 'Administrator' ? $healthCenterService->getAll() : [];
 </header>
 
 <script>
-function markAllAsRead() {
-    fetch("{{ route('api.notifications.markAllRead') }}", {
-        method: "POST",
-        headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" }
-    }).then(r => r.json()).then(data => {
-        if(data.success) location.reload();
-        else console.error('Failed to mark notifications read');
-    });
+function notificationHandler() {
+    return {
+        open: false,
+        notifications: [],
+        async init() {
+            this.fetchNotifications();
+            // Optional: Periodically fetch
+            setInterval(() => this.fetchNotifications(), 30000);
+        },
+        async fetchNotifications() {
+            try {
+                const response = await fetch('/notifications');
+                if (response.ok) {
+                    this.notifications = await response.json();
+                }
+            } catch (e) {
+                console.error('Notification fetch failed', e);
+            }
+        },
+        async handleNotificationClick(note) {
+            try {
+                // Mark as read in background
+                await fetch(`/notifications/${note.id}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                // Route to the link if it exists
+                if (note.link) {
+                    window.location.href = note.link;
+                } else {
+                    this.open = false;
+                    this.fetchNotifications();
+                }
+            } catch (e) {
+                console.error('Notification click failed', e);
+                if (note.link) window.location.href = note.link;
+            }
+        }
+    }
 }
 </script>

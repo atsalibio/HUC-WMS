@@ -1,0 +1,37 @@
+﻿Pending approved orders: 1
+Γ£à Order found: POID=4 PONumber=PO-2026-5609
+   Items count: 1
+   - ItemID=12 | item.ItemName=Aciclovir 400 mg
+
+--- Keys in order JSON ---
+POID, UserID, SupplierID, SupplierName, SupplierAddress, HealthCenterID, ContractID, PONumber, PODate, StatusType, DocumentType, CreatedAt, supplier, items
+
+--- Items key in JSON ---
+  item key present: YES
+  item.ItemName: Aciclovir 400 mg
+
+--- Issuance page: approved requisitions ---
+Approved requisitions: 1
+Γ£à Req: 2 Status=Approved HC=North District Clinic
+   item.ItemName=Amoxicillin 250mg
+   item.ItemName=Salbutamol Nebule
+   item.ItemName=Antiseptic Solution 500ml
+
+   ErrorException 
+
+  Undefined variable $encoded
+
+  at test.php:70
+     66Γûò // Simulate what the browser does: decode HTML entities then JSON.parse
+     67Γûò // HTML attribute stores: data-order="...JSON_HEX_encoded..."
+     68Γûò // Browser reads dataset.order and gets the decoded string
+     69Γûò // We simulate that by html_entity_decode (what the browser does automatically)
+  Γ₧£  70Γûò $decoded_by_browser = html_entity_decode($encoded, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+     71Γûò 
+     72Γûò // Now try to JSON decode (simulates JSON.parse in JS)
+     73Γûò $result = json_decode($decoded_by_browser);
+     74Γûò
+
+  1   test.php:70
+      Illuminate\Foundation\Bootstrap\HandleExceptions::{closure:Illuminate\Foundation\Bootstrap\HandleExceptions::forwardsTo():257}("Undefined variable $encoded", "C:\Users\Jules\Documents\GitHub\HUC-WMS\test.php")
+

@@ -1,4 +1,4 @@
--- HUCappDASMO Database Schema
+-- ILOILO CITY WAREHOUSE MANAGEMENT SYSTEM Database Schema
 -- Refactored for Auto-Increment IDs and Correct Relationships
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS InventoryAdjustment;
 DROP TABLE IF EXISTS HCInventoryBatch;
 DROP TABLE IF EXISTS Report;
 DROP TABLE IF EXISTS ApprovalLog;
-DROP TABLE IF EXISTS Notifications;
+DROP TABLE IF EXISTS Notification;
 DROP TABLE IF EXISTS SecurityLog;
 DROP TABLE IF EXISTS TransactionAuditLog;
 DROP TABLE IF EXISTS NoticeOfIssue;
@@ -33,25 +33,7 @@ DROP TABLE IF EXISTS Supplier;
 DROP TABLE IF EXISTS HealthCenters;
 DROP TABLE IF EXISTS Users;
 
--- 1. User Table
-CREATE TABLE Users (
-    UserID INT AUTO_INCREMENT PRIMARY KEY,
-    Username VARCHAR(100) UNIQUE NOT NULL,
-    Password VARCHAR(255) NOT NULL,
-    EmailNotifications TINYINT(1) DEFAULT 1,
-    InAppNotifications TINYINT(1) DEFAULT 1,
-    ThemePreference VARCHAR(50) DEFAULT 'system',
-    FName VARCHAR(100) NOT NULL,
-    MName VARCHAR(100),
-    LName VARCHAR(100) NOT NULL,
-    Role VARCHAR(50) NOT NULL,
-    HealthCenterID INT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (HealthCenterID) REFERENCES HealthCenters(HealthCenterID) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 2. HealthCenters Table
+-- 1. HealthCenters Table
 CREATE TABLE HealthCenters (
     HealthCenterID INT AUTO_INCREMENT PRIMARY KEY,
     Name VARCHAR(200) NOT NULL,
@@ -59,7 +41,7 @@ CREATE TABLE HealthCenters (
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 3. Supplier Table
+-- 2. Supplier Table
 CREATE TABLE Supplier (
     SupplierID INT AUTO_INCREMENT PRIMARY KEY,
     Name VARCHAR(200) NOT NULL,
@@ -68,7 +50,7 @@ CREATE TABLE Supplier (
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. Item Table
+-- 3. Item Table
 CREATE TABLE Item (
     ItemID INT AUTO_INCREMENT PRIMARY KEY,
     ItemName VARCHAR(200) NOT NULL,
@@ -79,13 +61,28 @@ CREATE TABLE Item (
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 5. Warehouse Table
+-- 4. Warehouse Table
 CREATE TABLE Warehouse (
     WarehouseID INT AUTO_INCREMENT PRIMARY KEY,
     WarehouseName VARCHAR(200) NOT NULL,
     Location TEXT,
     WarehouseType VARCHAR(100),
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 5. User Table
+CREATE TABLE Users (
+    UserID INT AUTO_INCREMENT PRIMARY KEY,
+    Username VARCHAR(100) UNIQUE NOT NULL,
+    Password VARCHAR(255) NOT NULL,
+    FName VARCHAR(100) NOT NULL,
+    MName VARCHAR(100),
+    LName VARCHAR(100) NOT NULL,
+    Role VARCHAR(50) NOT NULL,
+    HealthCenterID INT NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (HealthCenterID) REFERENCES HealthCenters(HealthCenterID) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 6. CentralInventoryBatch Table
@@ -117,7 +114,7 @@ CREATE TABLE Contract (
     FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 8. ProcurementOrder Table
+-- 8. ProcurementOrder Table (Remains same)
 CREATE TABLE ProcurementOrder (
     POID INT AUTO_INCREMENT PRIMARY KEY,
     UserID INT,
@@ -129,6 +126,7 @@ CREATE TABLE ProcurementOrder (
     PONumber VARCHAR(100) UNIQUE, -- Generated e.g. PO-2026-0001
     PODate DATETIME NOT NULL,
     StatusType VARCHAR(50) DEFAULT 'Pending',
+    PhotoPath VARCHAR(255),
     DocumentType VARCHAR(100),
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE SET NULL,
@@ -164,10 +162,17 @@ CREATE TABLE Receiving (
 CREATE TABLE ReceivingItem (
     ReceivingItemID INT AUTO_INCREMENT PRIMARY KEY,
     ReceivingID INT NOT NULL,
+    ItemID INT NOT NULL, -- Added to track item directly
     BatchID INT NOT NULL,
-    QuantityReceived INT NOT NULL,
+    QuantityReceived INT NOT NULL DEFAULT 0,
+    ExpiryDate DATE NULL,
+    UnitCost DECIMAL(10, 2) DEFAULT 0.00,
+    DateReceived DATE NULL,
+    WarehouseID INT NULL,
     FOREIGN KEY (ReceivingID) REFERENCES Receiving(ReceivingID) ON DELETE CASCADE,
-    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE,
+    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
+    FOREIGN KEY (WarehouseID) REFERENCES Warehouse(WarehouseID) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 12. Requisition Table
@@ -244,8 +249,10 @@ CREATE TABLE InventoryAdjustment (
     AdjustmentID INT AUTO_INCREMENT PRIMARY KEY,
     BatchID INT NOT NULL,
     UserID INT NOT NULL,
+    AdjustmentType VARCHAR(50), -- Disposal, Return, Correction
     AdjustmentQuantity INT NOT NULL,
     Reason VARCHAR(255),
+    EvidencePath VARCHAR(255),
     AdjustmentDate DATETIME,
     FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
@@ -257,10 +264,14 @@ CREATE TABLE HCInventoryBatch (
     HealthCenterID INT NOT NULL,
     ItemID INT NOT NULL,
     BatchID INT, -- Reference to the original central batch
+    LotNumber VARCHAR(100) NULL,
     ExpiryDate DATE,
+    QuantityReceived INT NOT NULL DEFAULT 0,
     QuantityOnHand INT NOT NULL DEFAULT 0,
     UnitCost DECIMAL(10, 2),
     DateReceivedAtHC DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (HealthCenterID) REFERENCES HealthCenters(HealthCenterID) ON DELETE CASCADE,
     FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -324,15 +335,19 @@ CREATE TABLE Report (
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 25. Notifications Table
-CREATE TABLE Notifications (
-    id VARCHAR(50) PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    message TEXT NOT NULL,
-    timestamp DATETIME NOT NULL,
-    isRead BOOLEAN DEFAULT FALSE,
-    type VARCHAR(50),
-    targetRoles TEXT -- Comma separated roles or null for all
+-- 25. Notification Table
+CREATE TABLE Notification (
+    NotificationID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NULL,
+    TargetRole VARCHAR(100) NULL,
+    Title VARCHAR(255) NOT NULL,
+    Message TEXT NOT NULL,
+    Link VARCHAR(255) NULL,
+    Priority VARCHAR(50) DEFAULT 'Normal',
+    IsRead TINYINT(1) DEFAULT 0,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 26. Patient Table
