@@ -336,7 +336,7 @@ CREATE TABLE Report (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 25. Notification Table
-CREATE TABLE Notification (
+CREATE TABLE Notifications (
     NotificationID INT AUTO_INCREMENT PRIMARY KEY,
     UserID INT NULL,
     TargetRole VARCHAR(100) NULL,

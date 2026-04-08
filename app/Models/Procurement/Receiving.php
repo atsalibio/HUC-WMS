@@ -8,7 +8,7 @@ class Receiving extends Model
 {
     protected $table = 'Receiving';
     protected $primaryKey = 'ReceivingID';
-    public $timestamps = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'UserID',

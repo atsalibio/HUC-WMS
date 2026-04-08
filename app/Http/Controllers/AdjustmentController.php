@@ -20,7 +20,7 @@ class AdjustmentController extends Controller
             ->whereIn('StatusType', ['Completed', 'Issued'])
             ->orderBy('RequestDate', 'desc')
             ->get();
-            
+
         $history = Adjustment::with(['batch.item', 'user'])
             ->orderBy('AdjustmentDate', 'desc')
             ->get();
@@ -45,7 +45,7 @@ class AdjustmentController extends Controller
 
         return DB::transaction(function() use ($request) {
             $batch = Batch::lockForUpdate()->find($request->batchId);
-            
+
             if ($batch->QuantityOnHand < $request->quantity) {
                 return response()->json(['success' => false, 'message' => 'Insufficient stock in batch.']);
             }
@@ -87,7 +87,7 @@ class AdjustmentController extends Controller
         return DB::transaction(function() use ($request) {
             foreach ($request->items as $item) {
                 $batch = Batch::lockForUpdate()->find($item['batchId']);
-                
+
                 Adjustment::create([
                     'BatchID' => $batch->BatchID,
                     'UserID' => Auth::id(),
@@ -104,6 +104,7 @@ class AdjustmentController extends Controller
             return response()->json(['success' => true]);
         });
     }
+
     public function storeCorrection(Request $request)
     {
         $request->validate([
@@ -114,7 +115,7 @@ class AdjustmentController extends Controller
 
         return DB::transaction(function() use ($request) {
             $batch = Batch::lockForUpdate()->find($request->batchId);
-            
+
             // If decreasing, check for sufficient stock
             if ($request->quantity < 0 && $batch->QuantityOnHand < abs($request->quantity)) {
                 return response()->json(['success' => false, 'message' => 'Insufficient stock for this correction.']);

@@ -51,7 +51,8 @@ class ReceivingService
 
                 // 2. Link batch to the receiving record
                 ReceivingItem::create([
-                    'ReceivingID' => $receiving->id,
+                    'ReceivingID' => $receiving->ReceivingID,
+                    'ItemID' => $item['itemId'],
                     'BatchID' => $batch->BatchID,
                     'QuantityReceived' => $qtyReceived,
                 ]);

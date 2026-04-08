@@ -8,10 +8,11 @@ class ReceivingItem extends Model
 {
     protected $table = 'ReceivingItem';
     protected $primaryKey = 'ReceivingItemID';
-    public $timestamps = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'ReceivingID',
+        'ItemID',
         'BatchID',
         'QuantityReceived',
     ];

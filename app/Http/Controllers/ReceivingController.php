@@ -32,8 +32,9 @@ class ReceivingController extends Controller
         $user = Auth::user();
 
         try {
-            $result = $this->receivingService->receiveItems($data['poId'], $data['items'], $user->UserID, $data['warehouseId']);
+            $result = $this->receivingService->receiveItems($data['poId'], $data['items'], $user['UserID'], $data['warehouseId']);
             return response()->json(['success' => true, 'receiving' => $result]);
+
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
