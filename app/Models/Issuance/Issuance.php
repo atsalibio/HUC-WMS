@@ -21,4 +21,14 @@ class Issuance extends Model
     {
         return $this->hasMany(IssuanceItem::class, 'IssuanceID', 'IssuanceID');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\System\User::class, 'UserID');
+    }
+
+    public function requisition()
+    {
+        return $this->belongsTo(\App\Models\Requisition\Requisition::class, 'RequisitionID');
+    }
 }

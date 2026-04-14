@@ -8,12 +8,16 @@ class Receiving extends Model
 {
     protected $table = 'Receiving';
     protected $primaryKey = 'ReceivingID';
-    public $timestamps = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'UserID',
         'POID',
         'ReceivedDate',
+    ];
+
+    protected $casts = [
+        'ReceivedDate' => 'datetime',
     ];
 
     public function items()
@@ -24,5 +28,10 @@ class Receiving extends Model
     public function procurementOrder()
     {
         return $this->belongsTo(ProcurementOrder::class, 'POID');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\System\User::class, 'UserID');
     }
 }

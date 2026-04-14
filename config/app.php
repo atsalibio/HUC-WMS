@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'ILOILO CITY WAREHOUSE MANAGEMENT SYSTEM'),
+    'name' => env('APP_NAME', 'Iloilo Warehouse Management System'),
 
     /*
     |--------------------------------------------------------------------------

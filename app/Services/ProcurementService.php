@@ -9,6 +9,7 @@ use App\Models\System\SecurityLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request as LaravelRequest;
+use App\Http\Controllers\NotificationController;
 
 class ProcurementService
 {
@@ -47,6 +48,8 @@ class ProcurementService
                 ProcurementOrderItem::create([
                     'POID' => $po->POID,
                     'ItemID' => $item['itemId'],
+                    'BatchID' => $item['batchId'] ?? null,
+                    'LotNumber' => $item['lotNumber'] ?? null,
                     'QuantityOrdered' => $item['quantity'],
                     'UnitCost' => $item['unitCost'] ?? 0,
                     'ExpiryDate' => $item['expiryDate'] ?? null,
@@ -61,6 +64,20 @@ class ProcurementService
                 'ModuleAffected' => 'Procurement',
                 'ActionDate' => Carbon::now(),
             ]);
+
+            // 通知 Trigger: Notify Admin and Warehouse of new PO
+            NotificationController::create(
+                "New Procurement Order",
+                "Order {$po->PONumber} was created for " . ($po->SupplierName ?? 'new supplier') . ".",
+                "/procurement",
+                "Warehouse Staff"
+            );
+            NotificationController::create(
+                "New Procurement Order",
+                "Order {$po->PONumber} was created for " . ($po->SupplierName ?? 'new supplier') . ".",
+                "/procurement",
+                "Administrator"
+            );
 
             return $po;
         });
@@ -80,6 +97,16 @@ class ProcurementService
             'ModuleAffected' => 'Procurement',
             'ActionDate' => Carbon::now(),
         ]);
+
+        // 通知 Trigger: Notify Requester of status update
+        NotificationController::create(
+            "Procurement Update",
+            "Your order #{$po->PONumber} has been {$status}.",
+            "/procurement",
+            null,
+            $po->UserID,
+            $status === 'Rejected' ? 'High' : 'Normal'
+        );
 
         return $po;
     }

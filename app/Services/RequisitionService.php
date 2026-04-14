@@ -7,6 +7,7 @@ use App\Models\Requisition\RequisitionItem;
 use App\Models\System\HealthCenter;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Http\Controllers\NotificationController;
 
 class RequisitionService
 {
@@ -48,6 +49,20 @@ class RequisitionService
                 ]);
             }
 
+            // 通知 Trigger: Notify Admin and Warehouse of new Central Requisition
+            NotificationController::create(
+                "New Requisition",
+                "New requisition {$requisition->RequisitionNumber} submitted for processing.",
+                "/requisitions",
+                "Warehouse Staff"
+            );
+            NotificationController::create(
+                "New Requisition",
+                "Central requisition {$requisition->RequisitionNumber} is pending review.",
+                "/requisitions",
+                "Administrator"
+            );
+
             return $requisition;
         });
     }
@@ -78,13 +93,21 @@ class RequisitionService
                 ]);
             }
 
+            // 通知 Trigger: Notify Admin and Warehouse of new Local Requisition
+            NotificationController::create(
+                "New Local Requisition",
+                "Staff submitted a local requisition ({$requisition->RequisitionNumber}).",
+                "/requisitions",
+                "Warehouse Staff"
+            );
+
             return $requisition;
         });
     }
 
-    public function updateStatus(int $id, string $status, int $userId)
+    public function updateStatus(int $id, string $status, int $userId, array $itemStatuses = [], ?string $remarks = null)
     {
-        return DB::transaction(function () use ($id, $status, $userId) {
+        return DB::transaction(function () use ($id, $status, $userId, $itemStatuses, $remarks) {
             $requisition = Requisition::findOrFail($id);
             $requisition->update(['StatusType' => $status]);
 
@@ -94,8 +117,29 @@ class RequisitionService
                 'UserID' => $userId,
                 'Decision' => $status,
                 'DecisionDate' => Carbon::now(),
-                'Remarks' => "Status updated to {$status} via central dashboard."
+                'Remarks' => $remarks ?: "Status updated to {$status} via central dashboard."
             ]);
+
+            // Apply per-item statuses if provided
+            if (!empty($itemStatuses)) {
+                foreach ($itemStatuses as $itemId => $itemStatus) {
+                    DB::table('RequisitionItem')
+                        ->where('RequisitionItemID', $itemId)
+                        ->update([
+                            'ItemStatus' => $itemStatus,
+                        ]);
+                }
+            }
+
+            // 通知 Trigger: Notify Requester of status update
+            NotificationController::create(
+                "Requisition Update",
+                "Your requisition #{$requisition->RequisitionNumber} has been {$status}.",
+                "/requisitions",
+                null,
+                $requisition->UserID,
+                $status === 'Rejected' ? 'High' : 'Normal'
+            );
 
             return $requisition;
         });

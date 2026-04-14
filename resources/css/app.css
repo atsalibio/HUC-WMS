@@ -11,8 +11,8 @@
 @theme {
     --font-heading: "Plus Jakarta Sans", "Inter", sans-serif;
     --font-body: "Inter", sans-serif;
-    --color-primary: #0d9488;
-    --color-primary-hover: #0f766e;
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
     --color-bg-surface: #ffffff;
     --color-bg-muted: #f8fafc;
     --color-text-base: #0f172a;
@@ -35,6 +35,7 @@ svg {
     backdrop-filter: blur(12px) saturate(180%);
     -webkit-backdrop-filter: blur(12px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    height: 100%;
 }
 
 .dark .glass {
@@ -54,6 +55,7 @@ svg {
         opacity: 0;
         transform: scale(0.98);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -64,15 +66,19 @@ svg {
     animation: fadeInScale 0.4s ease-out forwards;
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
+/* Robust Scrollbar Hide Utility */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
-.scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+    width: 0;
+    height: 0;
 }
 
 /* Premium Custom Scrollbar (if needed) */
@@ -80,16 +86,20 @@ svg {
     width: 6px;
     height: 6px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #e2e8f0;
     border-radius: 10px;
 }
+
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #1e293b;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #cbd5e1;
 }

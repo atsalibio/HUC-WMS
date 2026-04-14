@@ -95,8 +95,8 @@ class PatientRequisitionService
                     }
 
                     if ($remaining > 0) {
-                        // Optional: Handle insufficient stock case
-                        // throw new \Exception("Insufficient local stock for item ID " . $item->ItemID);
+                        $itemName = $item->item->ItemName ?? "Item ID {$item->ItemID}";
+                        throw new \Exception("Insufficient local stock for {$itemName}. Missing: {$remaining}");
                     }
                 }
             }

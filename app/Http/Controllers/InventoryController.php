@@ -11,7 +11,14 @@ class InventoryController extends Controller
     public function index()
     {
         $items = Item::all();
-        $inventory = \App\Models\Inventory\Batch::where('QuantityOnHand', '>', 0)->get();
+        $inventory = \App\Models\Inventory\Batch::where('QuantityOnHand', '>', 0)->where('IsLocked', false)->get();
+
+        $lastIssuances = DB::table('IssuanceItem')
+            ->join('Issuance', 'IssuanceItem.IssuanceID', '=', 'Issuance.IssuanceID')
+            ->join('CentralInventoryBatch', 'IssuanceItem.BatchID', '=', 'CentralInventoryBatch.BatchID')
+            ->select('CentralInventoryBatch.ItemID', DB::raw('MAX(Issuance.IssueDate) as LastIssueDate'))
+            ->groupBy('CentralInventoryBatch.ItemID')
+            ->pluck('LastIssueDate', 'ItemID');
 
         $batchesByItem = [];
         foreach ($inventory as $batch) {
@@ -40,7 +47,8 @@ class InventoryController extends Controller
                 'Category'    => $item->ItemType ?? 'N/A',
                 'Unit'        => $item->UnitOfMeasure ?? 'N/A',
                 'TotalQuantity' => $totalQty,
-                'NextExpiry'  => $nextExpiry
+                'NextExpiry'  => $nextExpiry,
+                'LastIssuance' => $lastIssuances[$itemId] ?? null
             ];
         }
 

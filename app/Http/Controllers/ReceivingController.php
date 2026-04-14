@@ -27,6 +27,7 @@ class ReceivingController extends Controller
             'items.*.unitCost' => 'sometimes|numeric|min:0',
             'items.*.expiryDate' => 'nullable|date',
             'items.*.lotNumber' => 'required|string',
+            'items.*.batchId' => 'required|string',
         ]);
 
         $user = Auth::user();

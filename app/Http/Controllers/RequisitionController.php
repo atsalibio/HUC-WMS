@@ -62,12 +62,28 @@ class RequisitionController extends Controller
     {
         $data = $request->validate([
             'status' => 'required|string|in:Approved,Rejected,Pending,Completed',
+            'itemStatuses' => 'nullable|array', // per-item overrides
+            'remarks' => 'nullable|string',
         ]);
 
         $user = Auth::user();
 
+        // Health Center Staff cannot approve or reject
+        if ($user->Role === 'Health Center Staff' && in_array($data['status'], ['Approved', 'Rejected'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: You do not have permission to approve or reject requisitions.'
+            ], 403);
+        }
+
         try {
-            $requisition = $this->requisitionService->updateStatus($id, $data['status'], $user->UserID);
+            $requisition = $this->requisitionService->updateStatus(
+                $id,
+                $data['status'],
+                $user->UserID,
+                $data['itemStatuses'] ?? [],
+                $data['remarks'] ?? null
+            );
             return response()->json(['success' => true, 'requisition' => $requisition]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to update requisition status'], 500);

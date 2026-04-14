@@ -8,9 +8,26 @@ use Illuminate\Support\Facades\Auth;
 class PageController extends Controller
 {
     protected $allowedPages = [
-        'dashboard', 'requisitions', 'hc_patient_requisitions', 'hc_requisitions', 'patient_requisitions',
-        'patient_requisitions_hp', 'procurement_orders', 'procurement-orders', 'receiving', 'inventory', 'hc_inventory', 'warehouse',
-        'issuance', 'adjustments', 'reports', 'history', 'settings', 'dpri_import', 'suppliers', 'profile'
+        'dashboard',
+        'requisitions',
+        'hc_patient_requisitions',
+        'hc_requisitions',
+        'patient_requisitions',
+        'patient_requisitions_hp',
+        'procurement_orders',
+        'procurement-orders',
+        'receiving',
+        'inventory',
+        'hc_inventory',
+        'warehouse',
+        'issuance',
+        'adjustments',
+        'reports',
+        'history',
+        'settings',
+        'dpri_import',
+        'suppliers',
+        'profile'
     ];
 
     protected $pagePermissions = [
@@ -41,7 +58,8 @@ class PageController extends Controller
         }
 
         $user = Auth::user();
-        if (!$user) return redirect()->route('login.show');
+        if (!$user)
+            return redirect()->route('login.show');
 
         // Security: Role-based Gating
         $allowedRoles = $this->pagePermissions[$page] ?? [];
@@ -77,6 +95,7 @@ class PageController extends Controller
 
         if ($page === 'receiving') {
             $data['pendingOrders'] = \App\Models\Procurement\ProcurementOrder::where('StatusType', 'Approved')->with(['supplier', 'items.item'])->get();
+            $data['receivingHistory'] = \App\Models\Procurement\Receiving::with(['procurementOrder.supplier', 'user', 'items.batch.item'])->latest('ReceivedDate')->limit(50)->get();
             $data['warehouses'] = \App\Models\Procurement\Warehouse::all();
         }
 
@@ -85,9 +104,19 @@ class PageController extends Controller
             if ($isHCStaff && $hcId) {
                 $query->where('HealthCenterID', $hcId);
             }
-            $data['requisitions'] = $query->with(['healthCenter', 'items.item', 'user'])->latest('RequestDate')->get();
+            $data['requisitions'] = $query->with(['healthCenter', 'items.item', 'user', 'items.item'])->latest('RequestDate')->get();
             $data['healthCenters'] = \App\Models\System\HealthCenter::all();
-            $data['items'] = \App\Models\Inventory\Item::all();
+            // Exclude Utility items from requisition form
+            $data['items'] = \App\Models\Inventory\Item::whereNotIn('ItemType', ['Utility', 'Equipment'])->get();
+            // Aggregate stock levels (non-expired batches only) per item
+            $data['stockByItem'] = \App\Models\Inventory\Batch::where('QuantityOnHand', '>', 0)
+                ->where('IsLocked', false)
+                ->where(function ($q) {
+                    $q->whereNull('ExpiryDate')->orWhere('ExpiryDate', '>=', \Carbon\Carbon::today());
+                })
+                ->selectRaw('ItemID, SUM(QuantityOnHand) as total')
+                ->groupBy('ItemID')
+                ->pluck('total', 'ItemID');
         }
 
         if ($page === 'issuance') {
@@ -95,6 +124,16 @@ class PageController extends Controller
                 ->with(['healthCenter', 'items.item'])
                 ->get();
             $data['warehouses'] = \App\Models\Procurement\Warehouse::all();
+            // Prepare available non-expired batches for each item, sorted FEFO
+            $batchRows = \App\Models\Inventory\Batch::where('QuantityOnHand', '>', 0)
+                ->where('IsLocked', false)
+                ->where(function ($q) {
+                    $q->whereNull('ExpiryDate')->orWhere('ExpiryDate', '>=', \Carbon\Carbon::today());
+                })
+                ->orderBy('ExpiryDate', 'asc')
+                ->get()
+                ->groupBy('ItemID');
+            $data['batchesByItem'] = $batchRows;
         }
 
         if ($page === 'hc_patient_requisitions') {
@@ -107,8 +146,20 @@ class PageController extends Controller
             }
 
             $data['patients'] = $patientQuery->get();
-            $data['items'] = \App\Models\Inventory\Item::all();
+            $data['items'] = \App\Models\Inventory\Item::whereNotIn('ItemType', ['Utility', 'Equipment'])->get();
             $data['requisitions'] = $query->with(['patient', 'items.item'])->latest('RequestDate')->get();
+
+            // Fetch HC stock levels
+            if ($hcId) {
+                $hcStock = \App\Models\HealthCenter\HCInventoryBatch::where('HealthCenterID', $hcId)
+                    ->where('QuantityOnHand', '>', 0)
+                    ->select('ItemID', \DB::raw('SUM(QuantityOnHand) as total'))
+                    ->groupBy('ItemID')
+                    ->pluck('total', 'ItemID');
+                $data['hcStock'] = $hcStock;
+            } else {
+                $data['hcStock'] = [];
+            }
         }
 
         if ($page === 'patient_requisitions_hp') {
@@ -118,11 +169,77 @@ class PageController extends Controller
         }
 
         if ($page === 'inventory') {
-            $data['batches'] = \App\Models\Inventory\Batch::with(['item', 'warehouse'])->latest('DateReceived')->get();
+            // Sort by FEFO (earliest expiry first), also exclude expired & out-of-stock items
+            $allItems = \App\Models\Inventory\Item::all();
+            $allBatches = \App\Models\Inventory\Batch::with(['item', 'warehouse'])
+                ->where('QuantityOnHand', '>', 0)
+                ->where('IsLocked', false)
+                ->where(function ($q) {
+                    $q->whereNull('ExpiryDate')->orWhere('ExpiryDate', '>=', \Carbon\Carbon::today());
+                })
+                ->orderBy('ExpiryDate', 'asc')  // FEFO
+                ->get();
+
+            $batchesByItem = [];
+            foreach ($allBatches as $batch) {
+                $batchesByItem[$batch->ItemID][] = [
+                    'BatchID' => $batch->BatchID,
+                    'LotNumber' => $batch->LotNumber,
+                    'ExpiryDate' => $batch->ExpiryDate,
+                    'QuantityOnHand' => $batch->QuantityOnHand,
+                    'PONumber' => $batch->PONumber ?? null,
+                ];
+            }
+
+            $aggregatedInventory = [];
+            foreach ($allItems as $item) {
+                $itemId = $item->ItemID;
+                $itemBatches = $batchesByItem[$itemId] ?? [];
+                $totalQty = array_sum(array_column($itemBatches, 'QuantityOnHand'));
+                if ($totalQty <= 0)
+                    continue; // skip out-of-stock
+                $nextExpiry = null;
+                if (!empty($itemBatches)) {
+                    // First element is earliest (FEFO already sorted)
+                    $nextExpiry = $itemBatches[0]['ExpiryDate'];
+                }
+                $aggregatedInventory[] = [
+                    'ItemID' => $itemId,
+                    'ItemName' => $item->ItemName,
+                    'Brand' => $item->Brand ?? '',
+                    'DosageUnit' => $item->DosageUnit ?? '',
+                    'Category' => $item->ItemType ?? 'N/A',
+                    'Unit' => $item->UnitOfMeasure ?? 'N/A',
+                    'TotalQuantity' => $totalQty,
+                    'NextExpiry' => $nextExpiry,
+                ];
+            }
+
+            $data['aggregatedInventory'] = $aggregatedInventory;
+            $data['batchesByItem'] = $batchesByItem;
+            $data['batches'] = $allBatches;
         }
 
         if ($page === 'hc_inventory') {
-            $data['hc_inventory'] = \App\Models\HealthCenter\HCInventoryBatch::with(['item', 'healthCenter'])->latest('DateReceivedAtHC')->get();
+            $raw = \App\Models\HealthCenter\HCInventoryBatch::with(['item', 'healthCenter'])->latest('DateReceivedAtHC')->get();
+            $data['hc_inventory'] = $raw->map(function ($row) {
+                return [
+                    'HCBatchID' => $row->HCBatchID,
+                    'HealthCenterID' => $row->HealthCenterID,
+                    'ItemID' => $row->ItemID,
+                    'BatchID' => $row->BatchID,
+                    'ExpiryDate' => $row->ExpiryDate,
+                    'QuantityOnHand' => $row->QuantityOnHand,
+                    'UnitCost' => $row->UnitCost,
+                    'DateReceivedAtHC' => $row->DateReceivedAtHC,
+                    'LotNumber' => $row->LotNumber ?? null,
+                    'ItemName' => $row->item?->ItemName ?? '—',
+                    'ItemType' => $row->item?->ItemType ?? '—',
+                    'UnitOfMeasure' => $row->item?->UnitOfMeasure ?? '—',
+                    'HealthCenterName' => $row->healthCenter?->Name ?? '—',
+                ];
+            })->values();
+            $data['hcId'] = $hcId;
         }
 
         if ($page === 'suppliers') {

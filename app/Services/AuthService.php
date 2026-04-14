@@ -54,10 +54,15 @@ class AuthService
 
         Auth::login($user);
         
+        $ua = Request::userAgent() ?? '';
+        $browser = str_contains($ua, 'Firefox') ? 'Firefox' : (str_contains($ua, 'Edg') ? 'Edge' : (str_contains($ua, 'Chrome') ? 'Chrome' : (str_contains($ua, 'Safari') ? 'Safari' : 'Unknown Browser')));
+        $os = str_contains($ua, 'Windows') ? 'Windows' : (str_contains($ua, 'Mac') ? 'macOS' : (str_contains($ua, 'Linux') ? 'Linux' : (str_contains($ua, 'Android') ? 'Android' : (str_contains($ua, 'iPhone') ? 'iOS' : 'Unknown OS'))));
+        $device = preg_match('/Mobile|Android|iPhone|iPad/i', $ua) ? 'Mobile' : 'Desktop';
+        
         SecurityLog::create([
             'UserID' => $user->UserID,
             'ActionType' => 'Login',
-            'ActionDescription' => 'User logged in successfully via web gateway.',
+            'ActionDescription' => "User {$user->Username} logged in via {$browser} on {$os} ({$device}).",
             'ModuleAffected' => 'Authentication',
             'IPAddress' => Request::ip(),
             'ActionDate' => now()
@@ -92,7 +97,7 @@ class AuthService
             SecurityLog::create([
                 'UserID' => $user->UserID,
                 'ActionType' => 'Logout',
-                'ActionDescription' => 'User session terminated successfully.',
+                'ActionDescription' => "User {$user->Username} session terminated.",
                 'ModuleAffected' => 'Authentication',
                 'IPAddress' => Request::ip(),
                 'ActionDate' => now()

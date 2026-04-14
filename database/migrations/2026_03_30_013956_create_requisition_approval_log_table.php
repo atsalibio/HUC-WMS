@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('RequisitionApprovalLog', function (Blueprint $table) {
-            $table->id('ApprovalLogID');
-            $table->integer('RequisitionID');
-            $table->integer('UserID');
-            $table->string('Decision');
-            $table->datetime('DecisionDate');
-            $table->string('Remarks')->nullable();
-        });
+        if (!Schema::hasTable('RequisitionApprovalLog')) {
+            Schema::create('RequisitionApprovalLog', function (Blueprint $table) {
+                $table->id('ApprovalLogID');
+                $table->integer('RequisitionID');
+                $table->integer('UserID');
+                $table->string('Decision');
+                $table->datetime('DecisionDate');
+                $table->string('Remarks')->nullable();
+            });
+        }
     }
 
     /**

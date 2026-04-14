@@ -3,23 +3,23 @@
 @section('content')
 <div class="space-y-6" x-data="adjustmentManager()">
     <!-- Page Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 px-4">
         <div class="space-y-1">
-            <h3 class="text-3xl font-black text-slate-800 dark:text-white mt-1" 
+            <h3 class="text-4xl font-black text-slate-800 dark:text-white mt-1 uppercase tracking-tight" 
                 x-text="activeTab === 'perform' ? 'Stock Adjustment' : 'Correction Logs'">
             </h3>
-            <p class="text-slate-500 font-bold text-xs uppercase tracking-widest" 
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1.5" 
                x-text="activeTab === 'perform' ? 'Manage disposals and item returns' : 'History of all inventory modifications'"></p>
         </div>
 
         <div class="inline-flex p-1.5 bg-slate-200/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800">
             <button @click="activeTab = 'perform'" 
-                :class="activeTab === 'perform' ? 'bg-white dark:bg-slate-800 text-teal-600 shadow-xl scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shadow-sm'"
+                :class="activeTab === 'perform' ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-xl scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shadow-sm'"
                 class="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">
                 Perform Adjustment
             </button>
             <button @click="activeTab = 'history'" 
-                :class="activeTab === 'history' ? 'bg-white dark:bg-slate-800 text-teal-600 shadow-xl scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shadow-sm'"
+                :class="activeTab === 'history' ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-xl scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shadow-sm'"
                 class="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ml-2">
                 History Logs
             </button>
@@ -146,7 +146,7 @@
         <!-- Manual Correction Section -->
         <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8 mt-12">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-900/20 text-teal-600 flex items-center justify-center font-black text-xl">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center font-black text-xl">
                     🔧
                 </div>
                 <div>
@@ -158,7 +158,7 @@
             <form @submit.prevent="submitCorrection" class="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
                 <div class="space-y-4">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Item</label>
-                    <select x-model="correction.itemId" @change="updateCorrectionBatches" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all dark:text-white">
+                    <select x-model="correction.itemId" @change="updateCorrectionBatches" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
                         <option value="">Choose item...</option>
                         <template x-for="item in items" :key="item.ItemID">
                             <option :value="item.ItemID" x-text="item.ItemName"></option>
@@ -167,7 +167,7 @@
                 </div>
                 <div class="space-y-4">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Batch</label>
-                    <select x-model="correction.batchId" required :disabled="!correction.itemId" class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all dark:text-white disabled:opacity-50">
+                    <select x-model="correction.batchId" required :disabled="!correction.itemId" class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white disabled:opacity-50">
                         <option value="">Choose batch...</option>
                         <template x-for="batch in filteredCorrectionBatches" :key="batch.BatchID">
                             <option :value="batch.BatchID" x-text="`${batch.BatchID} (${batch.QuantityOnHand} avail)`"></option>
@@ -177,15 +177,15 @@
                 <div class="space-y-4">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity Adjustment (+/-)</label>
                     <div class="flex items-center gap-2">
-                        <input type="number" x-model="correction.quantity" required class="flex-1 bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all dark:text-white" placeholder="e.g. -5 or 10">
-                        <button type="submit" class="px-8 py-4 bg-slate-900 dark:bg-teal-600 hover:scale-[1.02] text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-95">
+                        <input type="number" x-model="correction.quantity" required class="flex-1 bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="e.g. -5 or 10">
+                        <button type="submit" class="px-8 py-4 bg-slate-900 dark:bg-blue-600 hover:scale-[1.02] text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-95">
                             Apply
                         </button>
                     </div>
                 </div>
                 <div class="md:col-span-3">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Audit Reason</label>
-                    <input type="text" x-model="correction.reason" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all dark:text-white" placeholder="e.g. Stock count mismatch during annual audit">
+                    <input type="text" x-model="correction.reason" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="e.g. Stock count mismatch during annual audit">
                 </div>
             </form>
         </div>
@@ -213,7 +213,7 @@
                                     <span class="px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg" :class="{
                                         'bg-red-50 text-red-500': log.AdjustmentType === 'Disposal',
                                         'bg-blue-50 text-blue-500': log.AdjustmentType === 'Return',
-                                        'bg-teal-50 text-teal-600': log.AdjustmentType === 'Correction'
+                                        'bg-blue-50 text-blue-600': log.AdjustmentType === 'Correction'
                                     }" x-text="log.AdjustmentType"></span>
                                 </td>
                                 <td class="px-8 py-6">
@@ -221,7 +221,7 @@
                                     <p class="text-[10px] font-bold text-slate-400 font-mono tracking-tighter" x-text="'Batch: ' + log.BatchID"></p>
                                 </td>
                                 <td class="px-8 py-6 text-center">
-                                    <p class="text-sm font-black" :class="log.AdjustmentQuantity < 0 ? 'text-red-500' : 'text-teal-600'" x-text="log.AdjustmentQuantity"></p>
+                                    <p class="text-sm font-black" :class="log.AdjustmentQuantity < 0 ? 'text-red-500' : 'text-blue-600'" x-text="log.AdjustmentQuantity"></p>
                                 </td>
                                 <td class="px-8 py-6">
                                     <p class="text-xs font-bold text-slate-600 dark:text-slate-400" x-text="log.Reason"></p>

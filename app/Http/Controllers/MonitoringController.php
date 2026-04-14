@@ -29,50 +29,56 @@ class MonitoringController extends Controller
 
         switch ($type) {
             case 'summary':
-                // Item Additons (Central)
-                $data = Item::withCount(['batches as TotalTransactions'])
-                    ->withSum('batches as TotalAdded', 'QuantityReceived')
+                // Item additions (Central) aggregate manually since QuantityReceived is not a column in CentralInventoryBatch
+                $data = Item::with('batches')
                     ->get()
                     ->transform(function($item) {
+                        $totalAdded = $item->batches->sum(function ($b) {
+                            return $b->QuantityOnHand + $b->QuantityReleased;
+                        });
                         return [
                             'ItemID' => $item->ItemID,
                             'ItemName' => $item->ItemName,
-                            'TotalAdded' => $item->TotalAdded ?? 0,
-                            'TotalTransactions' => $item->TotalTransactions,
-                            'LastReceived' => $item->batches()->orderBy('DateReceived', 'desc')->first()?->DateReceived
+                            'TotalAdded' => $totalAdded,
+                            'TotalTransactions' => $item->batches->count(),
+                            'LastReceived' => $item->batches->sortByDesc('DateReceived')->first()?->DateReceived
                         ];
                     });
                 break;
 
             case 'item_additions':
-                $data = Batch::with(['item', 'user'])
-                    ->orderBy('DateReceived', 'desc')
+                // Item additions (Central Arrivals) - Filter out records without receiving parent
+                $data = \App\Models\Procurement\ReceivingItem::with(['receiving.user', 'batch.item'])
+                    ->has('receiving')
+                    ->orderBy('ReceivingItemID', 'desc')
                     ->get()
-                    ->transform(function($b) {
+                    ->transform(function($ri) {
+                        $u = $ri->receiving?->user;
                         return [
-                            'Date' => $b->DateReceived,
-                            'ItemName' => $b->item?->ItemName,
-                            'BatchID' => $b->BatchID,
-                            'Quantity' => $b->QuantityReceived,
-                            'User' => $b->user?->FName . ' ' . $b->user?->LName
+                            'Date' => $ri->receiving?->ReceivedDate ?? now(),
+                            'ItemName' => $ri->batch?->item?->ItemName ?? 'Unknown Item',
+                            'BatchID' => $ri->BatchID,
+                            'Quantity' => $ri->QuantityReceived ?? 0,
+                            'User' => $u ? ($u->FName . ' ' . $u->LName . ' (' . $u->Username . ')') : 'System'
                         ];
                     });
                 break;
 
             case 'warehouse_issuances':
-                $data = Issuance::with(['requisition.healthCenter', 'user', 'items.item'])
+                $data = Issuance::with(['requisition.healthCenter', 'user', 'items.batch.item'])
                     ->orderBy('IssueDate', 'desc')
                     ->get()
                     ->flatMap(function($iss) {
                         return $iss->items->map(function($item) use ($iss) {
+                            $u = $iss->user;
                             return [
-                                'Date' => $iss->IssueDate,
-                                'ItemName' => $item->item?->ItemName,
-                                'Quantity' => $item->QuantityIssued * -1,
-                                'HealthCenter' => $iss->requisition?->healthCenter?->Name,
+                                'Date' => $iss->IssueDate ?? now(),
+                                'ItemName' => $item->batch?->item?->ItemName ?? 'Undefined Item',
+                                'Quantity' => -1 * abs($item->QuantityIssued ?? 0),
+                                'HealthCenter' => $iss->requisition?->healthCenter?->Name ?? 'N/A',
                                 'Reference' => '#' . $iss->IssuanceID,
                                 'BatchID' => $item->BatchID,
-                                'User' => $iss->user?->FName . ' ' . $iss->user?->LName
+                                'User' => $u ? ($u->FName . ' ' . $u->LName . ' (' . $u->Username . ')') : 'System'
                             ];
                         });
                     });
@@ -83,14 +89,15 @@ class MonitoringController extends Controller
                     ->orderBy('RequestDate', 'desc')
                     ->get()
                     ->transform(function($req) {
+                        $u = $req->user;
                         return [
-                            'Date' => $req->RequestDate,
-                            'ItemName' => $req->items->pluck('item.ItemName')->implode(', '),
-                            'Quantity' => $req->items->sum('QuantityRequested'),
-                            'Patient' => $req->patient ? ($req->patient->FName . ' ' . $req->patient->LName) : $req->ManualName,
-                            'HealthCenter' => $req->healthCenter?->Name,
-                            'Reference' => $req->RequisitionNumber,
-                            'User' => $req->user?->FName . ' ' . $req->user?->LName
+                            'Date' => $req->RequestDate ?? now(),
+                            'ItemName' => $req->items->pluck('item.ItemName')->filter()->implode(', ') ?: 'General Distribution',
+                            'Quantity' => -1 * abs($req->items->sum('QuantityRequested') ?? 0),
+                            'Patient' => $req->patient ? ($req->patient->FName . ' ' . $req->patient->LName) : ($req->ManualName ?? 'Walk-in'),
+                            'HealthCenter' => $req->healthCenter?->Name ?? 'HC Site',
+                            'Reference' => $req->RequisitionNumber ?? 'DISPENSE',
+                            'User' => $u ? ($u->FName . ' ' . $u->LName . ' (' . $u->Username . ')') : 'System'
                         ];
                     });
                 break;
@@ -100,29 +107,31 @@ class MonitoringController extends Controller
                     ->orderBy('AdjustmentDate', 'desc')
                     ->get()
                     ->transform(function($adj) {
+                        $u = $adj->user;
                         return [
-                            'Date' => $adj->AdjustmentDate,
-                            'ItemName' => $adj->batch?->item?->ItemName,
-                            'Quantity' => $adj->AdjustmentQuantity,
-                            'Reason' => $adj->Reason,
-                            'Reference' => $adj->AdjustmentType,
-                            'User' => $adj->user?->FName . ' ' . $adj->user?->LName
+                            'Date' => $adj->AdjustmentDate ?? now(),
+                            'ItemName' => $adj->batch?->item?->ItemName ?? 'Item Record',
+                            'Quantity' => $adj->AdjustmentType === 'Return' ? abs($adj->AdjustmentQuantity ?? 0) : -1 * abs($adj->AdjustmentQuantity ?? 0),
+                            'Reason' => $adj->Reason ?? 'Operational Correction',
+                            'Reference' => $adj->AdjustmentType ?? 'Manual',
+                            'User' => $u ? ($u->FName . ' ' . $u->LName . ' (' . $u->Username . ')') : 'System'
                         ];
                     });
                 break;
 
             case 'procurement_orders':
-                $data = ProcurementOrder::with(['user', 'supplier'])
+                $data = ProcurementOrder::with(['user', 'supplier', 'items'])
                     ->orderBy('PODate', 'desc')
                     ->get()
                     ->transform(function($po) {
+                        $u = $po->user;
                         return [
-                            'Date' => $po->PODate,
-                            'ItemName' => $po->PONumber,
-                            'Quantity' => $po->items->sum('QuantityOrdered'),
+                            'Date' => $po->PODate ?? now(),
+                            'ItemName' => $po->PONumber ?? 'PO Record',
+                            'Quantity' => $po->items->sum('QuantityOrdered') ?? 0,
                             'HealthCenter' => $po->supplier?->Name ?? 'Contractor',
                             'Reference' => $po->PONumber,
-                            'User' => $po->user?->FName . ' ' . $po->user?->LName
+                            'User' => $u ? ($u->FName . ' ' . $u->LName . ' (' . $u->Username . ')') : 'System'
                         ];
                     });
                 break;
@@ -132,32 +141,36 @@ class MonitoringController extends Controller
                     ->orderBy('ActionDate', 'desc')
                     ->get()
                     ->transform(function($log) {
+                        $u = $log->user;
                         return [
-                            'Date' => $log->ActionDate,
-                            'ItemName' => $log->ActionType,
+                            'Date' => $log->ActionDate ?? now(),
+                            'ItemName' => $log->ActionType ?? 'System Event',
                             'Quantity' => 0,
-                            'HealthCenter' => $log->ModuleAffected,
-                            'Reference' => $log->IPAddress,
-                            'Reason' => $log->ActionDescription,
-                            'User' => $log->user ? ($log->user->FName . ' ' . $log->user->LName) : 'System'
+                            'HealthCenter' => $log->ModuleAffected ?? 'Security',
+                            'Reference' => $log->IPAddress ?? '127.0.0.1',
+                            'Reason' => $log->ActionDescription ?? 'Audit Trail Log',
+                            'User' => $u ? ($u->FName . ' ' . $u->LName . ' (' . $u->Username . ')') : 'System'
                         ];
                     });
                 break;
 
             case 'patient_log':
+                // Broaden search to include anything related to dispensing or patients in history
                 $data = TransactionLog::where('ReferenceType', 'LIKE', '%Patient%')
+                    ->orWhere('ActionType', 'LIKE', '%Dispense%')
                     ->with('user')
                     ->orderBy('ActionDate', 'desc')
                     ->get()
                     ->transform(function($log) {
+                        $u = $log->user;
                         return [
-                            'Date' => $log->ActionDate,
-                            'ItemName' => $log->ActionType,
+                            'Date' => $log->ActionDate ?? now(),
+                            'ItemName' => $log->ActionType ?? 'Patient Activity',
                             'Quantity' => 0,
-                            'HealthCenter' => $log->ReferenceID,
-                            'Reference' => $log->ReferenceType,
-                            'Reason' => $log->ActionDetails,
-                            'User' => $log->user ? ($log->user->FName . ' ' . $log->user->LName) : 'System'
+                            'HealthCenter' => $log->ReferenceID ?? 'HC',
+                            'Reference' => $log->ReferenceType ?? 'Log',
+                            'Reason' => $log->ActionDetails ?? 'Service rendered',
+                            'User' => $u ? ($u->FName . ' ' . $u->LName . ' (' . $u->Username . ')') : 'System'
                         ];
                     });
                 break;
@@ -169,9 +182,9 @@ class MonitoringController extends Controller
                     ->get()
                     ->transform(function($b) {
                         return [
-                            'Date' => $b->last_arrival,
-                            'ItemName' => $b->item?->ItemName,
-                            'Quantity' => $b->total_qty,
+                            'Date' => $b->last_arrival ?? now(),
+                            'ItemName' => $b->item?->ItemName ?? 'Stock Entry',
+                            'Quantity' => $b->total_qty ?? 0,
                             'HealthCenter' => 'Central Warehouse',
                             'Reference' => 'Audit Count',
                             'User' => 'System'
@@ -186,10 +199,10 @@ class MonitoringController extends Controller
                     ->get()
                     ->transform(function($b) {
                         return [
-                            'Date' => $b->last_arrival,
-                            'ItemName' => $b->item?->ItemName,
-                            'Quantity' => $b->total_qty,
-                            'HealthCenter' => $b->healthCenter?->Name,
+                            'Date' => $b->last_arrival ?? now(),
+                            'ItemName' => $b->item?->ItemName ?? 'HC Stock',
+                            'Quantity' => $b->total_qty ?? 0,
+                            'HealthCenter' => $b->healthCenter?->Name ?? 'HC Site',
                             'Reference' => 'HC Audit',
                             'User' => 'System'
                         ];
@@ -203,10 +216,10 @@ class MonitoringController extends Controller
                     ->get()
                     ->transform(function($b) {
                         return [
-                            'Date' => $b->DateReceivedAtHC,
-                            'ItemName' => $b->item?->ItemName,
-                            'Quantity' => $b->QuantityReceived,
-                            'HealthCenter' => $b->healthCenter?->Name,
+                            'Date' => $b->DateReceivedAtHC ?? now(),
+                            'ItemName' => $b->item?->ItemName ?? 'Medical Stock',
+                            'Quantity' => $b->QuantityReceived ?? 0,
+                            'HealthCenter' => $b->healthCenter?->Name ?? 'HC Site',
                             'Reference' => 'Arrival',
                             'User' => 'System'
                         ];
@@ -214,17 +227,18 @@ class MonitoringController extends Controller
                 break;
 
             case 'requisitions':
-                $data = Requisition::with(['healthCenter', 'user'])
+                $data = Requisition::with(['healthCenter', 'user', 'items'])
                     ->orderBy('RequestDate', 'desc')
                     ->get()
                     ->transform(function($req) {
+                        $u = $req->user;
                         return [
-                            'Date' => $req->RequestDate,
-                            'ItemName' => $req->RequisitionNumber,
-                            'Quantity' => $req->items->sum('QuantityRequested'),
-                            'HealthCenter' => $req->healthCenter?->Name,
-                            'Reference' => $req->StatusType,
-                            'User' => $req->user?->FName . ' ' . $req->user?->LName
+                            'Date' => $req->RequestDate ?? now(),
+                            'ItemName' => $req->RequisitionNumber ?? 'REQ',
+                            'Quantity' => $req->items->sum('QuantityRequested') ?? 0,
+                            'HealthCenter' => $req->healthCenter?->Name ?? 'HC Site',
+                            'Reference' => $req->StatusType ?? 'Pending',
+                            'User' => $u ? ($u->FName . ' ' . $u->LName . ' (' . $u->Username . ')') : 'System'
                         ];
                     });
                 break;
@@ -235,14 +249,40 @@ class MonitoringController extends Controller
                     ->orderBy('ActionDate', 'desc')
                     ->get()
                     ->transform(function($log) {
+                        $u = $log->user;
+                        
+                        $device = 'Desktop';
+                        if (preg_match('/\((Desktop|Mobile)\)/i', $log->ActionDescription, $matches)) {
+                            $device = $matches[1];
+                        }
+                        
                         return [
-                            'Date' => $log->ActionDate,
-                            'ItemName' => $log->ActionType,
+                            'Date' => $log->ActionDate ?? now(),
+                            'ItemName' => $log->ActionType ?? 'Session',
                             'Quantity' => 0,
-                            'HealthCenter' => $log->IPAddress,
-                            'Reference' => $log->IPAddress,
-                            'Reason' => 'Session Gateway',
-                            'User' => $log->user ? ($log->user->FName . ' ' . $log->user->LName) : 'System'
+                            'HealthCenter' => $log->IPAddress ?? 'Local',
+                            'Device' => $device,
+                            'Reference' => $log->IPAddress ?? 'N/A',
+                            'Reason' => $log->ActionDescription ?? 'User Session Event',
+                            'User' => $u ? ($u->FName . ' ' . $u->LName . ' (' . $u->Username . ')') : 'System'
+                        ];
+                    });
+                break;
+
+            case 'audit_log':
+                $data = TransactionLog::with('user')
+                    ->orderBy('ActionDate', 'desc')
+                    ->get()
+                    ->transform(function($log) {
+                        $u = $log->user;
+                        return [
+                            'Date' => $log->ActionDate ?? now(),
+                            'ItemName' => $log->ActionType ?? 'System Event',
+                            'Quantity' => 0,
+                            'HealthCenter' => $log->ReferenceType ?? 'General',
+                            'Reference' => $log->ReferenceID ?? 'N/A',
+                            'Reason' => $log->ActionDetails ?? 'Audit trail entry',
+                            'User' => $u ? ($u->FName . ' ' . $u->LName . ' (' . $u->Username . ')') : 'System'
                         ];
                     });
                 break;

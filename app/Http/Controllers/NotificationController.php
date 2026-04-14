@@ -20,8 +20,8 @@ class NotificationController extends Controller
 
         $notifications = Notification::unread()
             ->where(function($query) use ($user) {
-                $query->where('user_id', $user->id)
-                      ->orWhere('target_role', $user->Role)
+                $query->where('user_id', '=', $user->UserID)
+                      ->orWhere('target_role', '=', (string)$user->Role)
                       ->orWhere(function($q) {
                           $q->whereNull('user_id')->whereNull('target_role');
                       });
