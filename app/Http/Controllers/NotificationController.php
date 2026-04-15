@@ -52,12 +52,12 @@ class NotificationController extends Controller
     public static function create($title, $message, $link = null, $role = null, $userId = null, $priority = 'Normal')
     {
         return Notification::create([
-            'user_id' => $userId,
-            'target_role' => $role,
-            'title' => $title,
-            'message' => $message,
-            'link' => $link,
-            'priority' => $priority
+            'UserID' => $userId,
+            'TargetRole' => $role,
+            'Title' => $title,
+            'Message' => $message,
+            'Link' => $link,
+            'Priority' => $priority
         ]);
     }
 }

@@ -14,16 +14,16 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         // Sample: Logic to auto-generate a notification for low stock
         $lowStockCount = Batch::where('QuantityOnHand', '<', 500)->where('IsLocked', false)->count();
         if ($lowStockCount > 0 && optional($user)->Role !== 'Health Center Staff') {
             Notification::firstOrCreate(
-                ['title' => 'Low Stock Warning', 'is_read' => false, 'target_role' => 'Head Pharmacist'],
+                ['Title' => 'Low Stock Warning', 'IsRead' => false, 'TargetRole' => 'Head Pharmacist'],
                 [
-                    'message' => "There are {$lowStockCount} batches below the safety threshold.",
-                    'link' => route('page.show', ['page' => 'inventory']),
-                    'priority' => 'High'
+                    'Message' => "There are {$lowStockCount} batches below the safety threshold.",
+                    'Link' => route('page.show', ['page' => 'inventory']),
+                    'Priority' => 'High'
                 ]
             );
         }
@@ -73,9 +73,9 @@ class DashboardController extends Controller
                 'Accounting Office User' => 'accounting',
                 'CMO/GSO/COA User' => 'cmo'
             ];
-            
+
             $roleSlug = $roleMap[$user->Role] ?? strtolower(explode(' ', $user->Role)[0]);
-            
+
             if (view()->exists($roleSlug . '.dashboard')) {
                 $view = $roleSlug . '.dashboard';
             }

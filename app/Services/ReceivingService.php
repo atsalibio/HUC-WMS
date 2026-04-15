@@ -53,7 +53,7 @@ class ReceivingService
                 $batch = Batch::create([
                     'ItemID' => $item['itemId'],
                     'LotNumber' => $lotNumber,
-                    'BatchNumber' => $item['batchId'] ?? ($poItem->BatchID ?? null),
+                    //'BatchNumber' => $item['batchId'] ?? ($poItem->BatchID ?? null),
                     'WarehouseID' => $warehouseId,
                     'ExpiryDate' => $expiryDate,
                     'QuantityOnHand' => $qtyReceived,
@@ -66,6 +66,7 @@ class ReceivingService
                 // 3. Link batch to the receiving record
                 ReceivingItem::create([
                     'ReceivingID' => $receiving->ReceivingID,
+                    'ItemID' => $item['itemId'],
                     'BatchID' => $batch->BatchID,
                     'QuantityReceived' => $qtyReceived,
                 ]);
@@ -105,7 +106,7 @@ class ReceivingService
     {
         return DB::transaction(function () use ($poId, $userId) {
             $po = DB::table('ProcurementOrder')->where('POID', $poId)->first();
-            
+
             // Mark PO as Rejected
             DB::table('ProcurementOrder')->where('POID', $poId)->update(['StatusType' => 'Rejected']);
 

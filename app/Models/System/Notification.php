@@ -5,16 +5,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
+    protected $table = 'Notification';
+    public $timestamps = false;
     protected $fillable = [
-        'user_id',
-        'target_role',
-        'title',
-        'message',
-        'link',
-        'priority',
-        'is_read'
+        'UserID',
+        'TargetRole',
+        'Title',
+        'Message',
+        'Link',
+        'Priority',
+        'IsRead'
     ];
-    
+
     // Scopes for easy filtering
     public function scopeUnread($query)
     {

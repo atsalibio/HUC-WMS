@@ -20,7 +20,7 @@ class ReportController extends Controller
         $completedPOs = ProcurementOrder::whereIn('StatusType', ['Completed', 'Approved'])
             ->orderBy('PODate', 'desc')
             ->get();
-        
+
         $history = Report::select('report.*', 'users.FName', 'users.LName')
             ->join('users', 'report.UserID', '=', 'users.UserID')
             ->orderBy('GeneratedDate', 'desc')
@@ -59,12 +59,12 @@ class ReportController extends Controller
                     'CategoryBreakdown' => $categoryBreakdown,
                     'GeneratedAt' => now()->toDateTimeString()
                 ];
-            } 
+            }
             else if ($type === 'receipt_confirmation') {
                 $poId = $request->poId;
                 $refId = $poId;
                 $po = ProcurementOrder::with('items.item')->where('POID', $poId)->first();
-                
+
                 if (!$po) return response()->json(['success' => false, 'message' => 'PO not found']);
 
                 $receivings = DB::table('receiving')
@@ -160,14 +160,12 @@ class ReportController extends Controller
                 ];
             }
 
-            $reportId = 'RPT-' . strtoupper(bin2hex(random_bytes(4)));
             $newReport = Report::create([
-                'ReportID' => $reportId,
                 'UserID' => Auth::user()->UserID,
                 'ReportType' => ucwords(str_replace('_', ' ', $type)),
                 'GeneratedForOffice' => $office,
                 'GeneratedDate' => now(),
-                'ReferenceID' => (string)$refId,
+                'ReferenceID' => (int)$refId,
                 'Data' => $reportData
             ]);
 
@@ -199,7 +197,7 @@ class ReportController extends Controller
     {
         $report = Report::with('user')->where('ReportID', $id)->first();
         if (!$report) return response()->json(['success' => false, 'message' => 'Report not found']);
-        
+
         return response()->json([
             'success' => true,
             'report' => $report
