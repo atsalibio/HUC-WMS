@@ -14,6 +14,7 @@ class Receiving extends Model
         'UserID',
         'POID',
         'ReceivedDate',
+        'StatusType',
     ];
 
     protected $casts = [

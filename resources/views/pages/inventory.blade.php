@@ -139,47 +139,60 @@
                                 <td class="px-10 py-6 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <button @click.stop="openViewModal(item)"
-                                            class="w-9 h-9 inline-flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-blue-600 transition-all italic font-serif">i</button>
+                                            class="w-9 h-9 inline-flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
-                            <!-- Sub-batches (FEFO) -->
+                            <!-- Sub-batches sorted by Date Received (Issuance Order) -->
                             <tr x-show="expandedItems.includes(item.ItemID)"
                                 class="bg-slate-50/50 dark:bg-slate-900/40 border-l-4 border-blue-500 border-b border-slate-50 dark:border-slate-800"
                                 x-cloak>
                                 <td colspan="5" class="px-10 py-8">
                                     <div class="space-y-4">
-                                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Batch
-                                            Fragments (FEFO Order)</h4>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Batch Ledger — Sorted by Date Received</h4>
+                                            <span class="text-[9px] font-black text-blue-400 uppercase tracking-widest px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full"
+                                                x-text="(batches[item.ItemID] || []).length + ' active batches'"></span>
+                                        </div>
                                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left">
-                                            <template x-for="batch in batches[item.ItemID]" :key="batch.BatchID">
+                                            <template x-for="(batch, idx) in sortedBatches(item.ItemID)" :key="batch.BatchID">
                                                 <div
-                                                    class="p-6 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 flex flex-col justify-between">
+                                                    class="p-6 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 flex flex-col justify-between hover:shadow-md hover:border-blue-200 dark:hover:border-blue-700/50 transition-all">
                                                     <div class="flex justify-between items-start mb-4">
                                                         <div>
-                                                            <p
-                                                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                                                Batch ID</p>
-                                                            <p class="text-[11px] font-black text-slate-800 dark:text-white font-mono"
-                                                                x-text="batch.BatchID"></p>
+                                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Batch #<span x-text="idx + 1"></span></p>
+                                                            <p class="text-[11px] font-black text-slate-800 dark:text-white font-mono" x-text="batch.BatchNumber || ('BCH-' + batch.BatchID)"></p>
+                                                            <template x-if="batch.LotNumber">
+                                                                <p class="text-[9px] font-bold text-slate-400 mt-0.5" x-text="'Lot: ' + batch.LotNumber"></p>
+                                                            </template>
                                                         </div>
                                                         <span
                                                             class="px-2 py-1 bg-slate-50 dark:bg-slate-900 text-[8px] font-black text-slate-400 rounded-lg"
-                                                            x-text="'Ref: '+ (batch.PONumber || 'N/A')"></span>
+                                                            x-text="'Ref: ' + (batch.PONumber || 'N/A')"></span>
                                                     </div>
-                                                    <div class="grid grid-cols-2 gap-4">
+                                                    <div class="grid grid-cols-2 gap-3">
                                                         <div>
-                                                            <p
-                                                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                                                Qty</p>
+                                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Qty on Hand</p>
                                                             <p class="text-lg font-black text-slate-800 dark:text-white"
                                                                 x-text="Number(batch.QuantityOnHand).toLocaleString()"></p>
                                                         </div>
                                                         <div>
-                                                            <p
-                                                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                                                Expiry</p>
-                                                            <p class="text-[11px] font-bold"
+                                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Unit Cost</p>
+                                                            <p class="text-sm font-black text-slate-600 dark:text-slate-300"
+                                                                x-text="batch.UnitCost ? '₱' + Number(batch.UnitCost).toLocaleString('en-PH', {minimumFractionDigits:2}) : '—'"></p>
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Received</p>
+                                                            <p class="text-[10px] font-bold text-slate-600 dark:text-slate-300" x-text="formatDate(batch.DateReceived)"></p>
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Expiry</p>
+                                                            <p class="text-[10px] font-bold"
                                                                 :class="isExpiringSoon(batch.ExpiryDate) ? 'text-red-500' : 'text-slate-600 dark:text-slate-300'"
                                                                 x-text="formatDate(batch.ExpiryDate)"></p>
                                                         </div>
@@ -437,6 +450,16 @@
                         } else {
                             this.expandedItems.push(id);
                         }
+                    },
+
+                    // Returns batches for an item sorted by DateReceived ascending (issuance order)
+                    sortedBatches(itemId) {
+                        const list = this.batches[itemId] || [];
+                        return [...list].sort((a, b) => {
+                            const da = a.DateReceived ? new Date(a.DateReceived) : new Date('9999-12-31');
+                            const db = b.DateReceived ? new Date(b.DateReceived) : new Date('9999-12-31');
+                            return da - db;
+                        });
                     },
 
                     getEmoji(cat) {

@@ -7,7 +7,6 @@ use App\Models\Procurement\ReceivingItem;
 use App\Models\Inventory\Batch;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Carbon\Carbon;
 use App\Http\Controllers\NotificationController;
 use App\Models\System\TransactionLog;
 
@@ -28,6 +27,7 @@ class ReceivingService
                 'POID' => $poId,
                 'ReceivedDate' => Carbon::now(),
                 'UserID' => $userId,
+                'StatusType' => 'Received'
             ]);
 
             foreach ($items as $item) {
@@ -93,6 +93,44 @@ class ReceivingService
                     'ReferenceID' => $po->PONumber,
                     'ActionType' => 'Receiving',
                     'ActionDetails' => "Processed delivery for PO '{$po->PONumber}' from supplier '{$po->SupplierName}'.",
+                    'ActionDate' => Carbon::now()
+                ]);
+            }
+
+            return $receiving;
+        });
+    }
+
+    public function discardShipment($poId, int $userId)
+    {
+        return DB::transaction(function () use ($poId, $userId) {
+            $po = DB::table('ProcurementOrder')->where('POID', $poId)->first();
+            
+            // Mark PO as Rejected
+            DB::table('ProcurementOrder')->where('POID', $poId)->update(['StatusType' => 'Rejected']);
+
+            // Create Receiving Record as "Discarded"
+            $receiving = Receiving::create([
+                'POID' => $poId,
+                'ReceivedDate' => Carbon::now(),
+                'UserID' => $userId,
+                'StatusType' => 'Discarded'
+            ]);
+
+            if ($po) {
+                NotificationController::create(
+                    "Shipment Discarded",
+                    "The shipment for Order {$po->PONumber} has been rejected at the receiving bay.",
+                    "/receiving",
+                    "Administrator"
+                );
+
+                TransactionLog::create([
+                    'UserID' => $userId,
+                    'ReferenceType' => 'Shipment Rejected',
+                    'ReferenceID' => $po->PONumber,
+                    'ActionType' => 'Receiving',
+                    'ActionDetails' => "Discarded shipment for PO '{$po->PONumber}' at receiving bay.",
                     'ActionDate' => Carbon::now()
                 ]);
             }

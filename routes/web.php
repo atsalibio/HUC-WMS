@@ -51,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/issuances/process', [IssuanceController::class, 'process'])->name('issuances.process');
     Route::get('/issuances/fefo-batches', [IssuanceController::class, 'getFefoAllocation'])->name('issuances.fefo');
     Route::post('/receivings', [ReceivingController::class, 'receive'])->name('receivings.receive');
+    Route::post('/receivings/discard', [ReceivingController::class, 'discard'])->name('receivings.discard');
 
     // Ledger
     Route::get('/ledger', [LedgerController::class, 'index'])->name('ledger.index');

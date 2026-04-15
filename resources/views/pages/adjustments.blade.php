@@ -27,10 +27,46 @@
     </div>
 
     <!-- Perform Adjustment Tab Content -->
-    <div x-show="activeTab === 'perform'" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" class="space-y-12">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Disposal Section -->
-            <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8">
+    <div x-show="activeTab === 'perform'" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" class="space-y-6">
+
+        <!-- Sub-Tab Switcher -->
+        <div class="flex gap-2 p-1.5 bg-white dark:bg-slate-800 rounded-[2rem] shadow-sm border border-slate-200/60 dark:border-slate-700/60 w-fit">
+            <button @click="adjustTab = 'disposal'"
+                :class="adjustTab === 'disposal'
+                    ? 'bg-red-500 text-white shadow-lg shadow-red-500/30 scale-[1.03]'
+                    : 'text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10'"
+                class="flex items-center gap-2.5 px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-200">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Disposal
+            </button>
+            <button @click="adjustTab = 'return'"
+                :class="adjustTab === 'return'
+                    ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 scale-[1.03]'
+                    : 'text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10'"
+                class="flex items-center gap-2.5 px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-200">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                </svg>
+                Return
+            </button>
+            <button @click="adjustTab = 'correction'"
+                :class="adjustTab === 'correction'
+                    ? 'bg-slate-800 dark:bg-blue-600 text-white shadow-lg shadow-slate-800/20 scale-[1.03]'
+                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
+                class="flex items-center gap-2.5 px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-200">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Audit Correction
+            </button>
+        </div>
+
+        <!-- Disposal Tab Content -->
+        <div x-show="adjustTab === 'disposal'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
+            <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8 max-w-2xl">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center font-black text-xl">
                         🗑️
@@ -91,9 +127,11 @@
                     </button>
                 </form>
             </div>
+        </div>
 
-            <!-- Returns Section -->
-            <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8">
+        <!-- Returns Tab Content -->
+        <div x-show="adjustTab === 'return'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
+            <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8 max-w-2xl">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center font-black text-xl">
                         ↩️
@@ -143,51 +181,53 @@
             </div>
         </div>
 
-        <!-- Manual Correction Section -->
-        <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8 mt-12">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center font-black text-xl">
-                    🔧
-                </div>
-                <div>
-                    <h4 class="text-lg font-black text-slate-800 dark:text-white">Audit Correction</h4>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generic stock level adjustments (Increases or Decreases)</p>
-                </div>
-            </div>
-
-            <form @submit.prevent="submitCorrection" class="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
-                <div class="space-y-4">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Item</label>
-                    <select x-model="correction.itemId" @change="updateCorrectionBatches" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
-                        <option value="">Choose item...</option>
-                        <template x-for="item in items" :key="item.ItemID">
-                            <option :value="item.ItemID" x-text="item.ItemName"></option>
-                        </template>
-                    </select>
-                </div>
-                <div class="space-y-4">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Batch</label>
-                    <select x-model="correction.batchId" required :disabled="!correction.itemId" class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white disabled:opacity-50">
-                        <option value="">Choose batch...</option>
-                        <template x-for="batch in filteredCorrectionBatches" :key="batch.BatchID">
-                            <option :value="batch.BatchID" x-text="`${batch.BatchID} (${batch.QuantityOnHand} avail)`"></option>
-                        </template>
-                    </select>
-                </div>
-                <div class="space-y-4">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity Adjustment (+/-)</label>
-                    <div class="flex items-center gap-2">
-                        <input type="number" x-model="correction.quantity" required class="flex-1 bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="e.g. -5 or 10">
-                        <button type="submit" class="px-8 py-4 bg-slate-900 dark:bg-blue-600 hover:scale-[1.02] text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-95">
-                            Apply
-                        </button>
+        <!-- Audit Correction Tab Content -->
+        <div x-show="adjustTab === 'correction'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
+            <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8 max-w-4xl">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center font-black text-xl">
+                        🔧
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-black text-slate-800 dark:text-white">Audit Correction</h4>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generic stock level adjustments (Increases or Decreases)</p>
                     </div>
                 </div>
-                <div class="md:col-span-3">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Audit Reason</label>
-                    <input type="text" x-model="correction.reason" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="e.g. Stock count mismatch during annual audit">
-                </div>
-            </form>
+
+                <form @submit.prevent="submitCorrection" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Item</label>
+                            <select x-model="correction.itemId" @change="updateCorrectionBatches" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
+                                <option value="">Choose item...</option>
+                                <template x-for="item in items" :key="item.ItemID">
+                                    <option :value="item.ItemID" x-text="item.ItemName"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Batch</label>
+                            <select x-model="correction.batchId" required :disabled="!correction.itemId" class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white disabled:opacity-50">
+                                <option value="">Choose batch...</option>
+                                <template x-for="batch in filteredCorrectionBatches" :key="batch.BatchID">
+                                    <option :value="batch.BatchID" x-text="`${batch.BatchID} (${batch.QuantityOnHand} avail)`"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity Adjustment (+/-)</label>
+                            <input type="number" x-model="correction.quantity" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="e.g. -5 or 10">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Audit Reason</label>
+                        <input type="text" x-model="correction.reason" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="e.g. Stock count mismatch">
+                    </div>
+                    <button type="submit" class="w-full py-4 bg-slate-900 dark:bg-blue-600 hover:scale-[1.02] text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-95">
+                        Apply Correction
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -261,6 +301,7 @@
 function adjustmentManager() {
     return {
         activeTab: 'perform',
+        adjustTab: 'disposal',
         items: @json($items),
         inventory: @json($inventory),
         requisitions: @json($requisitions),

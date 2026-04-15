@@ -524,11 +524,9 @@
                         });
                     }
 
-                    // Auto-complete logic for partial/full approvals as requested
+                    // Status flows: Pending → Approved (queued for Issuance) → Completed
+                    // Rejected closes the requisition immediately.
                     let finalStatus = overallStatus;
-                    if (overallStatus === 'Approved') {
-                        finalStatus = 'Completed';
-                    }
 
                     try {
                         const response = await fetch(`/requisitions/${this.activeReq.RequisitionID}/status`, {

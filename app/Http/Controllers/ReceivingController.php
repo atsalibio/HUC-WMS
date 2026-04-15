@@ -39,4 +39,20 @@ class ReceivingController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+    public function discard(Request $request)
+    {
+        $data = $request->validate([
+            'poId' => 'required',
+        ]);
+
+        $user = Auth::user();
+
+        try {
+            $result = $this->receivingService->discardShipment($data['poId'], $user->UserID);
+            return response()->json(['success' => true, 'receiving' => $result]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
 }

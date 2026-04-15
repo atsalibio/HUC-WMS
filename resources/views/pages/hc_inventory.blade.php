@@ -12,6 +12,20 @@
                 </p>
             </div>
             <div class="flex items-center gap-4">
+                @if(in_array(Auth::user()->Role, ['Administrator', 'Head Pharmacist']))
+                <div class="relative">
+                    <select x-model="selectedHCId"
+                        class="appearance-none pl-5 pr-10 h-12 bg-white dark:bg-slate-800 border-none rounded-2xl text-blue-600 dark:text-blue-400 font-black text-[10px] uppercase tracking-widest shadow-lg focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
+                        <option value="">All Health Centers</option>
+                        @foreach($healthCenters as $hc)
+                            <option value="{{ $hc->HealthCenterID }}">{{ $hc->Name }}</option>
+                        @endforeach
+                    </select>
+                    <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-blue-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+                @endif
                 <div class="px-5 py-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-2xl flex items-center gap-3">
                     <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
                     <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Live Inventory Sync</span>
@@ -52,7 +66,12 @@
                     </svg>
                 </button>
                 <div class="px-5 h-12 flex items-center bg-white dark:bg-slate-800 rounded-2xl shadow-sm">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest" x-text="sortedGrouped.length + ' items'"></span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <span x-text="sortedGrouped.length"></span> items
+                        <template x-if="selectedHCId">
+                            <span x-text="' · ' + (selectedHCName || '')" class="text-blue-500"></span>
+                        </template>
+                    </span>
                 </div>
             </div>
         </div>
@@ -174,6 +193,9 @@
                 Alpine.data('hcInventoryManager', () => ({
                     hc_inventory: @json($hc_inventory),
                     hcId: @json($hcId ?? null),
+                    userRole: @json($userRole ?? ''),
+                    healthCenters: @json($healthCenters ?? []),
+                    selectedHCId: '',
                     search: '',
                     sortBy: 'name',
                     sortDir: 'asc',
@@ -181,9 +203,31 @@
                     showDetailsModal: false,
                     selectedGroup: null,
 
+                    init() {
+                        // HC Staff: lock to their health center
+                        if (this.hcId && this.userRole === 'Health Center Staff') {
+                            this.selectedHCId = String(this.hcId);
+                        }
+                        this.$nextTick(() => this.renderRows());
+                        this.$watch('sortedGrouped', () => this.renderRows());
+                        this.$watch('expanded', () => this.renderRows());
+                    },
+
+                    get selectedHCName() {
+                        if (!this.selectedHCId) return '';
+                        const hc = this.healthCenters.find(h => String(h.HealthCenterID) === String(this.selectedHCId));
+                        return hc ? hc.Name : '';
+                    },
+
                     get groupedInventory() {
+                        // Filter raw rows by selected HC first
+                        let rows = this.hc_inventory;
+                        if (this.selectedHCId) {
+                            rows = rows.filter(r => String(r.HealthCenterID) === String(this.selectedHCId));
+                        }
+
                         const groups = {};
-                        this.hc_inventory.forEach(row => {
+                        rows.forEach(row => {
                             const id = row.ItemID;
                             if (!groups[id]) {
                                 groups[id] = {
@@ -191,6 +235,7 @@
                                     ItemName: row.ItemName ?? '—',
                                     ItemType: row.ItemType ?? '—',
                                     UnitOfMeasure: row.UnitOfMeasure ?? '—',
+                                    HealthCenterName: row.HealthCenterName ?? '—',
                                     TotalStock: 0,
                                     EarliestExpiry: null,
                                     LastReceived: null,
@@ -207,6 +252,12 @@
                                 g.LastReceived = row.DateReceivedAtHC;
                             }
                         });
+
+                        // Sort batches inside each group by DateReceivedAtHC (oldest first)
+                        Object.values(groups).forEach(g => {
+                            g.batches.sort((a, b) => new Date(a.DateReceivedAtHC) - new Date(b.DateReceivedAtHC));
+                        });
+
                         return Object.values(groups);
                     },
 
@@ -238,12 +289,6 @@
                             return 0;
                         });
                         return arr;
-                    },
-
-                    init() {
-                        this.$nextTick(() => this.renderRows());
-                        this.$watch('sortedGrouped', () => this.renderRows());
-                        this.$watch('expanded', () => this.renderRows());
                     },
 
                     renderRows() {

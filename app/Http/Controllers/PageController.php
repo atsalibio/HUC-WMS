@@ -180,14 +180,25 @@ class PageController extends Controller
                 ->orderBy('ExpiryDate', 'asc')  // FEFO
                 ->get();
 
+            // Compute last issuance date per item via IssuanceItem → Issuance → Batch
+            $lastIssuanceByItem = \Illuminate\Support\Facades\DB::table('IssuanceItem as ii')
+                ->join('Issuance as i', 'ii.IssuanceID', '=', 'i.IssuanceID')
+                ->join('CentralInventoryBatch as b', 'ii.BatchID', '=', 'b.BatchID')
+                ->selectRaw('b.ItemID, MAX(i.IssueDate) as LastIssuance')
+                ->groupBy('b.ItemID')
+                ->pluck('LastIssuance', 'ItemID');
+
             $batchesByItem = [];
             foreach ($allBatches as $batch) {
                 $batchesByItem[$batch->ItemID][] = [
-                    'BatchID' => $batch->BatchID,
-                    'LotNumber' => $batch->LotNumber,
-                    'ExpiryDate' => $batch->ExpiryDate,
+                    'BatchID'       => $batch->BatchID,
+                    'LotNumber'     => $batch->LotNumber,
+                    'BatchNumber'   => $batch->BatchNumber,
+                    'ExpiryDate'    => $batch->ExpiryDate,
+                    'DateReceived'  => $batch->DateReceived,
                     'QuantityOnHand' => $batch->QuantityOnHand,
-                    'PONumber' => $batch->PONumber ?? null,
+                    'UnitCost'      => $batch->UnitCost ?? 0,
+                    'PONumber'      => $batch->PONumber ?? null,
                 ];
             }
 
@@ -204,14 +215,15 @@ class PageController extends Controller
                     $nextExpiry = $itemBatches[0]['ExpiryDate'];
                 }
                 $aggregatedInventory[] = [
-                    'ItemID' => $itemId,
-                    'ItemName' => $item->ItemName,
-                    'Brand' => $item->Brand ?? '',
-                    'DosageUnit' => $item->DosageUnit ?? '',
-                    'Category' => $item->ItemType ?? 'N/A',
-                    'Unit' => $item->UnitOfMeasure ?? 'N/A',
+                    'ItemID'       => $itemId,
+                    'ItemName'     => $item->ItemName,
+                    'Brand'        => $item->Brand ?? '',
+                    'DosageUnit'   => $item->DosageUnit ?? '',
+                    'Category'     => $item->ItemType ?? 'N/A',
+                    'Unit'         => $item->UnitOfMeasure ?? 'N/A',
                     'TotalQuantity' => $totalQty,
-                    'NextExpiry' => $nextExpiry,
+                    'NextExpiry'   => $nextExpiry,
+                    'LastIssuance' => $lastIssuanceByItem[$itemId] ?? null,
                 ];
             }
 
@@ -224,22 +236,24 @@ class PageController extends Controller
             $raw = \App\Models\HealthCenter\HCInventoryBatch::with(['item', 'healthCenter'])->latest('DateReceivedAtHC')->get();
             $data['hc_inventory'] = $raw->map(function ($row) {
                 return [
-                    'HCBatchID' => $row->HCBatchID,
-                    'HealthCenterID' => $row->HealthCenterID,
-                    'ItemID' => $row->ItemID,
-                    'BatchID' => $row->BatchID,
-                    'ExpiryDate' => $row->ExpiryDate,
-                    'QuantityOnHand' => $row->QuantityOnHand,
-                    'UnitCost' => $row->UnitCost,
-                    'DateReceivedAtHC' => $row->DateReceivedAtHC,
-                    'LotNumber' => $row->LotNumber ?? null,
-                    'ItemName' => $row->item?->ItemName ?? '—',
-                    'ItemType' => $row->item?->ItemType ?? '—',
-                    'UnitOfMeasure' => $row->item?->UnitOfMeasure ?? '—',
+                    'HCBatchID'        => $row->HCBatchID,
+                    'HealthCenterID'   => $row->HealthCenterID,
                     'HealthCenterName' => $row->healthCenter?->Name ?? '—',
+                    'ItemID'           => $row->ItemID,
+                    'BatchID'          => $row->BatchID,
+                    'ExpiryDate'       => $row->ExpiryDate,
+                    'QuantityOnHand'   => $row->QuantityOnHand,
+                    'UnitCost'         => $row->UnitCost,
+                    'DateReceivedAtHC' => $row->DateReceivedAtHC,
+                    'LotNumber'        => $row->LotNumber ?? null,
+                    'ItemName'         => $row->item?->ItemName ?? '—',
+                    'ItemType'         => $row->item?->ItemType ?? '—',
+                    'UnitOfMeasure'    => $row->item?->UnitOfMeasure ?? '—',
                 ];
             })->values();
-            $data['hcId'] = $hcId;
+            $data['hcId']          = $hcId;
+            $data['healthCenters'] = \App\Models\System\HealthCenter::all();
+            $data['userRole']      = $user->Role;
         }
 
         if ($page === 'suppliers') {

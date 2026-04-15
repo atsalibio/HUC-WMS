@@ -236,7 +236,6 @@
                     </div>
                 </div>
         </div>
-    </div>
 
     <!-- Details Modal -->
     <div x-show="showDetailsModal"
@@ -305,6 +304,10 @@
 </div>
 
 <script>
+    // Centralized Data Registry for Alpine
+    window.receivingPendingOrders = @json($pendingOrders);
+    window.receivingHistory = @json($receivingHistory);
+
 function receivingManager() {
     return {
         showReceivingModal: false,
@@ -316,14 +319,18 @@ function receivingManager() {
             warehouseId: '1',
             items: []
         },
-        pendingOrders: @json($pendingOrders),
-        receivingHistory: @json($receivingHistory),
+        pendingOrders: window.receivingPendingOrders || [],
+        receivingHistory: window.receivingHistory || [],
         init() {
-            console.log("Receiving Bay Initialized");
+            console.log("Receiving Bay UI Loaded. History items:", this.receivingHistory.length);
         },
         startReceiving(poId) {
+            console.log("Starting receive flow for PO ID:", poId);
             const order = this.pendingOrders.find(o => o.POID == poId);
-            if (!order) return;
+            if (!order) {
+                alert("Critical Error: Order not found in registry.");
+                return;
+            }
             
             this.activeOrder = order;
             this.receivingData.poId = order.POID;
@@ -340,12 +347,16 @@ function receivingManager() {
             this.showReceivingModal = true;
         },
         openDetailsModal(recId) {
-            console.log("Opening details modal for ID:", recId);
+            console.log("Triggered openDetailsModal for ID:", recId);
             const rec = this.receivingHistory.find(r => r.ReceivingID == recId);
+            
             if (!rec) {
-                console.warn("Record not found in history:", recId);
+                console.error("DEBUG: Record not found for ID:", recId, "Current history keys:", this.receivingHistory.map(r => r.ReceivingID));
+                alert("Error: Log entry not found. Please refresh the page.");
                 return;
             }
+            
+            console.log("Found record matched ID:", recId, rec);
             this.activeRec = rec;
             this.showDetailsModal = true;
         },
