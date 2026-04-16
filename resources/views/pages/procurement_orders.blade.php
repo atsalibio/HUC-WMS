@@ -276,18 +276,6 @@
                                         <div
                                             class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-8 border-t border-slate-200 dark:border-slate-700/50">
                                             <div class="space-y-2">
-                                                <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Assigned
-                                                    Batch</label>
-                                                <input type="text" x-model="item.batchId" placeholder="Batch ID (Optional)"
-                                                    class="w-full px-5 py-4 bg-white dark:bg-slate-800 border-none rounded-2xl font-bold dark:text-white text-xs">
-                                            </div>
-                                            <div class="space-y-2">
-                                                <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Lot
-                                                    Ident.</label>
-                                                <input type="text" x-model="item.lotNumber" placeholder="Lot Num (Optional)"
-                                                    class="w-full px-5 py-4 bg-white dark:bg-slate-800 border-none rounded-2xl font-bold dark:text-white text-xs">
-                                            </div>
-                                            <div class="space-y-2">
                                                 <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Expiry
                                                     Timeline</label>
                                                 <input type="date" x-model="item.expiryDate"
@@ -497,7 +485,7 @@
                         contractNumber: '',
                         contractStartDate: '',
                         contractEndDate: '',
-                        items: [{ itemId: '', quantity: 1, unitCost: 0, batchId: '', lotNumber: '', expiryDate: '' }]
+                        items: [{ itemId: '', quantity: 1, unitCost: 0, expiryDate: '' }]
                     },
                     init() {
                         this.$watch('showCreateModal', value => this.toggleScroll(value || this.showDetailsModal));
@@ -534,7 +522,7 @@
                         }[status] || 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
                     },
                     addItem() {
-                        this.formData.items.push({ itemId: '', quantity: 1, unitCost: 0, batchId: '', lotNumber: '', expiryDate: '' });
+                        this.formData.items.push({ itemId: '', quantity: 1, unitCost: 0, expiryDate: '' });
                     },
                     removeItem(index) {
                         if (this.formData.items.length > 1) {
@@ -557,7 +545,7 @@
                             contractNumber: '',
                             contractStartDate: '',
                             contractEndDate: '',
-                            items: [{ itemId: '', quantity: 1, unitCost: 0, batchId: '', lotNumber: '', expiryDate: '' }],
+                            items: [{ itemId: '', quantity: 1, unitCost: 0, expiryDate: '' }],
                             photoFile: null,
                             photoName: ''
                         };
@@ -593,8 +581,6 @@
                                 submissionData.append(`items[${index}][itemId]`, item.itemId);
                                 submissionData.append(`items[${index}][quantity]`, item.quantity);
                                 submissionData.append(`items[${index}][unitCost]`, item.unitCost);
-                                submissionData.append(`items[${index}][batchId]`, item.batchId);
-                                submissionData.append(`items[${index}][lotNumber]`, item.lotNumber);
                                 submissionData.append(`items[${index}][expiryDate]`, item.expiryDate);
                             });
 

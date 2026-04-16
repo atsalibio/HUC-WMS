@@ -17,7 +17,7 @@
                     {{ count($pendingOrders) }} Orders Pending
                 </span>
             </div>
-            
+
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead class="bg-slate-50 dark:bg-slate-900/50">
@@ -53,7 +53,7 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <button 
+                                <button
                                     @click="startReceiving({{ $order->POID }})"
                                     class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95">
                                     Accept Delivery
@@ -106,7 +106,7 @@
                                 {{ $rec->user->FName ?? '' }} {{ $rec->user->LName ?? 'System' }}
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <button 
+                                <button
                                     @click="openDetailsModal({{ $rec->ReceivingID }})"
                                     class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 dark:hover:text-blue-400 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-sm">
                                     View Log
@@ -137,7 +137,7 @@
 
             <!-- Modal Content -->
             <div class="relative bg-white dark:bg-slate-800 w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700/50 animate-in zoom-in-95 duration-200 flex flex-col my-auto z-[120] transition-all">
-                    
+
                     <!-- Header -->
                     <div class="px-10 pt-10 pb-6 border-b border-slate-100 dark:border-slate-700/30">
                         <div class="flex justify-between items-center">
@@ -201,7 +201,7 @@
                                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div class="space-y-1">
                                                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Batch ID</label>
-                                                    <input type="text" x-model="item.batchId" placeholder="Required" required :readonly="item.batchId && item.batchId.length > 0" 
+                                                    <input type="text" x-model="item.batchId" placeholder="Required" required :readonly="item.batchId && item.batchId.length > 0"
                                                            :class="item.batchId && item.batchId.length > 0 ? 'bg-slate-100 dark:bg-slate-700/50 cursor-not-allowed opacity-75' : 'bg-white dark:bg-slate-800'"
                                                            class="w-full px-4 py-2.5 border-none rounded-xl font-black dark:text-white text-xs">
                                                 </div>
@@ -250,7 +250,7 @@
 
             <!-- Modal Content -->
             <div class="relative bg-white dark:bg-slate-800 w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700/50 animate-in zoom-in-95 duration-200 flex flex-col my-auto z-[120] transition-all">
-                    
+
                     <!-- Header -->
                     <div class="px-10 pt-10 pb-6 border-b border-slate-100 dark:border-slate-700/30">
                         <div class="flex justify-between items-center">
@@ -331,7 +331,7 @@ function receivingManager() {
                 alert("Critical Error: Order not found in registry.");
                 return;
             }
-            
+
             this.activeOrder = order;
             this.receivingData.poId = order.POID;
             this.receivingData.items = order.items.map(i => ({
@@ -349,13 +349,13 @@ function receivingManager() {
         openDetailsModal(recId) {
             console.log("Triggered openDetailsModal for ID:", recId);
             const rec = this.receivingHistory.find(r => r.ReceivingID == recId);
-            
+
             if (!rec) {
                 console.error("DEBUG: Record not found for ID:", recId, "Current history keys:", this.receivingHistory.map(r => r.ReceivingID));
                 alert("Error: Log entry not found. Please refresh the page.");
                 return;
             }
-            
+
             console.log("Found record matched ID:", recId, rec);
             this.activeRec = rec;
             this.showDetailsModal = true;
@@ -375,7 +375,7 @@ function receivingManager() {
                     },
                     body: JSON.stringify(this.receivingData)
                 });
-                
+
                 const result = await response.json();
                 if (result.success) {
                     alert('Items received and inventory updated!');
@@ -408,7 +408,7 @@ function receivingManager() {
                     },
                     body: JSON.stringify({ status: 'Rejected' })
                 });
-                
+
                 const result = await response.json();
                 if (result.success) {
                     alert('Shipment discarded successfully.');

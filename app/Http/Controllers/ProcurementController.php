@@ -33,8 +33,6 @@ class ProcurementController extends Controller
             'items.*.itemId' => 'required|integer',
             'items.*.quantity' => 'required|numeric|min:1',
             'items.*.unitCost' => 'sometimes|numeric',
-            'items.*.batchId' => 'nullable|string',
-            'items.*.lotNumber' => 'nullable|string',
             'items.*.expiryDate' => 'sometimes|date',
         ]);
 

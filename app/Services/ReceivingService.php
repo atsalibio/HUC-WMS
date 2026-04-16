@@ -5,10 +5,12 @@ namespace App\Services;
 use App\Models\Procurement\Receiving;
 use App\Models\Procurement\ReceivingItem;
 use App\Models\Inventory\Batch;
+use App\Models\Procurement\Supplier;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Controllers\NotificationController;
 use App\Models\System\TransactionLog;
+
 
 class ReceivingService
 {
@@ -29,6 +31,8 @@ class ReceivingService
                 'UserID' => $userId,
                 'StatusType' => 'Received'
             ]);
+
+            $supplierData = Supplier::find($po->SupplierID);
 
             foreach ($items as $item) {
                 $qtyReceived = (float)($item['quantityReceived'] ?? 0);
@@ -76,13 +80,13 @@ class ReceivingService
             if ($po) {
                 NotificationController::create(
                     "Delivery Processed",
-                    "Items for Order {$po->PONumber} from {$po->SupplierName} have been processed.",
+                    "Items for Order {$po->PONumber} from {$supplierData->Name} have been processed.",
                     "/receiving",
                     "Administrator"
                 );
                 NotificationController::create(
                     "Valuation Update Required",
-                    "New stock from {$po->SupplierName} is ready for financial audit.",
+                    "New stock from {$supplierData->Name} is ready for financial audit.",
                     "/reports",
                     "Accounting Office User"
                 );
@@ -93,7 +97,7 @@ class ReceivingService
                     'ReferenceType' => 'Delivery Processed',
                     'ReferenceID' => $po->PONumber,
                     'ActionType' => 'Receiving',
-                    'ActionDetails' => "Processed delivery for PO '{$po->PONumber}' from supplier '{$po->SupplierName}'.",
+                    'ActionDetails' => "Processed delivery for PO '{$po->PONumber}' from supplier '{$supplierData->Name}'.",
                     'ActionDate' => Carbon::now()
                 ]);
             }

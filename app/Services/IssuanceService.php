@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Issuance\Issuance;
 use App\Models\Issuance\IssuanceItem;
+use App\Models\System\TransactionLog;
+use App\Models\System\HealthCenter;
 use App\Models\Inventory\Batch;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -119,6 +121,17 @@ class IssuanceService
             }
 
             DB::table('Requisition')->where('RequisitionID', $requisitionId)->update(['StatusType' => 'Completed']);
+
+            $healthCenter = HealthCenter::find($requisition->HealthCenterID);
+
+            TransactionLog::create([
+                'UserID' => $userId,
+                'ReferenceType' => "Requisition Issued",
+                'ReferenceID' => $issuance->IssuanceID,
+                'ActionType' => 'Issuance',
+                'ActionDetails' => "Processed issuance for requisition '{$requisition->RequisitionNumber}' for {$healthCenter->Name}.",
+                'ActionDate' => Carbon::now()
+            ]);
 
             return $issuance;
         });

@@ -121,8 +121,6 @@ CREATE TABLE ProcurementOrder (
     POID INT AUTO_INCREMENT PRIMARY KEY,
     UserID INT,
     SupplierID INT,
-    SupplierName VARCHAR(200),
-    SupplierAddress TEXT,
     HealthCenterID INT,
     ContractID INT, -- Reference to Contract
     PONumber VARCHAR(100) UNIQUE, -- Generated e.g. PO-2026-0001

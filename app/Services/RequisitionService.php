@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Requisition\Requisition;
 use App\Models\Requisition\RequisitionItem;
 use App\Models\System\HealthCenter;
+use App\Models\System\TransactionLog;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Controllers\NotificationController;
@@ -15,7 +16,7 @@ class RequisitionService
     {
         return DB::transaction(function () use ($payload, $userId) {
             $hcId = $payload['healthCenterId'] ?? null;
-            
+
             // Legacy logic: if HC name provided but ID missing, find or create
             if (empty($hcId) && !empty($payload['healthCenterName'])) {
                 $hc = HealthCenter::firstOrCreate(
@@ -49,13 +50,22 @@ class RequisitionService
                 ]);
             }
 
-            // 通知 Trigger: Notify Admin and Warehouse of new Central Requisition
+            TransactionLog::create([
+                'UserID' => $userId,
+                'ReferenceType' => "Requisition created",
+                'ReferenceID' => $requisition->RequisitionNumber,
+                'ActionType' => 'Requisition',
+                'ActionDetails' => "Created new requisition '{$requisition->RequisitionNumber}'.",
+                'ActionDate' => Carbon::now()
+            ]);
+
             NotificationController::create(
                 "New Requisition",
                 "New requisition {$requisition->RequisitionNumber} submitted for processing.",
                 "/requisitions",
                 "Warehouse Staff"
             );
+
             NotificationController::create(
                 "New Requisition",
                 "Central requisition {$requisition->RequisitionNumber} is pending review.",
@@ -93,6 +103,15 @@ class RequisitionService
                 ]);
             }
 
+            TransactionLog::create([
+                'UserID' => $userId,
+                'ReferenceType' => "Requisition created",
+                'ReferenceID' => $requisition->RequisitionNumber,
+                'ActionType' => 'Requisition',
+                'ActionDetails' => "Created new requisition '{$requisition->RequisitionNumber}'.",
+                'ActionDate' => Carbon::now()
+            ]);
+
             // 通知 Trigger: Notify Admin and Warehouse of new Local Requisition
             NotificationController::create(
                 "New Local Requisition",
@@ -111,16 +130,6 @@ class RequisitionService
             $requisition = Requisition::findOrFail($id);
             $requisition->update(['StatusType' => $status]);
 
-            // Log the decision
-            DB::table('RequisitionApprovalLog')->insert([
-                'RequisitionID' => $id,
-                'UserID' => $userId,
-                'Decision' => $status,
-                'DecisionDate' => Carbon::now(),
-                'Remarks' => $remarks ?: "Status updated to {$status} via central dashboard."
-            ]);
-
-            // Apply per-item statuses if provided
             if (!empty($itemStatuses)) {
                 foreach ($itemStatuses as $itemId => $itemStatus) {
                     DB::table('RequisitionItem')
@@ -131,7 +140,15 @@ class RequisitionService
                 }
             }
 
-            // 通知 Trigger: Notify Requester of status update
+            TransactionLog::create([
+                'UserID' => $userId,
+                'ReferenceType' => "Requisition {$status}",
+                'ReferenceID' => $requisition->RequisitionNumber,
+                'ActionType' => 'Requisition',
+                'ActionDetails' => "Updated requisition '{$requisition->RequisitionNumber}' status to {$status}.",
+                'ActionDate' => Carbon::now()
+            ]);
+
             NotificationController::create(
                 "Requisition Update",
                 "Your requisition #{$requisition->RequisitionNumber} has been {$status}.",
