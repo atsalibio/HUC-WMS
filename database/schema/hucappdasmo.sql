@@ -89,6 +89,7 @@ CREATE TABLE Users (
 CREATE TABLE CentralInventoryBatch (
     BatchID INT AUTO_INCREMENT PRIMARY KEY,
     LotNumber VARCHAR(100) NULL,
+    BatchNumber VARCHAR(100) NULL,
     ItemID INT NOT NULL,
     WarehouseID INT DEFAULT 1, -- Default to Main Warehouse
     ExpiryDate DATE,
@@ -96,6 +97,7 @@ CREATE TABLE CentralInventoryBatch (
     QuantityReleased INT DEFAULT 0,
     UnitCost DECIMAL(10, 2),
     DateReceived DATE,
+    IsLocked TINYINT(1) DEFAULT 0,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE,
     FOREIGN KEY (WarehouseID) REFERENCES Warehouse(WarehouseID) ON DELETE SET NULL
@@ -119,8 +121,6 @@ CREATE TABLE ProcurementOrder (
     POID INT AUTO_INCREMENT PRIMARY KEY,
     UserID INT,
     SupplierID INT,
-    SupplierName VARCHAR(200),
-    SupplierAddress TEXT,
     HealthCenterID INT,
     ContractID INT, -- Reference to Contract
     PONumber VARCHAR(100) UNIQUE, -- Generated e.g. PO-2026-0001
@@ -296,8 +296,9 @@ CREATE TABLE TransactionAuditLog (
     AuditLogID INT AUTO_INCREMENT PRIMARY KEY,
     UserID INT,
     ReferenceType VARCHAR(100),
-    ReferenceID INT,
+    ReferenceID VARCHAR(100) NULL,
     ActionType VARCHAR(100),
+    ActionDetails TEXT NULL,
     ActionDate DATETIME,
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -329,8 +330,10 @@ CREATE TABLE Report (
     ReportID INT AUTO_INCREMENT PRIMARY KEY,
     UserID INT,
     ReportType VARCHAR(100),
+    ReferenceID INT,
     GeneratedDate DATETIME,
     GeneratedForOffice VARCHAR(200),
+    Data JSON NULL,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -88,9 +88,9 @@
          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="opacity-0 translate-y-2 scale-90"
          class="fixed bottom-10 right-10 z-[100] flex items-center gap-4 px-8 py-5 rounded-[2rem] shadow-2xl border backdrop-blur-md"
-         :class="notificationType === 'success' ? 'bg-white/90 dark:bg-slate-800/90 text-teal-600 border-teal-100 dark:border-teal-900/30' : 'bg-red-50/90 dark:bg-red-900/20 text-red-600 border-red-100 dark:border-red-900/30'"
+         :class="notificationType === 'success' ? 'bg-white/90 dark:bg-slate-800/90 text-blue-600 border-blue-100 dark:border-blue-900/30' : 'bg-red-50/90 dark:bg-red-900/20 text-red-600 border-red-100 dark:border-red-900/30'"
     >
-        <div class="w-8 h-8 rounded-full flex items-center justify-center" :class="notificationType === 'success' ? 'bg-teal-50 dark:bg-teal-900/30' : 'bg-red-100 dark:bg-red-900/30'">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center" :class="notificationType === 'success' ? 'bg-blue-50 dark:bg-blue-900/30' : 'bg-red-100 dark:bg-red-900/30'">
             <template x-if="notificationType === 'success'">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
             </template>
@@ -121,7 +121,7 @@
                     {id: 'activity', label: 'Login Log', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'}
                 ]">
                     <button @click="activeTab = tab.id" 
-                        :class="activeTab === tab.id ? 'bg-slate-900 text-white dark:bg-teal-600 shadow-xl shadow-teal-500/10' : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50 hover:text-slate-600 dark:hover:text-slate-200'"
+                        :class="activeTab === tab.id ? 'bg-slate-900 text-white dark:bg-blue-600 shadow-xl shadow-blue-500/10' : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50 hover:text-slate-600 dark:hover:text-slate-200'"
                         class="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300">
                         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" :d="tab.icon"></path></svg>
                         <span x-text="tab.label"></span>
@@ -144,15 +144,15 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">First Name</label>
-                                <input type="text" name="FName" value="{{ Auth::user()->FName }}" required class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-teal-500/10 transition-all text-sm">
+                                <input type="text" name="FName" value="{{ Auth::user()->FName }}" required class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-blue-500/10 transition-all text-sm">
                             </div>
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Middle Initial / Name</label>
-                                <input type="text" name="MName" value="{{ Auth::user()->MName }}" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-teal-500/10 transition-all text-sm">
+                                <input type="text" name="MName" value="{{ Auth::user()->MName }}" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-blue-500/10 transition-all text-sm">
                             </div>
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Last Name</label>
-                                <input type="text" name="LName" value="{{ Auth::user()->LName }}" required class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-teal-500/10 transition-all text-sm">
+                                <input type="text" name="LName" value="{{ Auth::user()->LName }}" required class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-blue-500/10 transition-all text-sm">
                             </div>
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Account Role</label>
@@ -161,7 +161,7 @@
                         </div>
                         
                         <div class="pt-6">
-                            <button type="submit" class="px-10 py-5 bg-slate-900 dark:bg-teal-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-2xl transition-all active:scale-95">Update Primary Identity</button>
+                            <button type="submit" class="px-10 py-5 bg-slate-900 dark:bg-blue-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-2xl transition-all active:scale-95">Update Primary Identity</button>
                         </div>
                     </form>
                 </div>
@@ -178,15 +178,15 @@
                     <form @submit.prevent="submitPassword($event)" class="p-10 space-y-8 max-w-lg">
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Secret</label>
-                            <input type="password" name="currentPassword" required class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-teal-500/10 transition-all text-sm">
+                            <input type="password" name="currentPassword" required class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-blue-500/10 transition-all text-sm">
                         </div>
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Access Secret</label>
-                            <input type="password" name="newPassword" required minlength="8" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-teal-500/10 transition-all text-sm">
+                            <input type="password" name="newPassword" required minlength="8" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-blue-500/10 transition-all text-sm">
                         </div>
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm Secret</label>
-                            <input type="password" name="confirmPassword" required class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-teal-500/10 transition-all text-sm">
+                            <input type="password" name="confirmPassword" required class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl font-bold dark:text-white focus:ring-4 focus:ring-blue-500/10 transition-all text-sm">
                         </div>
                         <div class="pt-6">
                             <button type="submit" class="px-10 py-5 bg-red-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl transition-all active:scale-95">Rotate Authentication Secret</button>
@@ -210,12 +210,12 @@
                             {id: 'system', label: 'Sync Output', desc: 'System-wide parity', icon: 'M9.75 17L9 21h6l-.75-4M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'}
                         ]">
                             <button @click="setTheme(theme.id)" 
-                                :class="currentTheme === theme.id ? 'border-teal-500 bg-teal-50/10 ring-4 ring-teal-500/5' : 'border-slate-100 dark:border-slate-800 hover:border-slate-200'"
+                                :class="currentTheme === theme.id ? 'border-blue-500 bg-blue-50/10 ring-4 ring-blue-500/5' : 'border-slate-100 dark:border-slate-800 hover:border-slate-200'"
                                 class="relative p-8 rounded-[2.5rem] border-2 transition-all text-left group">
-                                <div x-show="currentTheme === theme.id" class="absolute top-6 right-6 text-teal-500">
+                                <div x-show="currentTheme === theme.id" class="absolute top-6 right-6 text-blue-500">
                                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
                                 </div>
-                                <div class="mb-6 w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-teal-500 transition-colors">
+                                <div class="mb-6 w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" :d="theme.icon"></path></svg>
                                 </div>
                                 <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mb-1" x-text="theme.label"></h4>
@@ -235,16 +235,16 @@
                             <p class="text-xs font-black text-slate-400 uppercase tracking-widest mt-1">Authentication & Security Audit</p>
                         </div>
                         <div class="flex p-1.5 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800">
-                            <button @click="subTab = 'transaction'" :class="subTab === 'transaction' ? 'bg-white dark:bg-slate-800 text-teal-600 shadow-lg' : 'text-slate-400'" class="px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Transactions</button>
-                            <button @click="subTab = 'security'" :class="subTab === 'security' ? 'bg-white dark:bg-slate-800 text-teal-600 shadow-lg' : 'text-slate-400'" class="px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Security</button>
+                            <button @click="subTab = 'transaction'" :class="subTab === 'transaction' ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-lg' : 'text-slate-400'" class="px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Transactions</button>
+                            <button @click="subTab = 'security'" :class="subTab === 'security' ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-lg' : 'text-slate-400'" class="px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Security</button>
                         </div>
                     </div>
                     
                     <div class="p-10">
                         <div x-show="subTab === 'transaction'" class="space-y-4">
                             @forelse($logs as $log)
-                                <div class="flex items-center p-6 bg-slate-50 dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-slate-800/50 transition-all hover:border-teal-500/30">
-                                    <div class="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center text-teal-500 mr-6 shadow-sm border border-slate-100 dark:border-slate-700/50">
+                                <div class="flex items-center p-6 bg-slate-50 dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-slate-800/50 transition-all hover:border-blue-500/30">
+                                    <div class="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center text-blue-500 mr-6 shadow-sm border border-slate-100 dark:border-slate-700/50">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </div>
                                     <div class="flex-1 min-w-0">
@@ -253,7 +253,7 @@
                                     </div>
                                     <div class="text-right">
                                         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">{{ optional($log->ActionDate)->diffForHumans() ?? 'N/A' }}</p>
-                                        <span class="px-3 py-1 bg-teal-50 dark:bg-teal-900/20 text-teal-600 rounded-lg text-[8px] font-black uppercase tracking-widest mt-1 inline-block">{{ $log->ReferenceType }}</span>
+                                        <span class="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-lg text-[8px] font-black uppercase tracking-widest mt-1 inline-block">{{ $log->ReferenceType }}</span>
                                     </div>
                                 </div>
                             @empty
@@ -300,7 +300,7 @@
                             </div>
                             <div class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" checked class="sr-only peer">
-                                <div class="w-14 h-8 bg-slate-200 peer-focus:outline-none dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-teal-500 rounded-full"></div>
+                                <div class="w-14 h-8 bg-slate-200 peer-focus:outline-none dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-500 rounded-full"></div>
                             </div>
                         </div>
                         <div class="flex items-center justify-between p-8 bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem]">
@@ -310,7 +310,7 @@
                             </div>
                             <div class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" class="sr-only peer">
-                                <div class="w-14 h-8 bg-slate-200 peer-focus:outline-none dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-teal-500 rounded-full"></div>
+                                <div class="w-14 h-8 bg-slate-200 peer-focus:outline-none dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-500 rounded-full"></div>
                             </div>
                         </div>
                     </div>

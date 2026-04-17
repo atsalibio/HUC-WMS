@@ -20,8 +20,8 @@ class NotificationController extends Controller
 
         $notifications = Notification::unread()
             ->where(function($query) use ($user) {
-                $query->where('user_id', $user->id)
-                      ->orWhere('target_role', $user->Role)
+                $query->where('user_id', '=', $user->UserID)
+                      ->orWhere('target_role', '=', (string)$user->Role)
                       ->orWhere(function($q) {
                           $q->whereNull('user_id')->whereNull('target_role');
                       });
@@ -52,12 +52,12 @@ class NotificationController extends Controller
     public static function create($title, $message, $link = null, $role = null, $userId = null, $priority = 'Normal')
     {
         return Notification::create([
-            'user_id' => $userId,
-            'target_role' => $role,
-            'title' => $title,
-            'message' => $message,
-            'link' => $link,
-            'priority' => $priority
+            'UserID' => $userId,
+            'TargetRole' => $role,
+            'Title' => $title,
+            'Message' => $message,
+            'Link' => $link,
+            'Priority' => $priority
         ]);
     }
 }

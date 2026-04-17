@@ -14,6 +14,8 @@ class ProcurementOrderItem extends Model
     protected $fillable = [
         'POID',
         'ItemID',
+        'BatchID',
+        'LotNumber',
         'QuantityOrdered',
         'UnitCost',
         'ExpiryDate',

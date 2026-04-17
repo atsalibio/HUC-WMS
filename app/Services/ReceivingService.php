@@ -5,8 +5,12 @@ namespace App\Services;
 use App\Models\Procurement\Receiving;
 use App\Models\Procurement\ReceivingItem;
 use App\Models\Inventory\Batch;
+use App\Models\Procurement\Supplier;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Http\Controllers\NotificationController;
+use App\Models\System\TransactionLog;
+
 
 class ReceivingService
 {
@@ -18,13 +22,17 @@ class ReceivingService
             }
 
             // Mark PO as completed (For now, full receipts only)
+            $po = DB::table('ProcurementOrder')->where('POID', $poId)->first();
             DB::table('ProcurementOrder')->where('POID', $poId)->update(['StatusType' => 'Completed']);
 
             $receiving = Receiving::create([
                 'POID' => $poId,
                 'ReceivedDate' => Carbon::now(),
                 'UserID' => $userId,
+                'StatusType' => 'Received'
             ]);
+
+            $supplierData = Supplier::find($po->SupplierID);
 
             foreach ($items as $item) {
                 $qtyReceived = (float)($item['quantityReceived'] ?? 0);
@@ -37,24 +45,98 @@ class ReceivingService
                     } catch (\Exception $e) {}
                 }
 
-                // 1. Create a batch in central inventory
+                // 1. Fetch LotNumber from ProcurementOrderItem if it exists
+                $poItem = DB::table('ProcurementOrderItem')
+                    ->where('POID', $poId)
+                    ->where('ItemID', $item['itemId'])
+                    ->first();
+
+                $lotNumber = $item['lotNumber'] ?? ($poItem->LotNumber ?? ('LOT-' . strtoupper(bin2hex(random_bytes(3)))));
+
+                // 2. Create a batch in central inventory
                 $batch = Batch::create([
                     'ItemID' => $item['itemId'],
-                    'LotNumber' => $item['lotNumber'] ?? ('LOT-' . time()),
+                    'LotNumber' => $lotNumber,
+                    //'BatchNumber' => $item['batchId'] ?? ($poItem->BatchID ?? null),
                     'WarehouseID' => $warehouseId,
                     'ExpiryDate' => $expiryDate,
                     'QuantityOnHand' => $qtyReceived,
                     'QuantityReleased' => 0,
+                    'IsLocked' => false, // Set to false by default so it can be discarded/adjusted if damaged
                     'UnitCost' => (float)($item['unitCost'] ?? 0),
                     'DateReceived' => Carbon::now(),
                 ]);
 
-                // 2. Link batch to the receiving record
+                // 3. Link batch to the receiving record
                 ReceivingItem::create([
                     'ReceivingID' => $receiving->ReceivingID,
                     'ItemID' => $item['itemId'],
                     'BatchID' => $batch->BatchID,
                     'QuantityReceived' => $qtyReceived,
+                ]);
+            }
+
+            // 通知 Trigger: Notify Admin and Accounting
+            if ($po) {
+                NotificationController::create(
+                    "Delivery Processed",
+                    "Items for Order {$po->PONumber} from {$supplierData->Name} have been processed.",
+                    "/receiving",
+                    "Administrator"
+                );
+                NotificationController::create(
+                    "Valuation Update Required",
+                    "New stock from {$supplierData->Name} is ready for financial audit.",
+                    "/reports",
+                    "Accounting Office User"
+                );
+
+                // Add to System Ledger
+                TransactionLog::create([
+                    'UserID' => $userId,
+                    'ReferenceType' => 'Delivery Processed',
+                    'ReferenceID' => $po->PONumber,
+                    'ActionType' => 'Receiving',
+                    'ActionDetails' => "Processed delivery for PO '{$po->PONumber}' from supplier '{$supplierData->Name}'.",
+                    'ActionDate' => Carbon::now()
+                ]);
+            }
+
+            return $receiving;
+        });
+    }
+
+    public function discardShipment($poId, int $userId)
+    {
+        return DB::transaction(function () use ($poId, $userId) {
+            $po = DB::table('ProcurementOrder')->where('POID', $poId)->first();
+
+            // Mark PO as Rejected
+            DB::table('ProcurementOrder')->where('POID', $poId)->update(['StatusType' => 'Rejected']);
+
+            // Create Receiving Record as "Discarded"
+            $receiving = Receiving::create([
+                'POID' => $poId,
+                'ReceivedDate' => Carbon::now(),
+                'UserID' => $userId,
+                'StatusType' => 'Discarded'
+            ]);
+
+            if ($po) {
+                NotificationController::create(
+                    "Shipment Discarded",
+                    "The shipment for Order {$po->PONumber} has been rejected at the receiving bay.",
+                    "/receiving",
+                    "Administrator"
+                );
+
+                TransactionLog::create([
+                    'UserID' => $userId,
+                    'ReferenceType' => 'Shipment Rejected',
+                    'ReferenceID' => $po->PONumber,
+                    'ActionType' => 'Receiving',
+                    'ActionDetails' => "Discarded shipment for PO '{$po->PONumber}' at receiving bay.",
+                    'ActionDate' => Carbon::now()
                 ]);
             }
 

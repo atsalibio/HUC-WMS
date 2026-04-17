@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\System\HealthCenter;
 
 class HCInventoryController extends Controller
 {
@@ -23,11 +24,29 @@ class HCInventoryController extends Controller
             $query->where('hb.HealthCenterID', $hcId);
         }
 
-        $hc_inventory = $query->where('hb.QuantityOnHand', '>', 0)
-            ->select('i.ItemName', 'i.ItemType', 'hb.BatchID', 'hb.QuantityOnHand', 'hb.ExpiryDate', 'hb.ItemID', 'hc.Name as HealthCenterName', 'hc.HealthCenterID')
+        $hc_inventory = $query
+            ->where('hb.QuantityOnHand', '>', 0)
+            ->select(
+                'hb.HCBatchID',
+                'hb.BatchID',
+                'hb.ItemID',
+                'hb.HealthCenterID',
+                'hb.QuantityOnHand',
+                'hb.ExpiryDate',
+                'hb.UnitCost',
+                'hb.DateReceivedAtHC',
+                'hb.LotNumber',
+                'i.ItemName',
+                'i.ItemType',
+                'i.UnitOfMeasure',
+                'hc.Name as HealthCenterName'
+            )
             ->orderBy('hb.HealthCenterID')
             ->get();
 
-        return view('pages.hc_inventory', compact('hc_inventory', 'hcId'));
+        $healthCenters = HealthCenter::all();
+        $userRole = $role;
+
+        return view('pages.hc_inventory', compact('hc_inventory', 'hcId', 'healthCenters', 'userRole'));
     }
 }

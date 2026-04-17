@@ -5,8 +5,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
+    protected $table = 'Notification';
     public $timestamps = false;
-
     protected $fillable = [
         'UserID',
         'TargetRole',
@@ -16,7 +16,7 @@ class Notification extends Model
         'Priority',
         'IsRead'
     ];
-    
+
     // Scopes for easy filtering
     public function scopeUnread($query)
     {

@@ -14,6 +14,11 @@ class Receiving extends Model
         'UserID',
         'POID',
         'ReceivedDate',
+        'StatusType',
+    ];
+
+    protected $casts = [
+        'ReceivedDate' => 'datetime',
     ];
 
     public function items()
@@ -24,5 +29,10 @@ class Receiving extends Model
     public function procurementOrder()
     {
         return $this->belongsTo(ProcurementOrder::class, 'POID');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\System\User::class, 'UserID');
     }
 }

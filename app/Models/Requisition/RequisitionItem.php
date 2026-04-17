@@ -13,7 +13,9 @@ class RequisitionItem extends Model
     protected $fillable = [
         'RequisitionID',
         'ItemID',
-        'QuantityRequested'
+        'QuantityRequested',
+        'ItemStatus',
+        'Remarks'
     ];
 
     public function requisition()

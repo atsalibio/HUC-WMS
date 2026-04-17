@@ -15,6 +15,16 @@ class ReceivingItem extends Model
         'ItemID',
         'BatchID',
         'QuantityReceived',
+        'ExpiryDate',
+        'UnitCost',
+        'DateReceived',
+        'WarehouseID',
+    ];
+
+    protected $casts = [
+        'ExpiryDate' => 'date',
+        'DateReceived' => 'date',
+        'UnitCost' => 'decimal:2',
     ];
 
     public function receiving()
@@ -25,5 +35,15 @@ class ReceivingItem extends Model
     public function batch()
     {
         return $this->belongsTo(\App\Models\Inventory\Batch::class, 'BatchID');
+    }
+
+    public function item()
+    {
+        return $this->belongsTo(\App\Models\Inventory\Item::class, 'ItemID');
+    }
+
+    public function warehouse()
+    {
+        return $this->belongsTo(\App\Models\Procurement\Warehouse::class, 'WarehouseID');
     }
 }

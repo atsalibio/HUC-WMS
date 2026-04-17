@@ -17,9 +17,9 @@
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --primary: #0d9488;
-            --primary-light: #14b8a6;
-            --primary-dark: #0f766e;
+            --primary: #2563eb;
+            --primary-light: #60a5fa;
+            --primary-dark: #1e40af;
             --surface: #ffffff;
             --text-primary: #0f172a;
             --text-secondary: #475569;
@@ -36,7 +36,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 25%, #99f6e4 50%, #5eead4 75%, #2dd4bf 100%);
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 25%, #bfdbfe 50%, #93c5fd 75%, #3b82f6 100%);
             background-size: 400% 400%;
             animation: bgShift 12s ease-in-out infinite;
             min-height: 100vh;
@@ -63,9 +63,9 @@
             pointer-events: none;
             z-index: 0;
         }
-        .orb-1 { width: 500px; height: 500px; background: #2dd4bf; top: -120px; left: -100px; animation: orbFloat1 18s ease-in-out infinite; }
-        .orb-2 { width: 400px; height: 400px; background: #0d9488; bottom: -80px; right: -60px; animation: orbFloat2 22s ease-in-out infinite; }
-        .orb-3 { width: 300px; height: 300px; background: #5eead4; top: 50%; left: 60%; animation: orbFloat3 15s ease-in-out infinite; }
+        .orb-1 { width: 500px; height: 500px; background: #3b82f6; top: -120px; left: -100px; animation: orbFloat1 18s ease-in-out infinite; }
+        .orb-2 { width: 400px; height: 400px; background: #1e40af; bottom: -80px; right: -60px; animation: orbFloat2 22s ease-in-out infinite; }
+        .orb-3 { width: 300px; height: 300px; background: #93c5fd; top: 50%; left: 60%; animation: orbFloat3 15s ease-in-out infinite; }
 
         @keyframes orbFloat1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(60px, 40px); } }
         @keyframes orbFloat2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-40px, -60px); } }
@@ -430,7 +430,7 @@
                 border-radius: 50%;
                 object-fit: cover;
                 border: 3px solid var(--primary);
-                box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
                 margin-bottom: 0.75rem;
             }
 
@@ -534,6 +534,14 @@
                     </div>
                 </div>
 
+                <!-- Success Message (server-side) -->
+                @if (session('success'))
+                    <div class="alert alert-success">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        <span>{{ session('success') }}</span>
+                    </div>
+                @endif
+
                 <!-- Validation Errors (server-side) -->
                 @if ($errors->any())
                     <div class="alert alert-error">
@@ -599,14 +607,19 @@ function loginFlow() {
 
                 const result = await response.json();
 
-                if (result.success) {
+                if (response.ok && result.success) {
                     this.message = 'Login successful! Redirecting…';
                     this.messageType = 'success';
                     setTimeout(() => {
                         window.location.href = result.redirect || '{{ route("dashboard") }}';
                     }, 800);
                 } else {
-                    this.message = result.message || 'Invalid username or password.';
+                    if (result.errors) {
+                        // Grab the first validation error message returned by Laravel 422
+                        this.message = Object.values(result.errors)[0][0];
+                    } else {
+                        this.message = result.message || 'Invalid username or password.';
+                    }
                     this.messageType = 'error';
                 }
             } catch (e) {

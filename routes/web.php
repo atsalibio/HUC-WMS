@@ -18,6 +18,7 @@ use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\PatientRequisitionController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\LedgerController;
 
 Route::get('/notifications', [NotificationController::class, 'index'])->name('api.notifications')->middleware('auth');
 Route::post('/notifications/{id}/read', [NotificationController::class, 'read'])->name('api.notifications.read')->middleware('auth');
@@ -48,7 +49,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/requisitions/local', [RequisitionController::class, 'storeLocal'])->name('requisitions.local.store');
     Route::patch('/requisitions/{id}/status', [RequisitionController::class, 'updateStatus'])->name('requisitions.updateStatus');
     Route::post('/issuances/process', [IssuanceController::class, 'process'])->name('issuances.process');
+    Route::get('/issuances/fefo-batches', [IssuanceController::class, 'getFefoAllocation'])->name('issuances.fefo');
     Route::post('/receivings', [ReceivingController::class, 'receive'])->name('receivings.receive');
+    Route::post('/receivings/discard', [ReceivingController::class, 'discard'])->name('receivings.discard');
+
+    // Ledger
+    Route::get('/ledger', [LedgerController::class, 'index'])->name('ledger.index');
+    Route::get('/ledger/summary', [LedgerController::class, 'summary'])->name('ledger.summary');
     
     // New Ported Routes
     Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
@@ -67,6 +74,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/patients/search', [PatientRequisitionController::class, 'searchPatients'])->name('patients.search');
     Route::post('/patient-requisitions', [PatientRequisitionController::class, 'storeRequisition'])->name('patient-requisitions.store');
     Route::patch('/patient-requisitions/{id}/status', [PatientRequisitionController::class, 'updateStatus'])->name('patient-requisitions.updateStatus');
+    Route::post('/patient-requisitions/{id}/dispense', [PatientRequisitionController::class, 'dispense'])->name('patient-requisitions.dispense');
 
     Route::get('/pages/adjustments', [AdjustmentController::class, 'index'])->name('pages.adjustments');
     Route::post('/adjustments/disposal', [AdjustmentController::class, 'storeDisposal']);
@@ -78,6 +86,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/pages/reports', [ReportController::class, 'index'])->name('pages.reports');
     Route::post('/reports/generate', [ReportController::class, 'generate']);
+    Route::get('/reports/{id}', [ReportController::class, 'show']);
+    Route::get('/reports/{id}/export', [ReportController::class, 'exportPdf']);
 
     Route::get('/pages/inventory', [InventoryController::class, 'index'])->name('pages.inventory');
     Route::post('/inventory/item', [InventoryController::class, 'storeItem']);

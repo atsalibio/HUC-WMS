@@ -34,6 +34,23 @@ class AuthController extends Controller
 
         $result = $this->authService->login($request->username, $request->password);
 
+        if ($request->expectsJson() || $request->ajax()) {
+            if (isset($result['error'])) {
+                // Return a 401 Unauthorized or 422 Unprocessable Entity
+                // We'll just return success: false with the error string
+                $errorMsg = is_array($result['error']) ? implode(' ', $result['error']) : (is_string($result['error']) ? $result['error'] : 'Invalid credentials.');
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMsg
+                ], 401);
+            }
+
+            return response()->json([
+                'success' => true,
+                'redirect' => route($this->authService->getRedirectRoute())
+            ]);
+        }
+
         if (isset($result['error'])) {
             return back()->withErrors($result['error']);
         }

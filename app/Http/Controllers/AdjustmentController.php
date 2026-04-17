@@ -15,7 +15,7 @@ class AdjustmentController extends Controller
     public function index()
     {
         $items = Item::all();
-        $inventory = Batch::where('QuantityOnHand', '>', 0)->get();
+        $inventory = Batch::where('QuantityOnHand', '>', 0)->where('IsLocked', false)->get();
         $requisitions = Requisition::with(['healthCenter', 'user', 'items.item', 'issuances.items.batch.item'])
             ->whereIn('StatusType', ['Completed', 'Issued'])
             ->orderBy('RequestDate', 'desc')
@@ -45,6 +45,10 @@ class AdjustmentController extends Controller
 
         return DB::transaction(function() use ($request) {
             $batch = Batch::lockForUpdate()->find($request->batchId);
+            
+            if ($batch->IsLocked) {
+                return response()->json(['success' => false, 'message' => 'Batch is locked and cannot be adjusted.']);
+            }
 
             if ($batch->QuantityOnHand < $request->quantity) {
                 return response()->json(['success' => false, 'message' => 'Insufficient stock in batch.']);
@@ -87,7 +91,11 @@ class AdjustmentController extends Controller
         return DB::transaction(function() use ($request) {
             foreach ($request->items as $item) {
                 $batch = Batch::lockForUpdate()->find($item['batchId']);
-
+                
+                if ($batch->IsLocked) {
+                    throw new \Exception("Batch {$batch->LotNumber} is locked and cannot be returned to.");
+                }
+                
                 Adjustment::create([
                     'BatchID' => $batch->BatchID,
                     'UserID' => Auth::id(),
@@ -115,6 +123,10 @@ class AdjustmentController extends Controller
 
         return DB::transaction(function() use ($request) {
             $batch = Batch::lockForUpdate()->find($request->batchId);
+            
+            if ($batch->IsLocked) {
+                return response()->json(['success' => false, 'message' => 'Batch is locked and cannot be corrected.']);
+            }
 
             // If decreasing, check for sufficient stock
             if ($request->quantity < 0 && $batch->QuantityOnHand < abs($request->quantity)) {

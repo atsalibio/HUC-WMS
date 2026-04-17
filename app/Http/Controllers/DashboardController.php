@@ -15,8 +15,9 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        $lowStockCount = Batch::where('QuantityOnHand', '<', 500)->count();
-        if ($lowStockCount > 0) {
+        // Sample: Logic to auto-generate a notification for low stock
+        $lowStockCount = Batch::where('QuantityOnHand', '<', 500)->where('IsLocked', false)->count();
+        if ($lowStockCount > 0 && optional($user)->Role !== 'Health Center Staff') {
             Notification::firstOrCreate(
                 ['Title' => 'Low Stock Warning', 'IsRead' => false, 'TargetRole' => 'Head Pharmacist'],
                 [
@@ -37,10 +38,14 @@ class DashboardController extends Controller
             $patientReqQuery->where('HealthCenterID', $user->HealthCenterID);
         }
 
+        $isHC = $user && $user->Role === 'Health Center Staff';
+
         $stats = [
             'pending_reqs' => (clone $requisitionsQuery)->where('StatusType', 'Pending')->count(),
-            'pending_pos' => (clone $procurementQuery)->where('StatusType', 'Pending')->count(),
-            'low_stock' => Batch::where('QuantityOnHand', '<', 500)->count(),
+            'completed_reqs' => (clone $requisitionsQuery)->where('StatusType', 'Completed')->count(),
+            'pending_pos' => $isHC ? 0 : (clone $procurementQuery)->where('StatusType', 'Pending')->count(),
+            'completed_pos' => $isHC ? 0 : (clone $procurementQuery)->where('StatusType', 'Completed')->count(),
+            'low_stock' => $isHC ? 0 : Batch::where('QuantityOnHand', '<', 500)->where('IsLocked', false)->count(),
             'pending_patient_reqs' => (clone $patientReqQuery)->where('StatusType', 'Pending')->count(),
         ];
 
@@ -54,11 +59,23 @@ class DashboardController extends Controller
         $pendingPatientReqs = collect();
         if (in_array(optional($user)->Role, ['Administrator', 'Head Pharmacist'])) {
             $pendingPatientReqs = \App\Models\HealthCenter\HCPatientRequisition::with(['patient', 'healthCenter'])->where('StatusType', 'Pending')->latest('RequestDate')->limit(5)->get();
+        } elseif (optional($user)->Role === 'Health Center Staff') {
+            $pendingPatientReqs = (clone $patientReqQuery)->with(['patient', 'healthCenter'])->latest('RequestDate')->limit(5)->get();
         }
 
         $view = 'dashboard';
         if ($user) {
-            $roleSlug = strtolower(explode(' ', $user->Role)[0]);
+            $roleMap = [
+                'Administrator' => 'admin',
+                'Health Center Staff' => 'health',
+                'Head Pharmacist' => 'pharmacist',
+                'Warehouse Staff' => 'warehouse',
+                'Accounting Office User' => 'accounting',
+                'CMO/GSO/COA User' => 'cmo'
+            ];
+
+            $roleSlug = $roleMap[$user->Role] ?? strtolower(explode(' ', $user->Role)[0]);
+
             if (view()->exists($roleSlug . '.dashboard')) {
                 $view = $roleSlug . '.dashboard';
             }

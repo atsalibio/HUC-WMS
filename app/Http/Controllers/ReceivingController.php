@@ -26,7 +26,8 @@ class ReceivingController extends Controller
             'items.*.quantityReceived' => 'required|numeric|min:0.01',
             'items.*.unitCost' => 'sometimes|numeric|min:0',
             'items.*.expiryDate' => 'nullable|date',
-            'items.*.lotNumber' => 'required|string',
+            'items.*.lotNumber' => 'nullable|string',
+            'items.*.batchId' => 'nullable|string',
         ]);
 
         $user = Auth::user();
@@ -35,6 +36,22 @@ class ReceivingController extends Controller
             $result = $this->receivingService->receiveItems($data['poId'], $data['items'], $user['UserID'], $data['warehouseId']);
             return response()->json(['success' => true, 'receiving' => $result]);
 
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function discard(Request $request)
+    {
+        $data = $request->validate([
+            'poId' => 'required',
+        ]);
+
+        $user = Auth::user();
+
+        try {
+            $result = $this->receivingService->discardShipment($data['poId'], $user->UserID);
+            return response()->json(['success' => true, 'receiving' => $result]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }

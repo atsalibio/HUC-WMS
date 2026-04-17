@@ -111,4 +111,22 @@ class PatientRequisitionController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to update requisition status'], 500);
         }
     }
+
+    public function dispense($id)
+    {
+        $user = Auth::user();
+        \Log::info("Attempting to dispense requisition ID: {$id} for user: " . ($user->UserID ?? 'N/A'));
+        try {
+            // First ensure it's Approved (triggers stock deduction in Service)
+            $this->patientRequisitionService->updateStatus($id, 'Approved', $user->UserID);
+            // Then mark as Completed
+            $requisition = $this->patientRequisitionService->updateStatus($id, 'Completed', $user->UserID);
+            
+            \Log::info("Successfully dispensed requisition ID: {$id}");
+            return response()->json(['success' => true, 'requisition' => $requisition]);
+        } catch (\Exception $e) {
+            \Log::error('Dispense failed for ID ' . $id . ': ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
 }

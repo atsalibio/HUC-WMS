@@ -12,11 +12,13 @@ class Batch extends Model
 
     protected $fillable = [
         'LotNumber',
+        'BatchNumber',
         'ItemID',
         'WarehouseID',
         'ExpiryDate',
         'QuantityOnHand',
         'QuantityReleased',
+        'IsLocked',
         'UnitCost',
         'DateReceived',
     ];

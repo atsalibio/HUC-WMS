@@ -5,14 +5,27 @@ namespace App\Services;
 use App\Models\HealthCenter\HCPatient;
 use App\Models\HealthCenter\HCPatientRequisition;
 use App\Models\HealthCenter\HCPatientRequisitionItem;
+use App\Models\System\TransactionLog;
+use App\Models\System\HealthCenter;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class PatientRequisitionService
 {
-    public function createPatient(array $data)
+    public function createPatient(array $data, $userId)
     {
-        return HCPatient::create($data);
+        $patient = HCPatient::create($data);
+
+        TransactionLog::create([
+            'UserID' => $userId,
+            'ReferenceType' => "Patient account created",
+            'ReferenceID' => $patient->PatientID,
+            'ActionType' => 'Patient Requisition',
+            'ActionDetails' => "Created new patient account.",
+            'ActionDate' => Carbon::now()
+        ]);
+
+        return $patient;
     }
 
     public function searchPatients(string $query, $healthCenterId, $role)
@@ -52,6 +65,16 @@ class PatientRequisitionService
 
             $reqNum = 'PREQ-' . date('Y') . '-' . str_pad($requisition->PatientReqID, 5, '0', STR_PAD_LEFT);
             $requisition->update(['RequisitionNumber' => $reqNum]);
+            $healthCenter = HealthCenter::find($data['healthCenterId']);
+
+            TransactionLog::create([
+                'UserID' => $userId,
+                'ReferenceType' => "'{$healthCenter->Name}' PatientRequisition created",
+                'ReferenceID' => $requisition->RequisitionNumber,
+                'ActionType' => 'Patient Requisition',
+                'ActionDetails' => "Created new patient requisition '{$requisition->RequisitionNumber}' for {$healthCenter->Name}.",
+                'ActionDate' => Carbon::now()
+            ]);
 
             foreach ($data['items'] as $item) {
                 HCPatientRequisitionItem::create([
@@ -69,13 +92,14 @@ class PatientRequisitionService
     {
         return DB::transaction(function () use ($reqId, $status, $userId) {
             $requisition = HCPatientRequisition::findOrFail($reqId);
-            
+            $healthCenter = HealthCenter::find($requisition->HealthCenterID);
+
             if ($status === 'Approved' && $requisition->StatusType !== 'Approved') {
                 // Deduct from HC inventory
                 $items = $requisition->items;
                 foreach ($items as $item) {
                     $remaining = $item->QuantityRequested;
-                    
+
                     $inventory = DB::table('HCInventoryBatch')
                         ->where('HealthCenterID', $requisition->HealthCenterID)
                         ->where('ItemID', $item->ItemID)
@@ -85,24 +109,33 @@ class PatientRequisitionService
 
                     foreach ($inventory as $inv) {
                         if ($remaining <= 0) break;
-                        
+
                         $qtyToDeduct = min($remaining, $inv->QuantityOnHand);
                         DB::table('HCInventoryBatch')
                             ->where('HCBatchID', $inv->HCBatchID)
                             ->decrement('QuantityOnHand', $qtyToDeduct);
-                        
+
                         $remaining -= $qtyToDeduct;
                     }
 
                     if ($remaining > 0) {
-                        // Optional: Handle insufficient stock case
-                        // throw new \Exception("Insufficient local stock for item ID " . $item->ItemID);
+                        $itemName = $item->item->ItemName ?? "Item ID {$item->ItemID}";
+                        throw new \Exception("Insufficient local stock for {$itemName}. Missing: {$remaining}");
                     }
                 }
             }
 
             $requisition->StatusType = $status;
             $requisition->save();
+
+            TransactionLog::create([
+                'UserID' => $userId,
+                'ReferenceType' => "'{$healthCenter->Name}' Patient Requisition {$status}",
+                'ReferenceID' => $requisition->RequisitionNumber,
+                'ActionType' => 'Patient Requisition',
+                'ActionDetails' => "Updated patient requisition '{$requisition->RequisitionNumber}' for {$healthCenter->Name} to status '{$status}'.",
+                'ActionDate' => Carbon::now()
+            ]);
 
             return $requisition;
         });

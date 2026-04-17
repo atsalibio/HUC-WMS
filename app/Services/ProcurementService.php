@@ -6,9 +6,12 @@ use App\Models\Procurement\ProcurementOrder;
 use App\Models\Procurement\ProcurementOrderItem;
 use App\Models\Procurement\Contract;
 use App\Models\System\SecurityLog;
+use App\Models\System\TransactionLog;
+use App\Models\Procurement\Supplier;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request as LaravelRequest;
+use App\Http\Controllers\NotificationController;
 
 class ProcurementService
 {
@@ -28,12 +31,11 @@ class ProcurementService
                 ]);
                 $contractId = $contract->ContractID;
             }
+            $supplierData = Supplier::find($data['supplier_id']);
 
             $po = ProcurementOrder::create([
                 'UserID' => $userId,
                 'SupplierID' => $data['supplier_id'],
-                'SupplierName' => $data['supplier_name'] ?? null,
-                'SupplierAddress' => $data['supplier_address'] ?? null,
                 'HealthCenterID' => $data['health_center_id'] ?? null,
                 'ContractID' => $contractId,
                 'PONumber' => 'PO-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
@@ -53,14 +55,28 @@ class ProcurementService
                 ]);
             }
 
-            SecurityLog::create([
+            TransactionLog::create([
                 'UserID' => $userId,
+                'ReferenceType' => 'Procurement Order Created',
+                'ReferenceID' => $po->PONumber,
                 'ActionType' => 'Procurement Order',
-                'ActionDescription' => 'Created New PO ' . $po->PONumber,
-                'IPAddress' => LaravelRequest::ip(),
-                'ModuleAffected' => 'Procurement',
-                'ActionDate' => Carbon::now(),
+                'ActionDetails' => "Created new procurement order PO '{$po->PONumber}'.",
+                'ActionDate' => Carbon::now()
             ]);
+
+            NotificationController::create(
+                "New Procurement Order",
+                "Order {$po->PONumber} was created for " . ($supplierData -> Name ?? 'new supplier') . ".",
+                "/procurement",
+                "Warehouse Staff"
+            );
+
+            NotificationController::create(
+                "New Procurement Order",
+                "Order {$po->PONumber} was created for " . ($supplierData -> Name ?? 'new supplier') . ".",
+                "/procurement",
+                "Administrator"
+            );
 
             return $po;
         });
@@ -80,6 +96,25 @@ class ProcurementService
             'ModuleAffected' => 'Procurement',
             'ActionDate' => Carbon::now(),
         ]);
+
+        TransactionLog::create([
+            'UserID' => $userId,
+            'ReferenceType' => "Procurement Order {$status}",
+            'ReferenceID' => $po->PONumber,
+            'ActionType' => 'Procurement Order',
+            'ActionDetails' => "Updated procurement order PO '{$po->PONumber}' status to {$status}.",
+            'ActionDate' => Carbon::now()
+        ]);
+
+        // 通知 Trigger: Notify Requester of status update
+        NotificationController::create(
+            "Procurement Update",
+            "Your order #{$po->PONumber} has been {$status}.",
+            "/procurement",
+            null,
+            $po->UserID,
+            $status === 'Rejected' ? 'High' : 'Normal'
+        );
 
         return $po;
     }
