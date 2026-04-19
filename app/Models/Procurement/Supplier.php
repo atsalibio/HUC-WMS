@@ -14,5 +14,8 @@ class Supplier extends Model
         'Name',
         'Address',
         'ContactInfo',
+        'LastUpdated',
+        'IsActive',
+        'DeletedAt'
     ];
 }

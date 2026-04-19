@@ -14,8 +14,7 @@ class RequisitionItem extends Model
         'RequisitionID',
         'ItemID',
         'QuantityRequested',
-        'ItemStatus',
-        'Remarks'
+        'StatusType'
     ];
 
     public function requisition()

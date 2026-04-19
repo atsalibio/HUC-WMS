@@ -2,81 +2,78 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Procurement\Supplier;
+use App\Services\SupplierService;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
 
 class SupplierController extends Controller
 {
+    protected $supplierService;
+
+    public function __construct(SupplierService $supplierService)
+    {
+        $this->supplierService = $supplierService;
+    }
+
     public function index(Request $request)
     {
-        $search = $request->get('search');
-        $sort = $request->get('sort', 'Name');
-        $direction = $request->get('direction', 'asc');
-
-        $query = Supplier::query();
-
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('Name', 'LIKE', "%{$search}%")
-                  ->orWhere('Address', 'LIKE', "%{$search}%")
-                  ->orWhere('ContactInfo', 'LIKE', "%{$search}%");
-            });
-        }
-
-        $suppliers = $query->orderBy($sort, $direction)->get();
-
         if ($request->ajax()) {
-            return response()->json(['suppliers' => $suppliers]);
+            $suppliers = $this->supplierService->getSuppliers(
+                $request->search,
+                $request->sort ?? 'Name',
+                $request->direction ?? 'asc'
+            );
+
+            return response()->json([
+                'success' => true,
+                'suppliers' => $suppliers
+            ]);
         }
 
-        return view('pages.suppliers', [
-            'suppliers' => $suppliers,
-            'currentPage' => 'suppliers'
-        ]);
+        return view('pages.suppliers');
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'Name' => 'required|string|max:200',
-            'Address' => 'nullable|string',
-            'ContactInfo' => 'nullable|string|max:200',
+        $validated = $request->validate([
+            'Name' => 'required|string|max:255',
+            'Address' => 'nullable|string|max:1000',
+            'ContactInfo' => 'nullable|string|max:255',
         ]);
 
-        try {
-            $supplier = Supplier::create($data);
-            return response()->json(['success' => true, 'supplier' => $supplier]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
+        $supplier = $this->supplierService->createSupplier($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Supplier created successfully.',
+            'supplier' => $supplier
+        ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
-        $data = $request->validate([
-            'Name' => 'required|string|max:200',
-            'Address' => 'nullable|string',
-            'ContactInfo' => 'nullable|string|max:200',
+        $validated = $request->validate([
+            'Name' => 'required|string|max:255',
+            'Address' => 'nullable|string|max:1000',
+            'ContactInfo' => 'nullable|string|max:255',
+            'LastUpdated' => 'nullable|date',
         ]);
 
-        try {
-            $supplier = Supplier::findOrFail($id);
-            $supplier->update($data);
-            return response()->json(['success' => true, 'supplier' => $supplier]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
+        $supplier = $this->supplierService->updateSupplier($id, $validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Supplier updated successfully.',
+            'supplier' => $supplier
+        ]);
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
-        try {
-            $supplier = Supplier::findOrFail($id);
-            $supplier->delete();
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
+        $this->supplierService->deleteSupplier($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Supplier deleted successfully.'
+        ]);
     }
 }

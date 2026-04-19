@@ -24,7 +24,7 @@
             class="bg-white dark:bg-slate-800 rounded-[3rem] shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left">
-                    <thead>
+                    <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700/50">
                         <tr
                             class="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400 border-b border-slate-50 dark:border-slate-800">
                             <th class="px-10 py-6">Order Details</th>
@@ -511,7 +511,7 @@
                         this.selectedOrder = null;
                     },
                     formatDate(dateStr) {
-                        if (!dateStr) return 'N/A';
+                        if (!dateStr) return NULL;
                         return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                     },
                     getStatusClass(status) {

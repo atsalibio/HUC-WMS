@@ -9,6 +9,7 @@ use App\Models\Procurement\Supplier;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Controllers\NotificationController;
+use App\Models\Inventory\Item;
 use App\Models\System\TransactionLog;
 
 
@@ -45,28 +46,26 @@ class ReceivingService
                     } catch (\Exception $e) {}
                 }
 
-                // 1. Fetch LotNumber from ProcurementOrderItem if it exists
-                $poItem = DB::table('ProcurementOrderItem')
-                    ->where('POID', $poId)
-                    ->where('ItemID', $item['itemId'])
-                    ->first();
+                $details = Item::find($item['itemId']);
 
                 $lotNumber = $item['lotNumber'] ?? ($poItem->LotNumber ?? ('LOT-' . strtoupper(bin2hex(random_bytes(3)))));
-
                 // 2. Create a batch in central inventory
                 $batch = Batch::create([
                     'ItemID' => $item['itemId'],
                     'LotNumber' => $lotNumber,
-                    //'BatchNumber' => $item['batchId'] ?? ($poItem->BatchID ?? null),
+                    'BatchNumber' => '', // For simplicity, using LotNumber as BatchNumber
                     'WarehouseID' => $warehouseId,
                     'ExpiryDate' => $expiryDate,
                     'QuantityOnHand' => $qtyReceived,
                     'QuantityReleased' => 0,
                     'IsLocked' => false, // Set to false by default so it can be discarded/adjusted if damaged
                     'UnitCost' => (float)($item['unitCost'] ?? 0),
-                    'DateReceived' => Carbon::now(),
+                    'LastUpdated' => Carbon::now(),
                 ]);
 
+                $batchNumber = $item['batchNumber'] ?? ($poItem->BatchNumber ?? ( strtoupper(substr($details->ItemType, 0, 3)) . '-' . strtoupper(substr($details->ItemName, 0, 3)) . '-' . now()->format('Ymd') . $batch->BatchID ));
+
+                $batch->update(['BatchNumber' => $batchNumber]);
                 // 3. Link batch to the receiving record
                 ReceivingItem::create([
                     'ReceivingID' => $receiving->ReceivingID,

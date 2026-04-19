@@ -30,6 +30,7 @@ class RequisitionService
                 'RequisitionNumber' => 'TEMP-' . time(),
                 'HealthCenterID' => $hcId,
                 'UserID' => $userId,
+                'IsUrgent' => $payload['isUrgent'] ?? FALSE,
                 'RequestDate' => Carbon::now(),
                 'StatusType' => 'Pending',
             ]);
@@ -135,7 +136,7 @@ class RequisitionService
                     DB::table('RequisitionItem')
                         ->where('RequisitionItemID', $itemId)
                         ->update([
-                            'ItemStatus' => $itemStatus,
+                            'StatusType' => $itemStatus,
                         ]);
                 }
             }

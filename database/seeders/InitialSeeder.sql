@@ -1,16 +1,41 @@
-SET FOREIGN_KEY_CHECKS = 0;
+# Sample Seed Data for Iloilo City Warehouse Management System
 
--- =========================
--- 1. HEALTH CENTERS
--- =========================
+-- HEALTH CENTERS
 INSERT INTO HealthCenters (Name, Address) VALUES
-('Central Health Unit', 'Central City'),
-('North District Clinic', 'Northtown'),
-('Southside Medical Center', 'Southville');
+('Jaro Health Center', 'Jaro, Iloilo City'),
+('Mandurriao Health Center', 'Mandurriao, Iloilo City'),
+('La Paz Health Center', 'La Paz, Iloilo City');
 
--- =========================
--- 2. USERS (DO NOT TOUCH)
--- =========================
+-- SUPPLIERS
+INSERT INTO Supplier (Name, Address, ContactInfo) VALUES
+('Unilab Pharmaceuticals', 'Makati City, Philippines', '09171234567'),
+('Mercury Drug Supplier Division', 'Quezon City, Philippines', '09181234567'),
+('Southstar Medical Supply', 'Cebu City, Philippines', '09221234567');
+
+-- ITEMS
+INSERT INTO Item (ItemName, Brand, ItemType, UnitOfMeasure, DosageUnit) VALUES
+('Paracetamol', 'Biogesic', 'Medicine', 'Box', '500mg'),
+('Amoxicillin', 'RiteMed', 'Medicine', 'Bottle', '250mg/5mL'),
+('Vitamin C', 'Ceelin', 'Medicine', 'Bottle', '100mg/mL'),
+('Face Mask', 'Generic', 'Supply', 'Box', NULL),
+('Syringe', 'Terumo', 'Supply', 'Piece', NULL),
+('Alcohol', 'Green Cross', 'Supply', 'Bottle', '500mL'),
+('Ibuprofen', 'Advil', 'Medicine', 'Box', '200mg'),
+('Cetirizine', 'Zyrtec', 'Medicine', 'Box', '10mg'),
+('Metformin', 'Generic', 'Medicine', 'Bottle', '500mg'),
+('Insulin Syringe', 'Terumo', 'Supply', 'Piece', NULL),
+('Disposable Gloves', 'Generic', 'Supply', 'Box', NULL),
+('Cotton Balls', 'Generic', 'Supply', 'Pack', NULL),
+('Bandage', 'Generic', 'Supply', 'Roll', NULL),
+('ORS', 'Hydrite', 'Medicine', 'Sachet', '4.1g'),
+('Nebulizer Mask', 'Omron', 'Supply', 'Piece', NULL),
+('Salbutamol', 'Ventolin', 'Medicine', 'Bottle', '2mg/5mL');
+
+-- WAREHOUSES
+INSERT INTO Warehouse (WarehouseName, Location, WarehouseType) VALUES
+('Main Central Warehouse', 'Iloilo City Proper', 'Central');
+
+-- USERS
 INSERT INTO Users (Username, FName, LName, Role, Password, HealthCenterID) VALUES
 ('admin', 'Admin', 'User', 'Administrator', '$2y$12$O7RbF0hFRFrrEBmXVFq6ouNuO.s.ua1pObOPTPoWgBCVqlpuL4y9y', NULL),
 ('hstaff1', 'Health', 'Staff', 'Health Center Staff', '$2y$12$O7RbF0hFRFrrEBmXVFq6ouNuO.s.ua1pObOPTPoWgBCVqlpuL4y9y', 1),
@@ -20,201 +45,142 @@ INSERT INTO Users (Username, FName, LName, Role, Password, HealthCenterID) VALUE
 ('frank', 'Frank', 'Gold', 'Accounting Office User', '$2y$12$O7RbF0hFRFrrEBmXVFq6ouNuO.s.ua1pObOPTPoWgBCVqlpuL4y9y', NULL),
 ('grace', 'Grace', 'Silver', 'CMO/GSO/COA User', '$2y$12$O7RbF0hFRFrrEBmXVFq6ouNuO.s.ua1pObOPTPoWgBCVqlpuL4y9y', NULL);
 
-
--- =========================
--- 3. ITEMS
--- =========================
-INSERT INTO Item (ItemName, Brand, ItemType, UnitOfMeasure, DosageUnit) VALUES
-('Paracetamol 500mg', 'Generic', 'Analgesic', 'Tablet', '500mg'),
-('Amoxicillin 250mg', 'Generic', 'Antibiotic', 'Capsule', '250mg'),
-('Gauze Pads 4x4', 'MedSupply', 'Medical Supply', 'Pack', NULL),
-('Salbutamol Nebule', 'AstraZeneca', 'Respiratory', 'Nebule', '2.5mg/ml'),
-('Losartan 50mg', 'Generic', 'Cardiovascular', 'Tablet', '50mg'),
-('Antiseptic Solution 500ml', 'Generic', 'Antiseptic', 'Bottle', '500ml');
-
--- =========================
--- 4. WAREHOUSE
--- =========================
-INSERT INTO Warehouse (WarehouseName, Location, WarehouseType) VALUES
-('Main Warehouse', 'Central City', 'Central');
-
--- =========================
--- 5. SUPPLIERS
--- =========================
-INSERT INTO Supplier (Name, Address, ContactInfo) VALUES
-('MedSupply Inc.', 'Pharma Lane', '555-1234'),
-('Global Health Distributors', 'Wellness Ave', '555-5678');
-
--- =========================
--- 6. CONTRACTS
--- =========================
+-- CONTRACTS
 INSERT INTO Contract (SupplierID, ContractNumber, StartDate, EndDate, ContractAmount, StatusType) VALUES
-(1, 'CON-2024-001', '2024-01-01', '2026-12-31', 50000.00, 'Active'),
-(2, 'CON-2024-002', '2024-02-01', '2025-12-31', 75000.00, 'Active');
+(1, 'CONT-2026-001', '2026-01-01', '2026-12-31', 500000.00, 'Active'),
+(2, 'CONT-2026-002', '2026-01-15', '2026-12-31', 300000.00, 'Active');
 
--- =========================
--- 7. INVENTORY BATCHES
--- =========================
-INSERT INTO CentralInventoryBatch
-(ItemID, LotNumber, WarehouseID, ExpiryDate, QuantityOnHand, QuantityReleased, UnitCost, DateReceived)
-VALUES
-(1, 'LOT001', 1, '2025-12-31', 4500, 0, 0.10, '2023-01-01'),
-(1, 'LOT002', 1, '2025-06-30', 3000, 0, 0.11, '2023-01-01'),
-(2, 'LOT003', 1, '2026-02-28', 1200, 0, 0.25, '2023-01-01'),
-(3, 'LOT004', 1, '2027-01-31', 8000, 0, 1.50, '2023-01-01'),
-(4, 'LOT005', 1, '2025-05-31', 150, 0, 2.10, '2023-01-01'),
-(5, 'LOT006', 1, '2026-08-31', 2500, 0, 0.50, '2023-01-01'),
-(6, 'LOT007', 1, '2028-01-01', 500, 0, 3.00, '2023-01-01');
+-- PROCUREMENT ORDERS
+INSERT INTO ProcurementOrder (UserID, SupplierID, HealthCenterID, ContractID, PONumber, PODate, StatusType, DocumentType) VALUES
+(1, 1, NULL, 1, 'PO-2026-0001', '2026-01-10 09:00:00', 'Approved', 'Purchase Order'),
+(1, 2, NULL, 2, 'PO-2026-0002', '2026-01-15 10:30:00', 'Approved', 'Purchase Order');
 
--- =========================
--- 8. PROCUREMENT ORDER
--- =========================
-INSERT INTO ProcurementOrder
-(UserID, SupplierID, SupplierName, SupplierAddress, HealthCenterID, ContractID, PONumber, PODate, StatusType, PhotoPath, DocumentType)
-VALUES
-(2, 1, 'MedSupply Inc.', 'Pharma Lane', 1, 1, 'PO-240001', '2023-10-10 09:00:00', 'Approved', NULL, 'Purchase Order'),
-(3, 2, 'Global Health Distributors', 'Wellness Ave', 2, 2, 'PO-240002', '2023-10-12 14:30:00', 'Pending', NULL, 'Purchase Order'),
-(5, 1, 'MedSupply Inc.', 'Pharma Lane', NULL, 1, 'PO-230003', '2023-09-15 11:00:00', 'Completed', NULL, 'Purchase Order');
-
--- =========================
--- 9. PROCUREMENT ORDER ITEMS
--- =========================
+-- PROCUREMENT ORDER ITEMS
 INSERT INTO ProcurementOrderItem (POID, ItemID, QuantityOrdered, UnitCost, ExpiryDate) VALUES
-(1, 1, 5000, 0.10, '2025-12-31'),
-(1, 3, 2000, 1.50, '2027-01-31'),
-(2, 5, 3000, 0.50, '2026-08-31'),
-(3, 2, 1500, 0.25, '2026-02-28');
+(1, 1, 1000, 5.50, '2027-01-31'),
+(1, 2, 500, 12.00, '2027-06-30'),
+(1, 4, 200, 150.00, NULL),
+(2, 3, 300, 85.00, '2027-03-31'),
+(2, 6, 150, 75.00, '2028-01-15'),
+(2, 7, 800, 6.50, '2027-08-31'),
+(2, 8, 600, 4.25, '2027-09-30'),
+(2, 9, 400, 8.75, '2028-02-28'),
+(2, 10, 1000, 12.00, NULL),
+(2, 11, 500, 250.00, NULL),
+(2, 12, 300, 45.00, NULL),
+(2, 13, 250, 35.00, NULL),
+(2, 14, 1200, 3.00, '2027-12-31'),
+(2, 15, 150, 180.00, NULL),
+(2, 16, 350, 65.00, '2027-11-30');
 
--- =========================
--- 10. RECEIVING
--- =========================
+-- CENTRAL INVENTORY BATCHES
+INSERT INTO CentralInventoryBatch (LotNumber, BatchNumber, ItemID, WarehouseID, ExpiryDate, QuantityOnHand, QuantityReleased, UnitCost) VALUES
+('LOT-001', 'BATCH-PARA-001', 1, 1, '2027-01-31', 1000, 200, 5.50),
+('LOT-002', 'BATCH-AMOX-001', 2, 1, '2027-06-30', 500, 100, 12.00),
+('LOT-003', 'BATCH-VITC-001', 3, 1, '2027-03-31', 300, 50, 85.00),
+('LOT-004', 'BATCH-MASK-001', 4, 1, NULL, 200, 20, 150.00),
+('LOT-005', 'BATCH-ALCOHOL-001', 6, 1, '2028-01-15', 150, 25, 75.00),
+('LOT-006', 'BATCH-IBU-001', 7, 1, '2027-08-31', 800, 120, 6.50),
+('LOT-007', 'BATCH-CET-001', 8, 1, '2027-09-30', 600, 80, 4.25),
+('LOT-008', 'BATCH-MET-001', 9, 1, '2028-02-28', 400, 40, 8.75),
+('LOT-009', 'BATCH-SYR-001', 10, 1, NULL, 1000, 150, 12.00),
+('LOT-010', 'BATCH-GLOVE-001', 11, 1, NULL, 500, 50, 250.00),
+('LOT-011', 'BATCH-COTTON-001', 12, 1, NULL, 300, 20, 45.00),
+('LOT-012', 'BATCH-BANDAGE-001', 13, 1, NULL, 250, 15, 35.00),
+('LOT-013', 'BATCH-ORS-001', 14, 1, '2027-12-31', 1200, 200, 3.00),
+('LOT-014', 'BATCH-NEB-001', 15, 1, NULL, 150, 10, 180.00),
+('LOT-015', 'BATCH-SALB-001', 16, 1, '2027-11-30', 350, 30, 65.00);
+
+-- RECEIVING
 INSERT INTO Receiving (UserID, POID, ReceivedDate) VALUES
-(5, 3, '2023-09-20 10:00:00');
+(2, 1, '2026-01-20 08:00:00'),
+(2, 2, '2026-01-25 09:30:00');
 
--- =========================
--- 11. RECEIVING ITEMS
--- =========================
-INSERT INTO ReceivingItem (ReceivingID, ItemID, BatchID, QuantityReceived, ExpiryDate, UnitCost, DateReceived, WarehouseID) VALUES
-(1, 2, 3, 1500, '2026-02-28', 0.25, '2023-09-20', 1);
+-- RECEIVING ITEMS
+INSERT INTO ReceivingItem (ReceivingID, ItemID, BatchID, QuantityReceived, UnitCost, DateReceived, WarehouseID) VALUES
+(1, 1, 1, 1000, 5.50, '2026-01-20', 1),
+(1, 2, 2, 500, 12.00, '2026-01-20', 1),
+(1, 4, 4, 200, 150.00, '2026-01-20', 1),
+(2, 3, 3, 300, 85.00, '2026-01-25', 1),
+(2, 6, 5, 150, 75.00, '2026-01-25', 1),
+(2, 7, 6, 800, 6.50, '2026-01-25', 1),
+(2, 8, 7, 600, 4.25, '2026-01-25', 1),
+(2, 9, 8, 400, 8.75, '2026-01-25', 1),
+(2, 10, 9, 1000, 12.00, '2026-01-25', 1),
+(2, 11, 10, 500, 250.00, '2026-01-25', 1),
+(2, 12, 11, 300, 45.00, '2026-01-25', 1),
+(2, 13, 12, 250, 35.00, '2026-01-25', 1),
+(2, 14, 13, 1200, 3.00, '2026-01-25', 1),
+(2, 15, 14, 150, 180.00, '2026-01-25', 1),
+(2, 16, 15, 350, 65.00, '2026-01-25', 1);
 
--- =========================
--- 12. REQUISITIONS
--- =========================
+-- REQUISITIONS
 INSERT INTO Requisition (RequisitionNumber, HealthCenterID, UserID, RequestDate, StatusType) VALUES
-('REQ-2023-001', 1, 2, '2023-10-01 10:00:00', 'Approved'),
-('REQ-2023-002', 2, 2, '2023-10-05 09:00:00', 'Pending'),
-('REQ-2023-003', 3, 3, '2023-10-06 11:30:00', 'Rejected');
+('REQ-2026-0001', 1, 3, '2026-02-01 10:00:00', 'Approved'),
+('REQ-2026-0002', 2, 4, '2026-02-03 14:00:00', 'Pending');
 
--- =========================
--- 13. REQUISITION ITEMS
--- =========================
+-- REQUISITION ITEMS
 INSERT INTO RequisitionItem (RequisitionID, ItemID, QuantityRequested) VALUES
-(1, 1, 1000),
-(1, 3, 500),
-(2, 2, 500),
-(2, 4, 200),
-(2, 6, 100),
-(3, 5, 2000);
+(1, 1, 200),
+(1, 4, 20),
+(2, 2, 100),
+(2, 6, 30);
 
--- =========================
--- 14. APPROVAL LOG
--- =========================
-INSERT INTO ApprovalLog (RequisitionID, UserID, Decision, DecisionDate) VALUES
-(1, 4, 'Approved', '2023-10-02 14:00:00'),
-(3, 1, 'Rejected', '2023-10-07 16:00:00');
-
--- =========================
--- 15. ISSUANCE
--- =========================
+-- ISSUANCE
 INSERT INTO Issuance (RequisitionID, UserID, IssueDate, StatusType) VALUES
-(1, 5, '2023-10-03 15:00:00', 'Issued');
+(1, 2, '2026-02-05 09:00:00', 'Issued');
 
--- =========================
--- 16. ISSUANCE ITEMS
--- =========================
+-- ISSUANCE ITEMS
 INSERT INTO IssuanceItem (IssuanceID, BatchID, RequisitionItemID, QuantityIssued) VALUES
-(1, 1, 1, 1000),
-(1, 4, 2, 500);
+(1, 1, 1, 200),
+(1, 4, 2, 20);
 
--- =========================
--- 17. REQUISITION ADJUSTMENT
--- =========================
-INSERT INTO RequisitionAdjustment (IssuanceID, UserID, AdjustmentType, AdjustmentDate, Reason) VALUES
-(1, 5, 'Return', '2023-10-04 10:00:00', 'Excess quantity');
+-- HEALTH CENTER INVENTORY BATCHES
+INSERT INTO HCInventoryBatch (HealthCenterID, ItemID, BatchID, LotNumber, QuantityReceived, QuantityOnHand, UnitCost) VALUES
+(1, 1, 1, 'LOT-001', 200, 180, 5.50),
+(1, 4, 4, 'LOT-004', 20, 18, 150.00),
+(2, 2, 2, 'LOT-002', 100, 100, 12.00);
 
--- =========================
--- 18. REQUISITION ADJUSTMENT DETAIL
--- =========================
-INSERT INTO RequisitionAdjustmentDetail (RequisitionAdjustmentID, BatchID, QuantityAdjusted) VALUES
-(1, 1, -100);
+-- ADJUSTMENT REQUESTS
+INSERT INTO AdjustmentRequest (UserID, AdjustmentType, Reason, StatusType, AdjustmentDate) VALUES
+(2, 'Disposal', 'Expired stock found during inspection', 'Pending', '2026-03-01 13:00:00');
 
--- =========================
--- 19. INVENTORY ADJUSTMENT
--- =========================
-INSERT INTO InventoryAdjustment (BatchID, UserID, AdjustmentType, AdjustmentQuantity, Reason, AdjustmentDate) VALUES
-(2, 5, 'Disposal', -50, 'Expired', '2023-10-05 12:00:00');
+-- ADJUSTMENT ITEMS
+INSERT INTO AdjustmentItem (AdjustmentID, BatchID, HCBatchID, QuantityAdjusted, StatusType) VALUES
+(1, 1, 1, 20, 'Pending');
 
--- =========================
--- 20. HC INVENTORY BATCH
--- =========================
-INSERT INTO HCInventoryBatch (HealthCenterID, ItemID, BatchID, LotNumber, ExpiryDate, QuantityReceived, QuantityOnHand, UnitCost, DateReceivedAtHC) VALUES
-(1, 1, 1, 'LOT001', '2025-12-31', 1000, 900, 0.10, '2023-10-03'),
-(2, 2, 3, 'LOT003', '2026-02-28', 500, 500, 0.25, '2023-10-04');
-
--- =========================
--- 21. NOTICE OF ISSUE
--- =========================
-INSERT INTO NoticeOfIssue (BatchID, UserID, ReportDate, IssueType, QuantityAffected, StatusType, Remarks) VALUES
-(2, 5, '2023-10-06 14:00:00', 'Damaged', 20, 'Reported', 'Packaging damaged');
-
--- =========================
--- 22. TRANSACTION AUDIT LOG
--- =========================
-INSERT INTO TransactionAuditLog (UserID, ReferenceType, ReferenceID, ActionType, ActionDate) VALUES
-(5, 'Issuance', 1, 'Created', '2023-10-03 15:00:00'),
-(5, 'InventoryAdjustment', 1, 'Created', '2023-10-05 12:00:00');
-
--- =========================
--- 23. SECURITY LOG
--- =========================
-INSERT INTO SecurityLog (UserID, ActionType, ActionDescription, IPAddress, ModuleAffected, ActionDate) VALUES
-(1, 'Login', 'Successful login', '192.168.1.1', 'Authentication', '2023-10-01 08:00:00'),
-(5, 'Data Export', 'Exported inventory report', '192.168.1.2', 'Reports', '2023-10-02 16:00:00');
-
--- =========================
--- 24. REPORT
--- =========================
-INSERT INTO Report (UserID, ReportType, GeneratedDate, GeneratedForOffice) VALUES
-(1, 'Inventory Summary', '2023-10-01 12:00:00', 'Central Office'),
-(4, 'Requisition Report', '2023-10-03 09:00:00', 'Pharmacy');
-
--- =========================
--- 25. NOTIFICATION
--- =========================
-INSERT INTO Notification (UserID, TargetRole, Title, Message, Link, Priority, IsRead) VALUES
-(NULL, 'Administrator', 'System Update', 'Scheduled maintenance tonight', NULL, 'Normal', 1),
-(NULL, 'Warehouse Staff', 'Low Stock Alert', 'Paracetamol running low', NULL, 'High', 1),
-(2, NULL, 'PO Approved', 'Your PO has been approved', '/po/1', 'Normal', 0);
-
--- =========================
--- 26. HC PATIENT
--- =========================
+-- PATIENTS
 INSERT INTO HCPatient (HealthCenterID, FName, MName, LName, Age, Gender, Address, ContactNumber) VALUES
-(1, 'John', 'Michael', 'Doe', 35, 'Male', '123 Main St', '555-1111'),
-(2, 'Jane', 'Marie', 'Smith', 28, 'Female', '456 Oak Ave', '555-2222');
+(1, 'Juan', 'Santos', 'Dela Cruz', 35, 'Male', 'Jaro, Iloilo City', '09170000001'),
+(1, 'Maria', 'Lopez', 'Fernandez', 28, 'Female', 'Jaro, Iloilo City', '09170000002');
 
--- =========================
--- 27. HC PATIENT REQUISITION
--- =========================
-INSERT INTO HCPatientRequisition (PatientID, UserID, HealthCenterID, RequisitionNumber, RequestDate, StatusType, Diagnosis, Notes, ContactInfo, IDProof) VALUES
-(1, 2, 1, 'PAT-REQ-2023-001', '2023-10-07 10:00:00', 'Pending', 'Hypertension', 'Needs medication refill', '555-1111', 'ID123'),
-(2, 3, 2, 'PAT-REQ-2023-002', '2023-10-08 11:00:00', 'Approved', 'Asthma', 'Inhaler needed', '555-2222', 'ID456');
+-- PATIENT REQUISITIONS
+INSERT INTO HCPatientRequisition (PatientID, UserID, HealthCenterID, RequisitionNumber, RequestDate, StatusType, Diagnosis) VALUES
+(1, 3, 1, 'PR-2026-0001', '2026-02-10 11:00:00', 'Approved', 'Fever and cough'),
+(2, 3, 1, 'PR-2026-0002', '2026-02-11 15:00:00', 'Pending', 'Vitamin deficiency');
 
--- =========================
--- 28. HC PATIENT REQUISITION ITEM
--- =========================
+-- PATIENT REQUISITION ITEMS
 INSERT INTO HCPatientRequisitionItem (PatientReqID, ItemID, QuantityRequested) VALUES
-(1, 5, 30),
-(2, 4, 10);
+(1, 1, 10),
+(1, 6, 1),
+(2, 3, 2);
 
-SET FOREIGN_KEY_CHECKS = 1;
+-- APPROVAL LOGS
+INSERT INTO ApprovalLog (RequisitionID, UserID, Decision, DecisionDate) VALUES
+(1, 1, 'Approved', '2026-02-02 08:30:00');
+
+-- NOTIFICATIONS
+INSERT INTO Notifications (UserID, Title, Message, Priority) VALUES
+(3, 'Requisition Approved', 'Your requisition REQ-2026-0001 has been approved.', 'High'),
+(2, 'New Receiving Task', 'A new receiving schedule has been assigned.', 'Normal');
+
+-- SECURITY LOGS
+INSERT INTO SecurityLog (UserID, ActionType, ActionDescription, IPAddress, ModuleAffected, ActionDate) VALUES
+(1, 'Login', 'Administrator logged in successfully', '192.168.1.10', 'Authentication', NOW()),
+(2, 'Update', 'Warehouse inventory updated', '192.168.1.11', 'Inventory', NOW());
+
+-- AUDIT LOGS
+INSERT INTO TransactionAuditLog (UserID, ReferenceType, ReferenceID, ActionType, ActionDetails, ActionDate) VALUES
+(1, 'ProcurementOrder', '1', 'Create', 'Created procurement order PO-2026-0001', NOW()),
+(2, 'Receiving', '1', 'Receive', 'Received stock for PO-2026-0001', NOW());
+```

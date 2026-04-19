@@ -3,6 +3,8 @@
 namespace App\Models\Inventory;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Inventory\Item;
+use App\Models\Procurement\Warehouse;
 
 class Batch extends Model
 {
@@ -20,7 +22,7 @@ class Batch extends Model
         'QuantityReleased',
         'IsLocked',
         'UnitCost',
-        'DateReceived',
+        'LastUpdated',
     ];
 
     public function item()

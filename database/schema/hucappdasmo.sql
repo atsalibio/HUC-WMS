@@ -47,6 +47,9 @@ CREATE TABLE Supplier (
     Name VARCHAR(200) NOT NULL,
     Address TEXT,
     ContactInfo VARCHAR(200),
+    IsActive TINYINT(1) DEFAULT 1,
+    DeletedAt TIMESTAMP NULL,
+    LastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -96,8 +99,8 @@ CREATE TABLE CentralInventoryBatch (
     QuantityOnHand INT NOT NULL DEFAULT 0,
     QuantityReleased INT DEFAULT 0,
     UnitCost DECIMAL(10, 2),
-    DateReceived DATE,
     IsLocked TINYINT(1) DEFAULT 0,
+    LastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE,
     FOREIGN KEY (WarehouseID) REFERENCES Warehouse(WarehouseID) ON DELETE SET NULL
@@ -143,6 +146,7 @@ CREATE TABLE ProcurementOrderItem (
     QuantityOrdered INT NOT NULL,
     UnitCost DECIMAL(10, 2),
     ExpiryDate DATE, -- Added back ExpiryDate per requirements
+    CreatredAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (POID) REFERENCES ProcurementOrder(POID) ON DELETE CASCADE,
     FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -165,10 +169,10 @@ CREATE TABLE ReceivingItem (
     ItemID INT NOT NULL, -- Added to track item directly
     BatchID INT NOT NULL,
     QuantityReceived INT NOT NULL DEFAULT 0,
-    ExpiryDate DATE NULL,
     UnitCost DECIMAL(10, 2) DEFAULT 0.00,
     DateReceived DATE NULL,
     WarehouseID INT NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ReceivingID) REFERENCES Receiving(ReceivingID) ON DELETE CASCADE,
     FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE,
     FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
@@ -181,8 +185,9 @@ CREATE TABLE Requisition (
     RequisitionNumber VARCHAR(100) UNIQUE, -- Generated e.g. REQ-2026-0001
     HealthCenterID INT,
     UserID INT,
-    RequestDate DATETIME NOT NULL,
+    RequestDate DATE DEFAULT CURRENT_TIMESTAMP,
     StatusType VARCHAR(50) DEFAULT 'Pending',
+    IsUrgent BOOLEAN DEFAULT FALSE,
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (HealthCenterID) REFERENCES HealthCenters(HealthCenterID) ON DELETE SET NULL,
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE SET NULL
@@ -194,6 +199,9 @@ CREATE TABLE RequisitionItem (
     RequisitionID INT NOT NULL,
     ItemID INT NOT NULL,
     QuantityRequested INT NOT NULL,
+    StatusType VARCHAR(50) DEFAULT 'Pending',
+    DateRequested DATE DEFAULT CURRENT_TIMESTAMP,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (RequisitionID) REFERENCES Requisition(RequisitionID) ON DELETE CASCADE,
     FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -214,48 +222,39 @@ CREATE TABLE Issuance (
 CREATE TABLE IssuanceItem (
     IssuanceItemID INT AUTO_INCREMENT PRIMARY KEY,
     IssuanceID INT NOT NULL,
+    ItemID INT NOT NULL,
     BatchID INT NOT NULL,
     RequisitionItemID INT,
     QuantityIssued INT NOT NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (IssuanceID) REFERENCES Issuance(IssuanceID) ON DELETE CASCADE,
     FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
     FOREIGN KEY (RequisitionItemID) REFERENCES RequisitionItem(RequisitionItemID) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 16. RequisitionAdjustment Table
-CREATE TABLE RequisitionAdjustment (
-    RequisitionAdjustmentID INT AUTO_INCREMENT PRIMARY KEY,
-    IssuanceID INT,
-    UserID INT,
-    AdjustmentType VARCHAR(100),
-    AdjustmentDate DATETIME,
-    Reason TEXT,
-    FOREIGN KEY (IssuanceID) REFERENCES Issuance(IssuanceID) ON DELETE SET NULL,
-    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 17. RequisitionAdjustmentDetail Table
-CREATE TABLE RequisitionAdjustmentDetail (
-    RADID INT AUTO_INCREMENT PRIMARY KEY,
-    RequisitionAdjustmentID INT NOT NULL,
-    BatchID INT,
-    QuantityAdjusted INT,
-    FOREIGN KEY (RequisitionAdjustmentID) REFERENCES RequisitionAdjustment(RequisitionAdjustmentID) ON DELETE CASCADE,
-    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 18. Inventory Adjustment Table (New)
-CREATE TABLE InventoryAdjustment (
+CREATE TABLE AdjustmentRequest (
     AdjustmentID INT AUTO_INCREMENT PRIMARY KEY,
-    BatchID INT NOT NULL,
     UserID INT NOT NULL,
     AdjustmentType VARCHAR(50), -- Disposal, Return, Correction
-    AdjustmentQuantity INT NOT NULL,
     Reason VARCHAR(255),
     EvidencePath VARCHAR(255),
+    StatusType VARCHAR(50) DEFAULT 'Pending',
     AdjustmentDate DATETIME,
-    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE AdjustmentItem(
+    AdjustmentItemID INT AUTO_INCREMENT PRIMARY KEY,
+    AdjustmentID INT NOT NULL,
+    BatchID INT NOT NULL,
+    HCBatchID INT NULL, -- Optional reference to HC batch if applicable
+    QuantityAdjusted INT NOT NULL,
+    StatusType VARCHAR(50) DEFAULT 'Pending', -- Pending, Returned, Disposed, Corrected
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (AdjustmentID) REFERENCES AdjustmentRequest(AdjustmentID) ON DELETE CASCADE,
+    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
+    FOREIGN KEY (HCBatchID) REFERENCES HCInventoryBatch(HCBatchID) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 19. Health Center Inventory Batch Table (New)
@@ -265,7 +264,6 @@ CREATE TABLE HCInventoryBatch (
     ItemID INT NOT NULL,
     BatchID INT, -- Reference to the original central batch
     LotNumber VARCHAR(100) NULL,
-    ExpiryDate DATE,
     QuantityReceived INT NOT NULL DEFAULT 0,
     QuantityOnHand INT NOT NULL DEFAULT 0,
     UnitCost DECIMAL(10, 2),

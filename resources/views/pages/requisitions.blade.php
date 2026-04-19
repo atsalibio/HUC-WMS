@@ -150,17 +150,26 @@
                                 </select>
                             </div>
                             <div class="space-y-4">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Priority
-                                    Status</p>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                    Priority Status
+                                </label>
+
                                 <div class="flex gap-4">
                                     <label
                                         class="flex items-center gap-3 cursor-pointer group px-5 py-4 bg-slate-50 dark:bg-slate-900 rounded-3xl w-full border-2 border-transparent transition-all"
                                         :class="formData.isUrgent ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/10' : ''">
-                                        <input type="checkbox" x-model="formData.isUrgent"
+
+                                        <input
+                                            type="checkbox"
+                                            :checked="formData.isUrgent"
+                                            @change="formData.isUrgent = $event.target.checked"
                                             class="w-6 h-6 rounded-lg border-2 border-slate-300 text-amber-600 focus:ring-amber-500/20 transition-all">
-                                        <span class="text-xs font-black uppercase tracking-widest"
-                                            :class="formData.isUrgent ? 'text-amber-700' : 'text-slate-400'">Mark as Urgent
-                                            Request</span>
+
+                                        <span
+                                            class="text-xs font-black uppercase tracking-widest"
+                                            :class="formData.isUrgent ? 'text-amber-700' : 'text-slate-400'">
+                                            Mark as Urgent Request
+                                        </span>
                                     </label>
                                 </div>
                             </div>
@@ -345,8 +354,8 @@
                                                         x-if="activeReq.StatusType !== 'Pending' || !['Head Pharmacist', 'Administrator'].includes('{{ Auth::user()->Role }}')">
                                                         <span
                                                             class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"
-                                                            :class="item.ItemStatus === 'Approved' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'"
-                                                            x-text="item.ItemStatus || 'Approved'"></span>
+                                                            :class="item.StatusType === 'Approved' ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'"
+                                                            x-text="item.StatusType || 'Approved'"></span>
                                                     </template>
                                                 </div>
                                             </div>
@@ -522,6 +531,15 @@
                         this.activeReq.items.forEach(item => {
                             itemStatuses[item.RequisitionItemID] = overallStatus === 'Rejected' ? 'Rejected' : item.ItemStatus;
                         });
+                    }
+
+                    if (overallStatus === 'Approved') {
+                        // If approving, ensure at least one item is approved
+                        const hasApproved = Object.values(itemStatuses).some(status => status === 'Approved');
+                        if (!hasApproved) {
+                            alert('At least one item must be approved to approve the requisition.');
+                            return;
+                        }
                     }
 
                     // Status flows: Pending → Approved (queued for Issuance) → Completed

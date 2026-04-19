@@ -13,8 +13,7 @@ class Receiving extends Model
     protected $fillable = [
         'UserID',
         'POID',
-        'ReceivedDate',
-        'StatusType',
+        'ReceivedDate'
     ];
 
     protected $casts = [

@@ -194,26 +194,26 @@
                                                 </div>
                                                 <div class="space-y-1">
                                                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Unit Cost (₱)</label>
-                                                    <input type="number" x-model="item.unitCost" step="0.01" class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border-none rounded-xl font-bold dark:text-white text-xs focus:ring-4 focus:ring-blue-500/10">
+                                                    <input type="number" x-model="item.unitCost" :readonly="item.unitCost" step="0.01" class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border-none rounded-xl font-bold dark:text-white focus:ring-4 focus:ring-blue-500/10">
                                                 </div>
                                             </div>
 
                                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div class="space-y-1">
-                                                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Batch ID</label>
-                                                    <input type="text" x-model="item.batchId" placeholder="Required" required :readonly="item.batchId && item.batchId.length > 0"
+                                                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Batch Number</label>
+                                                    <input type="text" x-model="item.batchId" placeholder="will be auto-generated" required :readonly="item.batchId && item.batchId.length > 0"
                                                            :class="item.batchId && item.batchId.length > 0 ? 'bg-slate-100 dark:bg-slate-700/50 cursor-not-allowed opacity-75' : 'bg-white dark:bg-slate-800'"
                                                            class="w-full px-4 py-2.5 border-none rounded-xl font-black dark:text-white text-xs">
                                                 </div>
                                                 <div class="space-y-1">
                                                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Lot Number</label>
-                                                    <input type="text" x-model="item.lotNumber" placeholder="Required" required :readonly="item.lotNumber && item.lotNumber.length > 0"
+                                                    <input type="text" x-model="item.lotNumber" placeholder="Required" required
                                                            :class="item.lotNumber && item.lotNumber.length > 0 ? 'bg-slate-100 dark:bg-slate-700/50 cursor-not-allowed opacity-75' : 'bg-white dark:bg-slate-800'"
                                                            class="w-full px-4 py-2.5 border-none rounded-xl font-black dark:text-white text-xs">
                                                 </div>
                                                 <div class="space-y-1">
                                                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Expiry Date</label>
-                                                    <input type="date" x-model="item.expiryDate" :readonly="item.expiryDate && item.expiryDate.length > 0"
+                                                    <input type="date" x-model="item.expiryDate" :value="item.expiryDate && item.expiryDate.length > 0"
                                                            :class="item.expiryDate && item.expiryDate.length > 0 ? 'bg-slate-100 dark:bg-slate-700/50 cursor-not-allowed opacity-75' : 'bg-white dark:bg-slate-800'"
                                                            class="w-full px-4 py-2.5 border-none rounded-xl font-bold dark:text-white text-xs focus:ring-4 focus:ring-blue-500/10">
                                                 </div>

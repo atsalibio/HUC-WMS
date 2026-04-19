@@ -17,7 +17,6 @@ class HCInventoryBatch extends Model
         'ItemID',
         'BatchID',
         'LotNumber',
-        'ExpiryDate',
         'QuantityReceived',
         'QuantityOnHand',
         'DateReceivedAtHC'

@@ -7,6 +7,8 @@ use App\Models\Issuance\IssuanceItem;
 use App\Models\System\TransactionLog;
 use App\Models\System\HealthCenter;
 use App\Models\Inventory\Batch;
+use App\Models\HealthCenter\HCInventoryBatch;
+use App\Models\Requisition\Requisition;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -39,9 +41,14 @@ class IssuanceService
     public function processIssuance(int $requisitionId, array $allocationPlan, int $userId)
     {
         return DB::transaction(function () use ($requisitionId, $allocationPlan, $userId) {
-            $requisition = \App\Models\Requisition\Requisition::findOrFail($requisitionId);
+            $requisition = Requisition::findOrFail($requisitionId);
 
             foreach ($allocationPlan as $planItem) {
+
+                if($planItem['reqItemStatus'] !== 'Approved') {
+                    continue; // Skip unavailable items
+                }
+
                 if (empty($planItem['allocated']) || !is_array($planItem['allocated'])) {
                     continue;
                 }
@@ -72,11 +79,13 @@ class IssuanceService
 
                     $centralBatch->decrement('QuantityOnHand', $qtyToIssue);
                     $centralBatch->increment('QuantityReleased', $qtyToIssue);
+                    $centralBatch->update(['LastUpdated' => Carbon::now()]);
+
 
                     // Update HC inventory
                     $hcId = $requisition->HealthCenterID;
                     if ($hcId) {
-                        \App\Models\HealthCenter\HCInventoryBatch::updateOrCreate(
+                        HCInventoryBatch::updateOrCreate(
                             [
                                 'HealthCenterID' => $hcId,
                                 'ItemID' => $centralBatch->ItemID,
@@ -101,6 +110,10 @@ class IssuanceService
             ]);
 
             foreach ($allocationPlan as $planItem) {
+                if($planItem['reqItemStatus'] !== 'Approved') {
+                    continue; // Skip unavailable items
+                }
+
                 if (empty($planItem['allocated']) || !is_array($planItem['allocated'])) {
                     continue;
                 }

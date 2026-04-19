@@ -176,87 +176,102 @@
 
                                     <!-- Batch Allocations for this item -->
                                     <div class="space-y-4">
-                                        <div class="flex justify-between items-center">
-                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Batch
-                                                Allocations (FEFO)</p>
-                                            <button type="button" @click="addBatchAllocation(index)"
-                                                class="text-[10px] font-black text-indigo-500 hover:underline uppercase tracking-widest">
-                                                + Add Batch
-                                            </button>
-                                        </div>
-
-                                        <template x-for="(alloc, ai) in item.allocations" :key="ai">
-                                            <div
-                                                class="flex flex-col md:flex-row gap-4 p-5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                                <!-- Batch Dropdown -->
-                                                <div class="flex-1 space-y-1">
-                                                    <label
-                                                        class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch
-                                                        / Lot Number</label>
-                                                    <select x-model="alloc.batchId" @change="onBatchSelected(index, ai)"
-                                                        class="w-full px-4 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold dark:text-white text-sm focus:ring-4 focus:ring-indigo-500/10">
-                                                        <option value="">Select Batch (FEFO)…</option>
-                                                        <template x-for="b in item.availableBatches" :key="b.BatchID">
-                                                            <option :value="b.BatchID" :disabled="b.QuantityOnHand <= 0"
-                                                                x-text="b.LotNumber + '  |  Qty: ' + b.QuantityOnHand + '  |  Exp: ' + (b.ExpiryDate || 'N/A')">
-                                                            </option>
-                                                        </template>
-                                                    </select>
+                                        <template x-if="item.itemStatus === 'Approved'">
+                                            <div class="space-y-4">
+                                                <div class="flex justify-between items-center">
+                                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Batch
+                                                        Allocations (FEFO)</p>
+                                                    <button type="button" @click="addBatchAllocation(index)"
+                                                        class="text-[10px] font-black text-indigo-500 hover:underline uppercase tracking-widest">
+                                                        + Add Batch
+                                                    </button>
                                                 </div>
 
-                                                <!-- Available qty for selected batch -->
-                                                <div class="w-32 space-y-1">
-                                                    <label
-                                                        class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Available</label>
-                                                    <div class="px-4 py-3 bg-green-50 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-800/30 font-black text-green-700 dark:text-green-400 text-sm text-center"
-                                                        x-text="alloc.availableQty !== null ? alloc.availableQty : '—'">
+                                                <template x-for="(alloc, ai) in item.allocations" :key="ai">
+                                                    <div
+                                                        class="flex flex-col md:flex-row gap-4 p-5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                                        <!-- Batch Dropdown -->
+                                                        <div class="flex-1 space-y-1">
+                                                            <label
+                                                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch No.
+                                                            </label>
+                                                            <select x-model="alloc.batchId" @change="onBatchSelected(index, ai)"
+                                                                class="w-full px-4 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold dark:text-white text-sm focus:ring-4 focus:ring-indigo-500/10">
+                                                                <template x-for="b in item.availableBatches" :key="b.BatchID">
+                                                                    <option :value="b.BatchID" :disabled="b.QuantityOnHand <= 0"
+                                                                        x-text="b.BatchNumber + '  |  Qty: ' + b.QuantityOnHand + '  |  Exp: ' + (b.ExpiryDate || 'N/A')">
+                                                                    </option>
+                                                                </template>
+                                                            </select>
+                                                        </div>
+
+                                                        <!-- Available qty for selected batch -->
+                                                        <div class="w-32 space-y-1">
+                                                            <label
+                                                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Available</label>
+                                                            <div class="px-4 py-3 bg-green-50 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-800/30 font-black text-green-700 dark:text-green-400 text-sm text-center"
+                                                                x-text="alloc.availableQty !== null ? alloc.availableQty : '—'">
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Issue Qty -->
+                                                        <div class="w-36 space-y-1">
+                                                            <label
+                                                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Issue
+                                                                Qty</label>
+                                                            <input type="number" x-model.number="alloc.issuedQty"
+                                                                :max="alloc.availableQty" min="1" @input="validateQty(index, ai)"
+                                                                class="w-full px-4 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-black dark:text-white text-lg text-center focus:ring-4 focus:ring-indigo-500/10"
+                                                                :class="alloc.issuedQty > alloc.availableQty ? 'ring-2 ring-red-400' : ''">
+                                                            <p x-show="alloc.issuedQty > alloc.availableQty"
+                                                                class="text-[9px] text-red-500 font-black mt-1 ml-1">Exceeds
+                                                                available!</p>
+                                                        </div>
+
+                                                        <!-- Remove Batch -->
+                                                        <button type="button" @click="removeBatchAllocation(index, ai)"
+                                                            x-show="item.allocations.length > 1"
+                                                            class="self-end p-3 text-slate-300 hover:text-red-500 transition-colors rounded-xl hover:bg-red-50">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </template>
+
+                                                <!-- Total issued for this item -->
+                                                <div class="flex justify-end">
+                                                    <div class="flex items-center gap-3 px-5 py-2.5 rounded-2xl"
+                                                        :class="getTotalIssued(index) === item.requestedQty ? 'bg-green-50 dark:bg-green-900/10' : 
+                                                                    getTotalIssued(index) > item.requestedQty ? 'bg-red-50 dark:bg-red-900/10' : 'bg-slate-50 dark:bg-slate-900/30'">
+                                                        <p class="text-[10px] font-black uppercase tracking-widest"
+                                                            :class="getTotalIssued(index) === item.requestedQty ? 'text-green-600' : 
+                                                                    getTotalIssued(index) > item.requestedQty ? 'text-red-600' : 'text-slate-400'">
+                                                            Total Issuing:
+                                                        </p>
+                                                        <p class="font-black text-lg"
+                                                            :class="getTotalIssued(index) === item.requestedQty ? 'text-green-700 dark:text-green-400' : 
+                                                                    getTotalIssued(index) > item.requestedQty ? 'text-red-700 dark:text-red-400' : 'text-slate-700 dark:text-slate-300'"
+                                                            x-text="getTotalIssued(index) + ' / ' + item.requestedQty">
+                                                        </p>
                                                     </div>
                                                 </div>
-
-                                                <!-- Issue Qty -->
-                                                <div class="w-36 space-y-1">
-                                                    <label
-                                                        class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Issue
-                                                        Qty</label>
-                                                    <input type="number" x-model.number="alloc.issuedQty"
-                                                        :max="alloc.availableQty" min="1" @input="validateQty(index, ai)"
-                                                        class="w-full px-4 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-black dark:text-white text-lg text-center focus:ring-4 focus:ring-indigo-500/10"
-                                                        :class="alloc.issuedQty > alloc.availableQty ? 'ring-2 ring-red-400' : ''">
-                                                    <p x-show="alloc.issuedQty > alloc.availableQty"
-                                                        class="text-[9px] text-red-500 font-black mt-1 ml-1">Exceeds
-                                                        available!</p>
-                                                </div>
-
-                                                <!-- Remove Batch -->
-                                                <button type="button" @click="removeBatchAllocation(index, ai)"
-                                                    x-show="item.allocations.length > 1"
-                                                    class="self-end p-3 text-slate-300 hover:text-red-500 transition-colors rounded-xl hover:bg-red-50">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                    </svg>
-                                                </button>
                                             </div>
                                         </template>
 
-                                        <!-- Total issued for this item -->
-                                        <div class="flex justify-end">
-                                            <div class="flex items-center gap-3 px-5 py-2.5 rounded-2xl"
-                                                :class="getTotalIssued(index) === item.requestedQty ? 'bg-green-50 dark:bg-green-900/10' : 
-                                                             getTotalIssued(index) > item.requestedQty ? 'bg-red-50 dark:bg-red-900/10' : 'bg-slate-50 dark:bg-slate-900/30'">
-                                                <p class="text-[10px] font-black uppercase tracking-widest"
-                                                    :class="getTotalIssued(index) === item.requestedQty ? 'text-green-600' : 
-                                                               getTotalIssued(index) > item.requestedQty ? 'text-red-600' : 'text-slate-400'">
-                                                    Total Issuing:
+                                        <template x-if="item.itemStatus != 'Approved'">
+                                            <div
+                                                class="p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-800/30">
+                                                <p class="text-[12px] font-black text-red-500 uppercase tracking-widest mb-1">
+                                                    ✖ Item Not Approved
                                                 </p>
-                                                <p class="font-black text-lg"
-                                                    :class="getTotalIssued(index) === item.requestedQty ? 'text-green-700 dark:text-green-400' : 
-                                                               getTotalIssued(index) > item.requestedQty ? 'text-red-700 dark:text-red-400' : 'text-slate-700 dark:text-slate-300'"
-                                                    x-text="getTotalIssued(index) + ' / ' + item.requestedQty">
+                                                <p class="text-[10px] text-red-700 dark:text-red-400">
+                                                    This item was not approved and cannot be issued.
                                                 </p>
                                             </div>
-                                        </div>
+                                        </template>
                                     </div>
                                 </div>
                             </template>
@@ -345,6 +360,7 @@
                             return {
                                 itemId: i.ItemID,
                                 reqItemId: i.RequisitionItemID,
+                                itemStatus: i.StatusType,
                                 itemName: i.item ? i.item.ItemName : ('Item #' + i.ItemID),
                                 requestedQty: i.QuantityRequested,
                                 availableBatches: batches,
@@ -407,6 +423,7 @@
                         // Validate all items have at least one batch selected
                         for (let i = 0; i < this.formData.items.length; i++) {
                             const item = this.formData.items[i];
+
                             for (let alloc of item.allocations) {
                                 if (!alloc.batchId) {
                                     alert(`Please select a batch for item: ${item.itemName}`);
@@ -429,6 +446,7 @@
                             requisitionId: this.formData.requisitionId,
                             allocationPlan: this.formData.items.map(item => ({
                                 reqItemId: item.reqItemId,
+                                reqItemStatus: item.itemStatus,
                                 allocated: item.allocations
                                     .filter(a => a.batchId && a.issuedQty > 0)
                                     .map(a => ({

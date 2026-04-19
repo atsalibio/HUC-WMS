@@ -32,7 +32,6 @@ class HCInventoryController extends Controller
                 'hb.ItemID',
                 'hb.HealthCenterID',
                 'hb.QuantityOnHand',
-                'hb.ExpiryDate',
                 'hb.UnitCost',
                 'hb.DateReceivedAtHC',
                 'hb.LotNumber',

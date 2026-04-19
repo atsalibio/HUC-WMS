@@ -15,6 +15,7 @@ class Requisition extends Model
         'HealthCenterID',
         'UserID',
         'RequestDate',
+        'IsUrgent',
         'StatusType'
     ];
 

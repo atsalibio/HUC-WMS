@@ -20,8 +20,7 @@ class RequisitionController extends Controller
     {
         $data = $request->validate([
             'healthCenterId' => 'nullable|integer',
-            'healthCenterName' => 'nullable|string|max:255',
-            'healthCenterAddress' => 'nullable|string|max:255',
+            'isUrgent' => 'nullable|boolean',
             'items' => 'required|array|min:1',
             'items.*.itemId' => 'required|integer',
             'items.*.quantity' => 'required|numeric|min:1',
@@ -70,6 +69,7 @@ class RequisitionController extends Controller
     {
         $data = $request->validate([
             'status' => 'required|string|in:Approved,Rejected,Pending,Completed',
+            'isUrgent' => 'nullable|boolean',
             'itemStatuses' => 'nullable|array', // per-item overrides
             'remarks' => 'nullable|string',
         ]);
@@ -90,7 +90,8 @@ class RequisitionController extends Controller
                 $data['status'],
                 $user->UserID,
                 $data['itemStatuses'] ?? [],
-                $data['remarks'] ?? null
+                $data['remarks'] ?? null,
+                $data['isUrgent'] ?? false,
             );
             return response()->json(['success' => true, 'requisition' => $requisition]);
         } catch (\Exception $e) {

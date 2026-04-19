@@ -7,11 +7,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-<<<<<<< HEAD
         "foxy/foxy": "*",
-=======
         "barryvdh/laravel-dompdf": "^3.1",
->>>>>>> julesbranch
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
         "mouf/nodejs-installer": "*"

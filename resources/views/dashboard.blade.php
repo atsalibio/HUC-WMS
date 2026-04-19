@@ -3,67 +3,21 @@
 @section('content')
 <div x-data="dashboardManager()" x-init="init()">
     @php
-        $stats = $stats ?? [
-            'pending_reqs' => 0,
-            'pending_pos' => 0,
-            'low_stock' => 0,
-            'pending_patient_reqs' => 0,
-        ];
+        $stats = $stats ?? [];
         $recentRequisitions = $recentRequisitions ?? collect();
+        $pendingPOs = $pendingPOs ?? collect();
+        $pendingPatientReqs = $pendingPatientReqs ?? collect();
+
         $user = $user ?? Auth::user();
 
-        $userName = trim((optional($user)->FName ?? '') . ' ' . (optional($user)->LName ?? '')) ?: 'User';
-        $activeRole = optional($user)->Role ?? 'N/A';
+        $userName = $ui['userName'];
+        $activeRole = $ui['activeRole'];
 
-        $badgeClass = match ($activeRole) {
-            'Administrator' => 'bg-purple-500/20 border-purple-500/30 text-purple-300',
-            'Health Center Staff' => 'bg-cyan-500/20 border-cyan-500/30 text-cyan-300',
-            'Head Pharmacist' => 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300',
-            'Warehouse Staff' => 'bg-amber-500/20 border-amber-500/30 text-amber-300',
-            'Accounting Office User' => 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300',
-            'CMO/GSO/COA User' => 'bg-teal-500/20 border-teal-500/30 text-teal-300',
-            default => 'bg-slate-500/20 border-slate-500/30 text-slate-300'
-        };
-
-        $pulseClass = match ($activeRole) {
-            'Administrator' => 'bg-purple-400',
-            'Health Center Staff' => 'bg-cyan-400',
-            'Head Pharmacist' => 'bg-indigo-400',
-            'Warehouse Staff' => 'bg-amber-400',
-            'Accounting Office User' => 'bg-emerald-400',
-            'CMO/GSO/COA User' => 'bg-teal-400',
-            default => 'bg-slate-400'
-        };
-
-        $btnClass = match ($activeRole) {
-            'Administrator' => 'bg-purple-600 hover:bg-purple-700 shadow-purple-500/30',
-            'Health Center Staff' => 'bg-cyan-600 hover:bg-cyan-700 shadow-cyan-500/30',
-            'Head Pharmacist' => 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/30',
-            'Warehouse Staff' => 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/30',
-            'Accounting Office User' => 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/30',
-            'CMO/GSO/COA User' => 'bg-teal-600 hover:bg-teal-700 shadow-teal-500/30',
-            default => 'bg-slate-600 hover:bg-slate-700 shadow-slate-500/30'
-        };
-
-        $blur1 = match ($activeRole) {
-            'Administrator' => 'bg-purple-500/20',
-            'Health Center Staff' => 'bg-cyan-500/20',
-            'Head Pharmacist' => 'bg-indigo-500/20',
-            'Warehouse Staff' => 'bg-amber-500/20',
-            'Accounting Office User' => 'bg-emerald-500/20',
-            'CMO/GSO/COA User' => 'bg-teal-500/20',
-            default => 'bg-slate-500/20'
-        };
-
-        $blur2 = match ($activeRole) {
-            'Administrator' => 'bg-fuchsia-500/20',
-            'Health Center Staff' => 'bg-blue-500/20',
-            'Head Pharmacist' => 'bg-purple-500/20',
-            'Warehouse Staff' => 'bg-orange-500/20',
-            'Accounting Office User' => 'bg-green-500/20',
-            'CMO/GSO/COA User' => 'bg-cyan-500/20',
-            default => 'bg-slate-600/20'
-        };
+        $badgeClass = $ui['badgeClass'];
+        $pulseClass = $ui['pulseClass'];
+        $btnClass = $ui['btnClass'];
+        $blur1 = $ui['blur1'];
+        $blur2 = $ui['blur2'];
     @endphp
 
     <div class="space-y-10 animate-fade-in px-2">
@@ -190,6 +144,266 @@
                 </div>
             @endif
         </div>
+
+        @if($activeRole !== 'Health Center Staff')
+            <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                <div class="px-8 py-6 border-b border-slate-200 dark:border-slate-700">
+                    <p class="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] mb-2">
+                        Critical Inventory Pressure
+                    </p>
+                    <h3 class="text-2xl font-black text-slate-900 dark:text-white">
+                        Insufficient Inventory Coverage
+                    </h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                        Items below do not have enough inventory on hand to fulfill approved and pending requisitions.
+                    </p>
+                </div>
+
+                @if(isset($criticalLowStockItems) && count($criticalLowStockItems) > 0)
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-left text-sm">
+                            <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 uppercase tracking-wide text-[10px] font-black">
+                                <tr>
+                                    <th class="px-6 py-4">Item</th>
+                                    <th class="px-6 py-4">On Hand</th>
+                                    <th class="px-6 py-4">Required</th>
+                                    <th class="px-6 py-4">Shortage</th>
+                                    <th class="px-6 py-4">Incoming PO</th>
+                                    <th class="px-6 py-4">Remaining Gap</th>
+                                    <th class="px-6 py-4">Coverage</th>
+                                    <th class="px-6 py-4">Status</th>
+
+                                </tr>
+                            </thead>
+
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                @foreach($criticalLowStockItems as $item)
+                                    @php
+                                        $required = $item['required_quantity'];
+                                        $available = $item['inventory_on_hand'];
+                                        $shortage = max($required - $available, 0);
+                                        $incomingPO = $item['incoming_po_quantity'] ?? 0;
+                                        $remainingShortage = max($shortage - $incomingPO, 0);
+
+                                        $percentage = $required > 0
+                                            ? min((($available + $incomingPO) / $required) * 100, 100)
+                                            : 0;
+
+                                        if ($incomingPO <= 0) {
+                                            $severityLabel = 'Critical';
+                                            $severityClass = 'bg-rose-100 text-rose-700';
+                                        } elseif ($incomingPO <= $shortage) {
+                                            $severityLabel = 'Urgent';
+                                            $severityClass = 'bg-amber-100 text-amber-700';
+                                        } else {
+                                            $severityLabel = 'Low Inventory';
+                                            $severityClass = 'bg-green-100 text-green-700';
+                                        }
+                                    @endphp
+
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                        <td class="px-6 py-5">
+                                            <div>
+                                                <p class="font-bold text-slate-900 dark:text-white">
+                                                    {{ $item['item_name'] }}
+                                                </p>
+                                                <p class="text-[10px] uppercase tracking-widest font-black text-slate-400 mt-1">
+                                                    Inventory Coverage Review
+                                                </p>
+                                            </div>
+                                        </td>
+
+                                        <td class="px-6 py-5 font-bold text-slate-700 dark:text-slate-300">
+                                            {{ $available }}
+                                        </td>
+
+                                        <td class="px-6 py-5 font-bold text-slate-700 dark:text-slate-300">
+                                            {{ $required }}
+                                        </td>
+
+                                        <td class="px-6 py-5">
+                                            <span class="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
+                                                {{ $shortage }}
+                                            </span>
+                                        </td>
+
+                                        <td class="px-6 py-5 font-bold text-slate-700 dark:text-slate-300">
+                                            {{ $incomingPO }}
+                                        </td>
+
+                                        <td class="px-6 py-5">
+                                            <span class="px-3 py-1 rounded-full {{ $remainingShortage > 0 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }} text-[10px] font-black uppercase tracking-widest">
+                                                {{ $remainingShortage }}
+                                            </span>
+                                        </td>
+
+                                        <td class="px-6 py-5 min-w-[220px]">
+                                            <div class="space-y-2">
+                                                <div class="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                    <div
+                                                        class="h-full rounded-full bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500"
+                                                        style="width: {{ $percentage }}%"
+                                                    ></div>
+                                                </div>
+
+                                                <div class="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                    <span>0%</span>
+                                                    <span>{{ round($percentage) }}%</span>
+                                                    <span>100%</span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td class="px-6 py-5">
+                                            <span class="px-3 py-1 rounded-full {{ $severityClass }} text-[10px] font-black uppercase tracking-widest">
+                                                {{ $severityLabel }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="p-10 text-center">
+                        <p class="text-lg font-black text-emerald-600 dark:text-emerald-400 mb-2">
+                            No Critical Shortages
+                        </p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">
+                            Current inventory can satisfy all pending and approved demand.
+                        </p>
+                    </div>
+                @endif
+            </div>
+        @endif
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-200 dark:border-slate-700">
+                <p class="text-[10px] font-black text-cyan-500 uppercase tracking-[0.3em] mb-2">
+                    Seasonal Demand Analysis
+                </p>
+                <h3 class="text-2xl font-black text-slate-900 dark:text-white">
+                    Seasonal Medicine Demand Spikes
+                </h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                    Tracks medicines with seasonal demand increases throughout the year.
+                </p>
+            </div>
+
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-8 py-6 border-b border-slate-200 dark:border-slate-700">
+                <div>
+                    <p class="text-[10px] font-black text-cyan-500 uppercase tracking-[0.3em] mb-2">
+                        Seasonal Demand Analysis
+                    </p>
+                    <h3 class="text-2xl font-black text-slate-900 dark:text-white">
+                        Seasonal Medicine Demand Spikes
+                    </h3>
+                </div>
+
+                <form method="GET" class="flex items-center gap-3">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        Year
+                    </label>
+
+                    <select
+                        name="trend_year"
+                        onchange="this.form.submit()"
+                        class="px-5 py-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-4 focus:ring-cyan-500/10"
+                    >
+                        @foreach($availableTrendYears as $year)
+                            <option value="{{ $year }}" {{ $selectedTrendYear == $year ? 'selected' : '' }}>
+                                {{ $year }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            </div>
+
+            <div class="p-8">
+                <div class="h-[420px]">
+                    <canvas id="seasonalDemandChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const ctx = document.getElementById('seasonalDemandChart');
+
+                if (!ctx) return;
+
+                const labels = @json($seasonalDemandMonths);
+
+                const datasets = @json($seasonalDemandDatasets).map(item => ({
+                    label: item.label,
+                    data: item.data,
+                    borderColor: item.color,
+                    backgroundColor: item.color,
+                    fill: false,
+                    tension: 0.35,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    borderWidth: 3
+                }));
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#64748b',
+                                    usePointStyle: true,
+                                    padding: 20,
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw} requests`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#64748b'
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#64748b',
+                                    stepSize: 1
+                                },
+                                grid: {
+                                    color: 'rgba(148, 163, 184, 0.15)'
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
             <!-- Recent Requisitions -->
