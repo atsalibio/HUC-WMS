@@ -131,9 +131,9 @@ INSERT INTO Issuance (RequisitionID, UserID, IssueDate, StatusType) VALUES
 (1, 2, '2026-02-05 09:00:00', 'Issued');
 
 -- ISSUANCE ITEMS
-INSERT INTO IssuanceItem (IssuanceID, BatchID, RequisitionItemID, QuantityIssued) VALUES
-(1, 1, 1, 200),
-(1, 4, 2, 20);
+INSERT INTO IssuanceItem (IssuanceID, ItemID, BatchID, RequisitionItemID, QuantityIssued) VALUES
+(1, 1, 1, 1, 200),
+(1, 4, 4, 2, 20);
 
 -- HEALTH CENTER INVENTORY BATCHES
 INSERT INTO HCInventoryBatch (HealthCenterID, ItemID, BatchID, LotNumber, QuantityReceived, QuantityOnHand, UnitCost) VALUES

@@ -233,6 +233,7 @@ CREATE TABLE IssuanceItem (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 16. RequisitionAdjustment Table
+/*
 CREATE TABLE AdjustmentRequest (
     AdjustmentID INT AUTO_INCREMENT PRIMARY KEY,
     UserID INT NOT NULL,
@@ -255,6 +256,43 @@ CREATE TABLE AdjustmentItem(
     FOREIGN KEY (AdjustmentID) REFERENCES AdjustmentRequest(AdjustmentID) ON DELETE CASCADE,
     FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
     FOREIGN KEY (HCBatchID) REFERENCES HCInventoryBatch(HCBatchID) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+*/
+
+-- 18. Inventory Adjustment Table (New)
+CREATE TABLE InventoryAdjustment (
+    AdjustmentID INT AUTO_INCREMENT PRIMARY KEY,
+    BatchID INT NOT NULL,
+    UserID INT NOT NULL,
+    AdjustmentType VARCHAR(50), -- Disposal, Return, Correction
+    AdjustmentQuantity INT NOT NULL,
+    Reason VARCHAR(255),
+    EvidencePath VARCHAR(255),
+    AdjustmentDate DATETIME,
+    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 16. RequisitionAdjustment Table
+CREATE TABLE RequisitionAdjustment (
+    RequisitionAdjustmentID INT AUTO_INCREMENT PRIMARY KEY,
+    IssuanceID INT,
+    UserID INT,
+    AdjustmentType VARCHAR(100),
+    AdjustmentDate DATETIME,
+    Reason TEXT,
+    FOREIGN KEY (IssuanceID) REFERENCES Issuance(IssuanceID) ON DELETE SET NULL,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 17. RequisitionAdjustmentDetail Table
+CREATE TABLE RequisitionAdjustmentDetail (
+    RADID INT AUTO_INCREMENT PRIMARY KEY,
+    RequisitionAdjustmentID INT NOT NULL,
+    BatchID INT,
+    QuantityAdjusted INT,
+    FOREIGN KEY (RequisitionAdjustmentID) REFERENCES RequisitionAdjustment(RequisitionAdjustmentID) ON DELETE CASCADE,
+    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 19. Health Center Inventory Batch Table (New)

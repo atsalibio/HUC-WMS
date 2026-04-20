@@ -344,212 +344,212 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Patient Requisition Details Modal -->
-    <div x-show="showDetailsModal" x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-[110] grid place-items-center overflow-y-auto p-4 py-12 backdrop-blur-sm scrollbar-hide bg-slate-1200/60"
-        x-cloak @click.self="closeDetailsModal()">
 
-        <!-- Modal Panel -->
-        <div
-            class="relative z-10 bg-white dark:bg-slate-800 w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700/50 flex flex-col my-auto animate-in zoom-in-95 duration-200">
-            <!-- Modal Header -->
+        <!-- Patient Requisition Details Modal -->
+        <div x-show="showDetailsModal" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 z-[110] grid place-items-center overflow-y-auto p-4 py-12 backdrop-blur-sm scrollbar-hide bg-slate-1200/60"
+            x-cloak @click.self="closeDetailsModal()">
+
+            <!-- Modal Panel -->
             <div
-                class="px-10 py-8 border-b border-slate-50 dark:border-slate-700/50 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/20">
-                <div>
-                    <p class="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em] mb-1"
-                        x-text="'ID: ' + activeReq.RequisitionNumber"></p>
-                    <h2 class="text-2xl font-black text-slate-800 dark:text-white">Patient Record Summary</h2>
-                </div>
-                <button @click="closeDetailsModal()"
-                    class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white dark:bg-slate-700 text-slate-400 hover:text-red-500 transition-all shadow-sm">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="flex-1 overflow-y-auto p-10 custom-scrollbar">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 text-left">
-                    <!-- Left: Core Info & Documents -->
-                    <div class="space-y-10">
-                        <div class="space-y-6">
-                            <h3
-                                class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 dark:border-slate-800 pb-3">
-                                Patient Registry Info</h3>
-                            <div class="grid grid-cols-2 gap-8">
-                                <div>
-                                    <label
-                                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Full
-                                        Name</label>
-                                    <p class="font-bold text-slate-800 dark:text-slate-200"
-                                        x-text="(activeReq.patient ? (activeReq.patient.FName + ' ' + activeReq.patient.LName) : activeReq.ManualName)">
-                                    </p>
-                                </div>
-                                <div>
-                                    <label
-                                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Age
-                                        / Gender</label>
-                                    <p class="font-bold text-slate-800 dark:text-slate-200"
-                                        x-text="(activeReq.patient ? (activeReq.patient.Age + ' yrs • ' + activeReq.patient.Gender) : 'N/A')">
-                                    </p>
-                                </div>
-                                <div>
-                                    <label
-                                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Case
-                                        Tracking ID</label>
-                                    <p class="font-bold text-slate-800 dark:text-slate-200"
-                                        x-text="activeReq.RequisitionNumber"></p>
-                                </div>
-                                <div>
-                                    <label
-                                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">ID
-                                        Proof Reference</label>
-                                    <template x-if="activeReq.IDProof && activeReq.IDProof.startsWith('assets/img')">
-                                        <div
-                                            class="mt-2 group/img relative overflow-hidden rounded-2xl border-2 border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
-                                            <img :src="'/' + activeReq.IDProof"
-                                                class="w-full h-auto max-h-48 object-contain bg-slate-50 dark:bg-slate-900">
-                                            <a :href="'/' + activeReq.IDProof" target="_blank"
-                                                class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-2">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                                    </path>
-                                                </svg>
-                                                <span class="text-[9px] font-black uppercase tracking-widest">Open Full
-                                                    View</span>
-                                            </a>
-                                        </div>
-                                    </template>
-                                    <template x-if="!activeReq.IDProof || !activeReq.IDProof.startsWith('assets/img')">
-                                        <p class="font-bold text-slate-800 dark:text-slate-200"
-                                            x-text="activeReq.IDProof || 'Not Provided'"></p>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-6">
-                            <h3
-                                class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 dark:border-slate-800 pb-3">
-                                Clinical Diagnosis</h3>
-                            <div
-                                class="p-6 bg-slate-50 dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-slate-800">
-                                <p class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-2"
-                                    x-text="activeReq.Diagnosis || 'General Prescription'"></p>
-                                <p class="text-xs text-slate-500 italic leading-relaxed"
-                                    x-text="activeReq.Notes || 'No additional clinical notes recorded for this patient case.'">
-                                </p>
-                            </div>
-                        </div>
+                class="relative z-10 bg-white dark:bg-slate-800 w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700/50 flex flex-col my-auto animate-in zoom-in-95 duration-200">
+                <!-- Modal Header -->
+                <div
+                    class="px-10 py-8 border-b border-slate-50 dark:border-slate-700/50 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/20">
+                    <div>
+                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em] mb-1"
+                            x-text="'ID: ' + activeReq.RequisitionNumber"></p>
+                        <h2 class="text-2xl font-black text-slate-800 dark:text-white">Patient Record Summary</h2>
                     </div>
+                    <button @click="closeDetailsModal()"
+                        class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white dark:bg-slate-700 text-slate-400 hover:text-red-500 transition-all shadow-sm">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
 
-                    <!-- Right: Items & Actions -->
-                    <div class="space-y-10">
-                        <!-- Prescribed Items -->
-                        <div class="space-y-4">
-                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Prescribed Medication
-                            </h3>
-                            <div class="space-y-3">
-                                <template x-for="item in activeReq.items || []">
-                                    <div
-                                        class="flex justify-between items-center p-4 bg-white dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm transition-all hover:border-blue-500/30">
-                                        <div class="flex items-center gap-4">
-                                            <div
-                                                class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center font-black text-xs">
-                                                💊
-                                            </div>
-                                            <div>
-                                                <p class="text-sm font-bold text-slate-700 dark:text-slate-300"
-                                                    x-text="item.item.ItemName"></p>
-                                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
-                                                    x-text="'Dosage Tracking'"></p>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="text-lg font-black text-slate-800 dark:text-white"
-                                                x-text="item.Quantity"></p>
-                                            <p
-                                                class="text-[9px] font-black text-slate-400 uppercase tracking-widest uppercase">
-                                                Units</p>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-
-                        <!-- Dispensing History -->
-                        <div class="space-y-4">
-                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Transaction History
-                            </h3>
-                            <div
-                                class="p-8 bg-slate-50 dark:bg-slate-900/10 rounded-2xl border-2 border-dashed border-slate-100 dark:border-slate-800/50 text-center">
-                                <template x-if="activeReq.StatusType === 'Completed'">
-                                    <div class="flex flex-col items-center">
-                                        <div
-                                            class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center mb-4">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                        </div>
-                                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Stock
-                                            Dispensed</p>
-                                        <p class="text-xs text-slate-400"
-                                            x-text="'Processed on ' + (activeReq.DispensedDate || activeReq.updated_at)">
+                <div class="flex-1 overflow-y-auto p-10 custom-scrollbar">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 text-left">
+                        <!-- Left: Core Info & Documents -->
+                        <div class="space-y-10">
+                            <div class="space-y-6">
+                                <h3
+                                    class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 dark:border-slate-800 pb-3">
+                                    Patient Registry Info</h3>
+                                <div class="grid grid-cols-2 gap-8">
+                                    <div>
+                                        <label
+                                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Full
+                                            Name</label>
+                                        <p class="font-bold text-slate-800 dark:text-slate-200"
+                                            x-text="(activeReq.patient ? (activeReq.patient.FName + ' ' + activeReq.patient.LName) : activeReq.ManualName)">
                                         </p>
                                     </div>
-                                </template>
-                                <template x-if="activeReq.StatusType !== 'Completed'">
-                                    <p
-                                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest tracking-[0.3em]">
-                                        Awaiting Delivery</p>
-                                </template>
+                                    <div>
+                                        <label
+                                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Age
+                                            / Gender</label>
+                                        <p class="font-bold text-slate-800 dark:text-slate-200"
+                                            x-text="(activeReq.patient ? (activeReq.patient.Age + ' yrs • ' + activeReq.patient.Gender) : 'N/A')">
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Case
+                                            Tracking ID</label>
+                                        <p class="font-bold text-slate-800 dark:text-slate-200"
+                                            x-text="activeReq.RequisitionNumber"></p>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">ID
+                                            Proof Reference</label>
+                                        <template x-if="activeReq.IDProof && activeReq.IDProof.startsWith('assets/img')">
+                                            <div
+                                                class="mt-2 group/img relative overflow-hidden rounded-2xl border-2 border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+                                                <img :src="'/' + activeReq.IDProof"
+                                                    class="w-full h-auto max-h-48 object-contain bg-slate-50 dark:bg-slate-900">
+                                                <a :href="'/' + activeReq.IDProof" target="_blank"
+                                                    class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-2">
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                        </path>
+                                                    </svg>
+                                                    <span class="text-[9px] font-black uppercase tracking-widest">Open Full
+                                                        View</span>
+                                                </a>
+                                            </div>
+                                        </template>
+                                        <template x-if="!activeReq.IDProof || !activeReq.IDProof.startsWith('assets/img')">
+                                            <p class="font-bold text-slate-800 dark:text-slate-200"
+                                                x-text="activeReq.IDProof || 'Not Provided'"></p>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6">
+                                <h3
+                                    class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 dark:border-slate-800 pb-3">
+                                    Clinical Diagnosis</h3>
+                                <div
+                                    class="p-6 bg-slate-50 dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+                                    <p class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-2"
+                                        x-text="activeReq.Diagnosis || 'General Prescription'"></p>
+                                    <p class="text-xs text-slate-500 italic leading-relaxed"
+                                        x-text="activeReq.Notes || 'No additional clinical notes recorded for this patient case.'">
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Items & Actions -->
+                        <div class="space-y-10">
+                            <!-- Prescribed Items -->
+                            <div class="space-y-4">
+                                <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Prescribed Medication
+                                </h3>
+                                <div class="space-y-3">
+                                    <template x-for="item in activeReq.items || []">
+                                        <div
+                                            class="flex justify-between items-center p-4 bg-white dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm transition-all hover:border-blue-500/30">
+                                            <div class="flex items-center gap-4">
+                                                <div
+                                                    class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center font-black text-xs">
+                                                    💊
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-bold text-slate-700 dark:text-slate-300"
+                                                        x-text="item.item.ItemName"></p>
+                                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
+                                                        x-text="'Dosage Tracking'"></p>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-lg font-black text-slate-800 dark:text-white"
+                                                    x-text="item.Quantity"></p>
+                                                <p
+                                                    class="text-[9px] font-black text-slate-400 uppercase tracking-widest uppercase">
+                                                    Units</p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Dispensing History -->
+                            <div class="space-y-4">
+                                <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Transaction History
+                                </h3>
+                                <div
+                                    class="p-8 bg-slate-50 dark:bg-slate-900/10 rounded-2xl border-2 border-dashed border-slate-100 dark:border-slate-800/50 text-center">
+                                    <template x-if="activeReq.StatusType === 'Completed'">
+                                        <div class="flex flex-col items-center">
+                                            <div
+                                                class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center mb-4">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M5 13l4 4L19 7"></path>
+                                                </svg>
+                                            </div>
+                                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Stock
+                                                Dispensed</p>
+                                            <p class="text-xs text-slate-400"
+                                                x-text="'Processed on ' + (activeReq.DispensedDate || activeReq.updated_at)">
+                                            </p>
+                                        </div>
+                                    </template>
+                                    <template x-if="activeReq.StatusType !== 'Completed'">
+                                        <p
+                                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest tracking-[0.3em]">
+                                            Awaiting Delivery</p>
+                                    </template>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Footer Summary -->
-            <div class="px-10 py-8 border-t border-slate-50 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-900/20">
-                <div class="flex justify-between items-center">
-                    <div class="text-left">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Verification Status
-                        </p>
-                        <span class="px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest" :class="{
-                                    'bg-blue-50 text-blue-600': activeReq.StatusType === 'Approved',
-                                    'bg-amber-50 text-amber-600': activeReq.StatusType === 'Pending',
-                                    'bg-red-50 text-red-600': activeReq.StatusType === 'Rejected',
-                                    'bg-blue-50 text-blue-600': activeReq.StatusType === 'Completed'
-                                }" x-text="activeReq.StatusType"></span>
-                    </div>
-                    <div class="flex gap-4">
-                        <button @click="closeDetailsModal()"
-                            class="px-10 py-5 bg-white dark:bg-slate-700 text-slate-600 dark:text-white font-black text-xs uppercase tracking-widest rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-all active:scale-95">
-                            Close
-                        </button>
-                        <template x-if="activeReq.StatusType === 'Approved'">
-                            <button @click="dispenseStock(activeReq.PatientReqID)"
-                                class="px-10 py-5 bg-slate-900 dark:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-[2rem] shadow-xl transition-all hover:bg-blue-500 active:scale-95">
-                                Finalize Dispensing
+                <!-- Footer Summary -->
+                <div class="px-10 py-8 border-t border-slate-50 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-900/20">
+                    <div class="flex justify-between items-center">
+                        <div class="text-left">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Verification Status
+                            </p>
+                            <span class="px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest" :class="{
+                                        'bg-blue-50 text-blue-600': activeReq.StatusType === 'Approved',
+                                        'bg-amber-50 text-amber-600': activeReq.StatusType === 'Pending',
+                                        'bg-red-50 text-red-600': activeReq.StatusType === 'Rejected',
+                                        'bg-blue-50 text-blue-600': activeReq.StatusType === 'Completed'
+                                    }" x-text="activeReq.StatusType"></span>
+                        </div>
+                        <div class="flex gap-4">
+                            <button @click="closeDetailsModal()"
+                                class="px-10 py-5 bg-white dark:bg-slate-700 text-slate-600 dark:text-white font-black text-xs uppercase tracking-widest rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-all active:scale-95">
+                                Close
                             </button>
-                        </template>
+                            <template x-if="activeReq.StatusType === 'Approved'">
+                                <button @click="dispenseStock(activeReq.PatientReqID)"
+                                    class="px-10 py-5 bg-slate-900 dark:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-[2rem] shadow-xl transition-all hover:bg-blue-500 active:scale-95">
+                                    Finalize Dispensing
+                                </button>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    </div>
-    </div>
+
 
     <script>
         function patientReqManager() {
@@ -601,7 +601,17 @@
                     }
                 },
                 openDetailsModal(req) {
-                    this.activeReq = req;
+                    console.log("Opening details for Req:", req);
+                    // Deep clone to avoid modifying original until saved
+                    this.activeReq = JSON.parse(JSON.stringify(req));
+                    // Initialize ItemStatus for each item if not set
+                    if (this.activeReq.items) {
+                        this.activeReq.items.forEach(item => {
+                            if (!item.ItemStatus) item.ItemStatus = 'Approved';
+                        });
+                    }
+
+                    this.decisionRemarks = '';
                     this.showDetailsModal = true;
                 },
                 closeDetailsModal() {

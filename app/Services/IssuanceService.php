@@ -120,12 +120,14 @@ class IssuanceService
 
                 foreach ($planItem['allocated'] as $allocatedBatch) {
                     $batchId = $allocatedBatch['BatchID'] ?? null;
+                    $centralBatch = Batch::find($batchId);
                     $qtyToIssue = (int)($allocatedBatch['Quantity'] ?? 0);
                     if (!$batchId || $qtyToIssue <= 0) {
                         continue;
                     }
                     IssuanceItem::create([
                         'IssuanceID' => $issuance->IssuanceID,
+                        'ItemID' => $centralBatch->ItemID,
                         'BatchID' => $batchId,
                         'RequisitionItemID' => $planItem['reqItemId'] ?? null,
                         'QuantityIssued' => $qtyToIssue,

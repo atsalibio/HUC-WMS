@@ -21,7 +21,7 @@
                     </div>
                     <h3 class="text-xl font-black text-slate-800 dark:text-white mb-1">{{ $req->patient->FName }} {{ $req->patient->LName }}</h3>
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $req->patient->Age }}y/o | {{ $req->patient->Gender }}</p>
-                    
+
                     <div class="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700/50 space-y-4">
                         <div>
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Health Center</p>
@@ -33,7 +33,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="mt-8 pt-8 space-y-4">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ID Proof Status</p>
                     @if($req->IDProof)
@@ -77,6 +77,13 @@
                 </div>
 
                 <!-- Decision Footer -->
+                @if($req->StatusType === 'Approved')
+                <div class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700 flex gap-4">
+                    <button @click="dispenseStock({{ $req->PatientReqID }})" class="flex-[2] py-4 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-rose-500/20 transition-all active:scale-95">
+                        Dispense & Finalize Release
+                    </button>
+                </div>
+                @else
                 <div class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700 flex gap-4">
                     <button @click="updateStatus({{ $req->PatientReqID }}, 'Rejected')" class="flex-1 py-4 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-red-500 font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all border border-transparent hover:border-red-500/20">
                         Deny Request
@@ -85,6 +92,7 @@
                         Verify & Authorize Release
                     </button>
                 </div>
+                @endif
             </div>
         </div>
         @empty
@@ -107,7 +115,7 @@ function patientApprovalManager() {
         },
         async updateStatus(id, status) {
             if (!confirm('Are you sure you want to ' + status.toLowerCase() + ' this requisition?')) return;
-            
+
             try {
                 const response = await fetch('/patient-requisitions/' + id + '/status', {
                     method: 'PATCH',
@@ -117,10 +125,31 @@ function patientApprovalManager() {
                     },
                     body: JSON.stringify({ status: status })
                 });
-                
+
                 const result = await response.json();
                 if (result.success) {
                     alert('Requisition ' + status.toLowerCase() + ' successfully.');
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Connection error');
+            }
+        },
+        async dispenseStock(reqId) {
+            if (!confirm('Finalize medicine dispensing for this patient?')) return;
+            try {
+                const response = await fetch(`/patient-requisitions/${reqId}/dispense`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Dispensing completed!');
                     location.reload();
                 } else {
                     alert('Error: ' + result.message);

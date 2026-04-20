@@ -20,10 +20,10 @@ class NotificationController extends Controller
 
         $notifications = Notification::unread()
             ->where(function($query) use ($user) {
-                $query->where('user_id', '=', $user->UserID)
-                      ->orWhere('target_role', '=', (string)$user->Role)
+                $query->where('UserID', '=', $user->UserID)
+                      ->orWhere('TargetRole', '=', (string)$user->Role)
                       ->orWhere(function($q) {
-                          $q->whereNull('user_id')->whereNull('target_role');
+                          $q->whereNull('UserID')->whereNull('TargetRole');
                       });
             })
             ->latest()
@@ -39,7 +39,7 @@ class NotificationController extends Controller
     {
         $notification = Notification::find($id);
         if ($notification) {
-            $notification->update(['is_read' => true]);
+            $notification->update(['IsRead' => true]);
             return response()->json(['success' => true]);
         }
 

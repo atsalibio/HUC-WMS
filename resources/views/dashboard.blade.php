@@ -544,14 +544,14 @@
     </div>
 
     <!-- Requisition Details Modal -->
-    <div x-show="showDetailsModal" 
+    <div x-show="showDetailsModal"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-[110] grid place-items-center overflow-y-auto p-4 py-12 backdrop-blur-sm scrollbar-hide" 
+         class="fixed inset-0 z-[110] grid place-items-center overflow-y-auto p-4 py-12 backdrop-blur-sm scrollbar-hide"
          x-cloak>
         <!-- Backdrop -->
         <div class="fixed inset-0 bg-slate-1200/60" @click="closeDetailsModal()"></div>

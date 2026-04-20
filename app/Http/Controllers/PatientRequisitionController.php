@@ -19,7 +19,7 @@ class PatientRequisitionController extends Controller
     public function storePatient(Request $request)
     {
         $user = Auth::user();
-        
+
         $data = $request->validate([
             'HealthCenterID' => 'nullable|integer',
             'FName' => 'required|string',
@@ -39,7 +39,7 @@ class PatientRequisitionController extends Controller
         }
 
         try {
-            $patient = $this->patientRequisitionService->createPatient($data);
+            $patient = $this->patientRequisitionService->createPatient($data, $user->UserID);
             return response()->json(['success' => true, 'patient' => $patient]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to save patient: ' . $e->getMessage()], 500);
@@ -62,7 +62,7 @@ class PatientRequisitionController extends Controller
     public function storeRequisition(Request $request)
     {
         $user = Auth::user();
-        
+
         $data = $request->validate([
             'patientId' => 'required|integer',
             'healthCenterId' => 'nullable|integer',
@@ -120,8 +120,8 @@ class PatientRequisitionController extends Controller
             // First ensure it's Approved (triggers stock deduction in Service)
             $this->patientRequisitionService->updateStatus($id, 'Approved', $user->UserID);
             // Then mark as Completed
-            $requisition = $this->patientRequisitionService->updateStatus($id, 'Completed', $user->UserID);
-            
+            $requisition = $this->patientRequisitionService->dispense($id, $user->UserID);
+
             \Log::info("Successfully dispensed requisition ID: {$id}");
             return response()->json(['success' => true, 'requisition' => $requisition]);
         } catch (\Exception $e) {

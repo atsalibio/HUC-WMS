@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::dropIfExists('notifications');
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->string('target_role')->nullable();
-            $table->string('title');
-            $table->text('message');
-            $table->string('link')->nullable();
-            $table->string('priority')->default('Normal');
-            $table->boolean('is_read')->default(false);
+            $table->unsignedBigInteger('UserID')->nullable();
+            $table->string('TargetRole')->nullable();
+            $table->string('Title');
+            $table->text('Message');
+            $table->string('Link')->nullable();
+            $table->string('Priority')->default('Normal');
+            $table->boolean('IsRead')->default(false);
             $table->timestamps();
         });
     }

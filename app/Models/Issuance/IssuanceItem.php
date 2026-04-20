@@ -12,6 +12,7 @@ class IssuanceItem extends Model
 
     protected $fillable = [
         'IssuanceID',
+        'ItemID',
         'BatchID',
         'RequisitionItemID',
         'QuantityIssued'

@@ -5,11 +5,14 @@ namespace App\Services;
 use App\Models\Inventory\Batch;
 use App\Models\Inventory\Item;
 use App\Models\Procurement\ProcurementOrder;
+use App\Models\Procurement\ProcurementOrderItem;
 use App\Models\Requisition\Requisition;
 use App\Models\Requisition\RequisitionItem;
 use App\Models\HealthCenter\HCPatientRequisition;
 use App\Models\System\Notification;
 use Illuminate\Support\Facades\Auth;
+
+use function PHPSTORM_META\map;
 
 class DashboardService
 {
@@ -64,26 +67,63 @@ class DashboardService
             ],
         ];
 
-        $criticalLowStockItems = [
-            [
-                'item_name' => 'Paracetamol 500mg',
-                'inventory_on_hand' => 120,
-                'required_quantity' => 300,
-                'incoming_po_quantity' => 200,
-            ],
-            [
-                'item_name' => 'Amoxicillin 250mg',
-                'inventory_on_hand' => 40,
-                'required_quantity' => 100,
-                'incoming_po_quantity' => 0,
-            ],
-            [
-                'item_name' => 'Ibuprofen 200mg',
-                'inventory_on_hand' => 80,
-                'required_quantity' => 200,
-                'incoming_po_quantity' => 100,
-            ],
-        ];
+        $itemsByInventoryQuantity = Batch::query()
+            ->selectRaw('ItemID, SUM(QuantityOnHand) as total_quantity')
+            ->groupBy('ItemID')
+            ->with('item')
+            ->get()
+            ->map(function ($ri) {
+                return [
+                    'item_id' => $ri->ItemID,
+                    'item_name' => $ri->item->ItemName ?? 'Unknown Item',
+                    'total_quantity' => $ri->total_quantity,
+                ];
+            });
+
+        $itemsByRequisitionQuantity = RequisitionItem::query()
+            ->selectRaw('ItemID, SUM(QuantityRequested) as total_requested')
+            ->where('StatusType', 'Approved')
+            ->groupBy('ItemID')
+            ->with('item')
+            ->get()
+            ->map(function ($ri) {
+                return [
+                    'item_id' => $ri->ItemID,
+                    'item_name' => $ri->item->ItemName ?? 'Unknown Item',
+                    'total_requested' => $ri->total_requested,
+                ];
+            });
+
+        $itemsByPOQuantity = ProcurementOrderItem::query()
+            ->selectRaw('ItemID, SUM(QuantityOrdered) as total_ordered')
+            ->whereHas('procurementOrder', function ($query) {
+                $query->where('StatusType', 'Approved');
+            })
+            ->groupBy('ItemID')
+            ->with('item')
+            ->get()
+            ->map(function ($poi) {
+                return [
+                    'item_id' => $poi->ItemID,
+                    'item_name' => $poi->item->ItemName ?? 'Unknown Item',
+                    'total_ordered' => $poi->total_ordered,
+                ];
+            });
+
+        $criticalLowStockItems = $itemsByInventoryQuantity->map(function ($item) use ($itemsByRequisitionQuantity, $itemsByPOQuantity) {
+            $requested = $itemsByRequisitionQuantity->where('item_id', $item['item_id'])->first()['total_requested'] ?? 0;
+            $ordered = $itemsByPOQuantity->where('item_id', $item['item_id'])->first()['total_ordered'] ?? 0;
+
+            return [
+                'item_id' => $item['item_id'],
+                'item_name' => $item['item_name'],
+                'inventory_on_hand' => $item['total_quantity'],
+                'required_quantity' => $requested,
+                'incoming_po_quantity' => $ordered,
+            ];
+        })->filter(function ($item) {
+            return $item['inventory_on_hand'] <= $item['required_quantity'];
+        })->values();
 
         $topSeasonalItems = RequisitionItem::query()
             ->selectRaw('ItemID, COUNT(*) as total_requests')
