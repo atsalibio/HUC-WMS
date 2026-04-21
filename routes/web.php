@@ -21,7 +21,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\LedgerController;
 
 Route::get('/notifications', [NotificationController::class, 'index'])->name('api.notifications')->middleware('auth');
-Route::post('/notifications/{id}/read', [NotificationController::class, 'read'])->name('api.notifications.read')->middleware('auth');
+Route::patch('/notifications/{id}/read', [NotificationController::class, 'read'])->name('api.notifications.read')->middleware('auth');
 
 Route::post('/switch-health-center', [HealthCenterController::class, 'switch'])
     ->name('api.switchHealthCenter')
@@ -56,20 +56,20 @@ Route::middleware(['auth'])->group(function () {
     // Ledger
     Route::get('/ledger', [LedgerController::class, 'index'])->name('ledger.index');
     Route::get('/ledger/summary', [LedgerController::class, 'summary'])->name('ledger.summary');
-    
+
     // New Ported Routes
     Route::get('/warehouses', [WarehouseController::class, 'index'])->name('warehouses.index');
     Route::post('/warehouses', [WarehouseController::class, 'store'])->name('warehouses.store');
     Route::put('/warehouses/{id}', [WarehouseController::class, 'update'])->name('warehouses.update');
-    
+
     Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
     Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
     Route::put('/suppliers/{id}', [SupplierController::class, 'update'])->name('suppliers.update');
     Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
-    
+
     Route::post('/procurement/orders', [ProcurementController::class, 'store'])->name('procurement.orders.store');
     Route::patch('/procurement/orders/{id}/status', [ProcurementController::class, 'updateStatus'])->name('procurement.orders.updateStatus');
-    
+
     Route::post('/patients', [PatientRequisitionController::class, 'storePatient'])->name('patients.store');
     Route::get('/patients/search', [PatientRequisitionController::class, 'searchPatients'])->name('patients.search');
     Route::post('/patient-requisitions', [PatientRequisitionController::class, 'storeRequisition'])->name('patient-requisitions.store');

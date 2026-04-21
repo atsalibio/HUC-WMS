@@ -12,9 +12,9 @@ class NotificationService {
 
     public function getNotificationsForRole(string $role, int $limit = 20): array {
         $stmt = $this->db->prepare("
-            SELECT * FROM Notifications 
+            SELECT * FROM Notifications
             WHERE targetRoles IS NULL OR targetRoles = '' OR FIND_IN_SET(:role, targetRoles) > 0
-            ORDER BY Timestamp DESC 
+            ORDER BY Timestamp DESC
             LIMIT :limit
         ");
         $stmt->bindValue(':role', $role);
@@ -27,5 +27,10 @@ class NotificationService {
     public function markAllAsRead(int $userId): bool {
         $stmt = $this->db->prepare("UPDATE Notifications SET isRead = 1 WHERE FIND_IN_SET(:role, targetRoles) > 0");
         return $stmt->execute(['role' => $userId]);
+    }
+
+    public function updateReadStatus(int $notificationId, bool $isRead, $userId): bool {
+        $stmt = $this->db->prepare("UPDATE Notifications SET isRead = :isRead WHERE NotificationID = :id");
+        return $stmt->execute(['isRead' => $isRead ? 1 : 0, 'id' => $notificationId]);
     }
 }

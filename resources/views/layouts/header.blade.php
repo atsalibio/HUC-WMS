@@ -49,24 +49,25 @@
                         <template x-if="notifications.length > 0">
                             <span
                                 class="px-2 py-0.5 bg-blue-50 dark:bg-blue-500/10 text-[10px] font-black text-blue-500 rounded-full"
-                                x-text="'New (' + notifications.length + ')'"></span>
+                                x-text="'New (' + notifications.length + ')'">
+                            </span>
                         </template>
                     </div>
                     <div class="max-h-96 overflow-y-auto">
-                        <template x-for="note in notifications" :key="note.id">
+                        <template x-for="note in notifications" :key="note.NotificationID">
                             <div @click="handleNotificationClick(note)"
                                 class="p-4 border-b border-slate-50 dark:border-slate-700/30 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer group">
                                 <div class="flex gap-3">
                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-                                        :class="note.priority === 'High' ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/10' : (note.priority === 'Normal' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10' : 'bg-slate-100 text-slate-600 dark:bg-slate-900/50')">
-                                        <template x-if="note.priority === 'High'">
+                                        :class="note.Priority === 'High' ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/10' : (note.Priority === 'Normal' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10' : 'bg-slate-100 text-slate-600 dark:bg-slate-900/50')">
+                                        <template x-if="note.Priority === 'High'">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
                                                 </path>
                                             </svg>
                                         </template>
-                                        <template x-if="note.priority !== 'High'">
+                                        <template x-if="note.Priority !== 'High'">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
@@ -76,9 +77,9 @@
                                     </div>
                                     <div class="flex-1">
                                         <p class="text-xs font-black text-slate-800 dark:text-white mb-0.5 group-hover:text-indigo-500 transition-colors"
-                                            x-text="note.title || 'Notification'"></p>
+                                            x-text="note.Title || 'Notification'"></p>
                                         <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2"
-                                            x-text="note.message"></p>
+                                            x-text="note.Message"></p>
                                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-1"
                                             x-text="new Date(note.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})">
                                         </p>
@@ -163,20 +164,20 @@
             async handleNotificationClick(note) {
                 try {
                     // Mark as read in background
-                    await fetch(`/notifications/${note.id}/read`, {
-                        method: 'POST',
+                    await fetch(`/notifications/${note.NotificationID}/read`, {
+                        method: 'PATCH',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Content-Type': 'application/json'
-                        }
+                        },
+                        body: JSON.stringify({ isRead: true })
                     });
-
                     // Route to the link if it exists
                     if (note.link) {
                         window.location.href = note.link;
                     } else {
                         this.open = false;
-                        this.fetchNotifications();
+                        location.reload();
                     }
                 } catch (e) {
                     console.error('Notification click failed', e);

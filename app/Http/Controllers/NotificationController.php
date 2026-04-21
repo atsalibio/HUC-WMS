@@ -3,11 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\System\Notification;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     /**
      * Get unread notifications for the current user and their role.
      */
@@ -35,15 +42,20 @@ class NotificationController extends Controller
     /**
      * Mark a notification as read.
      */
-    public function read($id)
+    public function read(Request $request, $id)
     {
-        $notification = Notification::find($id);
-        if ($notification) {
-            $notification->update(['IsRead' => true]);
-            return response()->json(['success' => true]);
-        }
+        $data = $request->validate([
+            'isRead' => 'required|boolean',
+        ]);
 
-        return response()->json(['success' => false], 404);
+        $user = Auth::user();
+
+        try {
+            $notification = $this->notificationService->updateReadStatus($id, $data['isRead'], $user->UserID);
+            return response()->json(['success' => true, 'Notification' => $notification]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to update notification status: ' . $e->getMessage()], 500);
+        }
     }
 
     /**

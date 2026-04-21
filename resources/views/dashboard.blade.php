@@ -239,12 +239,14 @@
 
                                         <td class="px-6 py-5 min-w-[220px]">
                                             <div class="space-y-2">
-                                                <div class="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                <progress class="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden" value="{{ round($percentage) }}" max="100"></progress>
+                                                <div class="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden" >
                                                     <div
                                                         class="h-full rounded-full bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500"
-                                                        style="width: {{ $percentage }}%"
+                                                        style="width: 100%"
                                                     ></div>
                                                 </div>
+
 
                                                 <div class="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
                                                     <span>0%</span>
@@ -278,6 +280,7 @@
         @endif
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
         <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
             <div class="px-8 py-6 border-b border-slate-200 dark:border-slate-700">
                 <p class="text-[10px] font-black text-cyan-500 uppercase tracking-[0.3em] mb-2">
@@ -292,15 +295,6 @@
             </div>
 
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-8 py-6 border-b border-slate-200 dark:border-slate-700">
-                <div>
-                    <p class="text-[10px] font-black text-cyan-500 uppercase tracking-[0.3em] mb-2">
-                        Seasonal Demand Analysis
-                    </p>
-                    <h3 class="text-2xl font-black text-slate-900 dark:text-white">
-                        Seasonal Medicine Demand Spikes
-                    </h3>
-                </div>
-
                 <form method="GET" class="flex items-center gap-3">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         Year
