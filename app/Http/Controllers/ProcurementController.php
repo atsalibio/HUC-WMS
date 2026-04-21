@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\ProcurementService;
+use App\Services\SupplierService;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,16 +11,18 @@ use Illuminate\Support\Facades\Auth;
 class ProcurementController extends Controller
 {
     protected $procurementService;
+    protected $supplierService;
 
-    public function __construct(ProcurementService $procurementService)
+    public function __construct(ProcurementService $procurementService, SupplierService $supplierService)
     {
         $this->procurementService = $procurementService;
+        $this->supplierService = $supplierService;
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'supplier_id' => 'required|integer',
+            'supplier_id' => 'nullable|integer',
             'supplier_name' => 'nullable|string',
             'supplier_address' => 'nullable|string',
             'health_center_id' => 'nullable|integer',
@@ -44,6 +47,16 @@ class ProcurementController extends Controller
                 $filename = time() . '_' . $photo->getClientOriginalName();
                 $photo->move(public_path('assets/img/uploads/procurement'), $filename);
                 $data['photo_path'] = 'assets/img/uploads/procurement/' . $filename;
+            }
+
+            if ($data['supplier_id'] === null && $data['supplier_name']) {
+                $supplier = $this->supplierService->createSupplier([
+                    'Name' => $data['supplier_name'],
+                    'Address' => $data['supplier_address'] ?? null,
+                ]);
+                $data['supplier_id'] = $supplier->SupplierID;
+            } elseif ($data['supplier_id'] === null) {
+                return response()->json(['success' => false, 'message' => 'Either supplier ID or name must be provided.'], 400);
             }
 
             $po = $this->procurementService->createProcurementOrder($data, $user->UserID);
