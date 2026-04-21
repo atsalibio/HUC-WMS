@@ -46,7 +46,7 @@
                                     <td class="px-8 py-6">
                                         <p
                                             class="font-black"
-                                             :class="{{ $req -> IsUrgent }} ? 'text-red-500' : 'text-slate-800 dark:text-white group-hover:text-blue-600 transition-colors'">
+                                             :class="{{ $req -> IsUrgent && $req-> StatusType !== 'Completed' }} ? 'text-red-500' : 'text-slate-800 dark:text-white group-hover:text-blue-600 transition-colors'">
                                             {{ $req->RequisitionNumber }}
                                         </p>
                                         <div class="text-[10px] text-slate-400 font-bold uppercase">{{ $req->items->count() }}
