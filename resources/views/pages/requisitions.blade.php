@@ -44,10 +44,11 @@
                             @forelse($requisitions as $req)
                                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition-colors group">
                                     <td class="px-8 py-6">
-                                        <div
-                                            class="font-black text-slate-800 dark:text-white group-hover:text-blue-600 transition-colors">
+                                        <p
+                                            class="font-black"
+                                             :class="{{ $req -> IsUrgent }} ? 'text-red-500' : 'text-slate-800 dark:text-white group-hover:text-blue-600 transition-colors'">
                                             {{ $req->RequisitionNumber }}
-                                        </div>
+                                        </p>
                                         <div class="text-[10px] text-slate-400 font-bold uppercase">{{ $req->items->count() }}
                                             Items Requested</div>
                                     </td>
@@ -494,6 +495,9 @@
                     if (stock === 0) return 'text-red-500';
                     if (stock <= 50) return 'text-amber-500';
                     return 'text-emerald-500';
+                },
+                isUrgent(req) {
+                    return req.IsUrgent ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' : '';
                 },
                 async submitRequisition() {
                     if (!this.formData.healthCenterId || this.formData.items.length === 0) {

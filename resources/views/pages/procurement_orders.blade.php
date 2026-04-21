@@ -38,7 +38,7 @@
                         @forelse($procurementOrders as $po)
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition-all group">
                                 <td class="px-10 py-6">
-                                    <div class="font-black text-slate-800 dark:text-white text-xs">{{ $po->PONumber }}</div>
+                                    <div class="font-black text-slate-800 dark:text-white text-lg">{{ $po->PONumber }}</div>
                                     <div class="text-[10px] text-blue-600 font-black uppercase tracking-widest mt-1">
                                         {{ $po->DocumentType }} | {{ $po->healthCenter->Name ?? 'Main Depot' }}</div>
                                 </td>
