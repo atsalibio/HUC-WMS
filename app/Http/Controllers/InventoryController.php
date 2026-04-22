@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Inventory\Item;
 use Illuminate\Support\Facades\DB;
+use App\Models\Inventory\Batch;
 
 class InventoryController extends Controller
 {
     public function index()
     {
         $items = Item::all();
-        $inventory = \App\Models\Inventory\Batch::where('QuantityOnHand', '>', 0)->where('IsLocked', false)->get();
+        $inventory = Batch::where('QuantityOnHand', '>', 0)->where('IsLocked', false)->get();
 
         $lastIssuances = DB::table('IssuanceItem')
             ->join('Issuance', 'IssuanceItem.IssuanceID', '=', 'Issuance.IssuanceID')
@@ -24,6 +25,16 @@ class InventoryController extends Controller
         foreach ($inventory as $batch) {
             $batchesByItem[$batch->ItemID][] = $batch;
         }
+
+        $itemBatches = [];
+        foreach ($items as $item) {
+            $itemBatches[$item->ItemID] = Batch::where('ItemID', $item->ItemID)
+                ->where('QuantityOnHand', '>', 0)
+                ->where('IsLocked', false)
+                ->orderBy('ExpiryDate', 'asc')
+                ->get();
+        }
+
 
         $aggregatedInventory = [];
         foreach ($items as $item) {
@@ -55,6 +66,7 @@ class InventoryController extends Controller
         return view('pages.inventory', [
             'aggregatedInventory' => $aggregatedInventory,
             'batchesByItem' => $batchesByItem,
+            'ItemBatches' => $itemBatches,
             'currentPage' => 'inventory'
         ]);
     }

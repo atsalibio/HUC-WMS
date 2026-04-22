@@ -249,6 +249,12 @@
                         </div>
                     </div>
                 </div>
+                <!--- Batch Details and other info can be added here in the future --->
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl" :for="batch in itemBatches[selectedItem.ItemID]" :key="batch.BatchID">
+                        <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Batch Number</p>
+                        <p class="text-xs font-black text-slate-800 dark:text-white"
+                            x-text="batch"></p>
+                    </div>
                 <div class="px-8 pb-8">
                     <button @click="showViewModal = false"
                         class="w-full py-4 bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-800 transition-all">Close
@@ -360,6 +366,7 @@
                     expandedItems: [],
                     inventory: @json($aggregatedInventory),
                     batches: @json($batchesByItem),
+                    itemBatches: @json($itemBatches),
                     showViewModal: false,
                     showCreateModal: false,
                     selectedItem: null,
@@ -435,6 +442,7 @@
                     openViewModal(item) {
                         console.log('Opening View Modal for:', item);
                         this.selectedItem = item;
+                        this.itemBatches = this.batches[item.ItemID] || [];
                         this.showViewModal = true;
                     },
 
