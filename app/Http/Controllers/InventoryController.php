@@ -26,16 +26,6 @@ class InventoryController extends Controller
             $batchesByItem[$batch->ItemID][] = $batch;
         }
 
-        $itemBatches = [];
-        foreach ($items as $item) {
-            $itemBatches[$item->ItemID] = Batch::where('ItemID', $item->ItemID)
-                ->where('QuantityOnHand', '>', 0)
-                ->where('IsLocked', false)
-                ->orderBy('ExpiryDate', 'asc')
-                ->get();
-        }
-        //print_r(json_encode($itemBatches));
-
         $aggregatedInventory = [];
         foreach ($items as $item) {
             $itemId = $item->ItemID;
@@ -66,7 +56,6 @@ class InventoryController extends Controller
         return view('pages.inventory', [
             'aggregatedInventory' => $aggregatedInventory,
             'batchesByItem' => $batchesByItem,
-            'itemBatches' => $itemBatches,
             'currentPage' => 'inventory'
         ]);
     }

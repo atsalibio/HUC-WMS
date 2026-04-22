@@ -250,11 +250,55 @@
                     </div>
                 </div>
                 <!--- Batch Details and other info can be added here in the future --->
-                    <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl" :for="batch in itemBatches[selectedItem.ItemID]" :key="batch.BatchID">
-                        <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Batch Number</p>
-                        <p class="text-xs font-black text-slate-800 dark:text-white"
-                            x-text=""></p>
-                    </div>
+                <table class="w-full text-left text-sm">
+                    <thead
+                        class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
+                        <tr>
+                            <th
+                                class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                Batch Number</th>
+                            <th
+                                class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">
+                                Quantity</th>
+                            <th
+                                class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                Unit Price</th>
+                            <th
+                                class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                Expiry Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
+                        <template x-if="itemBatches.length > 0">
+                            <template x-for="batch in itemBatches" :key="batch.BatchID">
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/10 transition-colors">
+                                    <td class="px-10 py-5">
+                                        <p class="font-black text-slate-800 dark:text-white text-xs"
+                                            x-text="batch.BatchNumber || 'Unknown Entity'"></p>
+                                        <p class="text-[9px] text-blue-600 font-black uppercase tracking-widest mt-0.5"
+                                            x-text="batch.LotNumber || ''"></p>
+                                    </td>
+                                    <td class="px-10 py-5 font-black text-slate-800 dark:text-white text-center text-sm"
+                                        x-text="batch.QuantityOnHand || 0"></td>
+                                    <td class="px-10 py-5 font-black text-slate-800 dark:text-white text-right text-sm"
+                                        x-text="'₱' + Number(batch.UnitCost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})">
+                                    </td>
+                                    <td class="px-10 py-5 font-black text-slate-800 dark:text-white text-right text-sm"
+                                        x-text="batch.ExpiryDate || 'N/A'">
+                                    </td>
+                                </tr>
+                            </template>
+                        </template>
+                        <template
+                            x-if="itemBatches.length === 0">
+                            <tr>
+                                <td colspan="4"
+                                    class="px-10 py-10 text-center text-slate-300 italic text-xs uppercase tracking-widest">
+                                    No line items recorded</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
                 <div class="px-8 pb-8">
                     <button @click="showViewModal = false"
                         class="w-full py-4 bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-800 transition-all">Close
@@ -366,7 +410,7 @@
                     expandedItems: [],
                     inventory: @json($aggregatedInventory),
                     batches: @json($batchesByItem),
-                    itemBatches: @json($itemBatches),
+                    itemBatches: [],
                     showViewModal: false,
                     showCreateModal: false,
                     selectedItem: null,
@@ -440,9 +484,8 @@
                     },
 
                     openViewModal(item) {
-                        console.log('Opening View Modal for:', item);
                         this.selectedItem = item;
-                        console.log('Batches:', this.itemBatches[toString(item.ItemID)]);
+                        this.itemBatches = this.sortedBatches(item.ItemID);
                         this.showViewModal = true;
                     },
 
