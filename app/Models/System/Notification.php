@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 class Notification extends Model
 {
     protected $table = 'Notifications';
-    public $timestamps = false;
+    public $timestamps = true;
+    const CREATED_AT = 'CreatedAt';
+    const UPDATED_AT = 'UpdatedAt';
     protected $fillable = [
         'UserID',
         'TargetRole',
