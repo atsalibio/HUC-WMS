@@ -138,7 +138,9 @@
                                         class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-900 border-none rounded-3xl font-bold dark:text-white focus:ring-4 focus:ring-blue-500/10 transition-all text-xs">
                                         <option value="">Select Registered Supplier...</option>
                                         @foreach($suppliers as $s)
-                                            <option value="{{ $s->SupplierID }}">{{ $s->Name }}</option>
+                                            @if($s->IsActive)
+                                                <option value="{{ $s->SupplierID }}">{{ $s->Name }}</option>
+                                            @endif
                                         @endforeach
                                     </select>
                                 </template>
