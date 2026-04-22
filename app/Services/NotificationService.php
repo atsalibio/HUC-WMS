@@ -2,35 +2,29 @@
 namespace App\Services;
 
 use App\Models\System\Notification;
+use Illuminate\Support\Facades\DB;
 
 class NotificationService {
-    private \PDO $db;
-
-    public function __construct(\PDO $db) {
-        $this->db = $db;
-    }
 
     public function getNotificationsForRole(string $role, int $limit = 20): array {
-        $stmt = $this->db->prepare("
-            SELECT * FROM Notifications
-            WHERE targetRoles IS NULL OR targetRoles = '' OR FIND_IN_SET(:role, targetRoles) > 0
-            ORDER BY Timestamp DESC
-            LIMIT :limit
-        ");
-        $stmt->bindValue(':role', $role);
-        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
-        $stmt->execute();
-        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        return array_map(fn($data) => new Notification($data), $results);
+        return Notification::where(function($query) use ($role) {
+                $query->whereNull('TargetRole')
+                      ->orWhere('TargetRole', '')
+                      ->orWhereRaw('FIND_IN_SET(?, TargetRole) > 0', [$role]);
+            })
+            ->orderBy('CreatedAt', 'desc')
+            ->limit($limit)
+            ->get()
+            ->toArray();
     }
 
     public function markAllAsRead(int $userId): bool {
-        $stmt = $this->db->prepare("UPDATE Notifications SET isRead = 1 WHERE FIND_IN_SET(:role, targetRoles) > 0");
-        return $stmt->execute(['role' => $userId]);
+        return Notification::whereRaw('FIND_IN_SET(?, TargetRole) > 0', [$userId])
+            ->update(['IsRead' => 1]);
     }
 
     public function updateReadStatus(int $notificationId, bool $isRead, $userId): bool {
-        $stmt = $this->db->prepare("UPDATE Notifications SET isRead = :isRead WHERE NotificationID = :id");
-        return $stmt->execute(['isRead' => $isRead ? 1 : 0, 'id' => $notificationId]);
+        return Notification::where('NotificationID', $notificationId)
+            ->update(['IsRead' => $isRead ? 1 : 0]);
     }
 }

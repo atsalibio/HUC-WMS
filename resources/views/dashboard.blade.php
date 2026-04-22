@@ -196,7 +196,7 @@
                                             $severityLabel = 'Urgent';
                                             $severityClass = 'bg-amber-100 text-amber-700';
                                         } else {
-                                            $severityLabel = 'Low Inventory';
+                                            $severityLabel = 'Low';
                                             $severityClass = 'bg-green-100 text-green-700';
                                         }
                                     @endphp
@@ -239,7 +239,6 @@
 
                                         <td class="px-6 py-5 min-w-[220px]">
                                             <div class="space-y-2">
-                                                <progress class="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden" value="{{ round($percentage) }}" max="100"></progress>
                                                 <div class="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden" >
                                                     <div
                                                         class="h-full rounded-full bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500"
