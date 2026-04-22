@@ -17,6 +17,7 @@ class HCInventoryController extends Controller
 
         $query = DB::table('HCInventoryBatch as hb')
             ->join('Item as i', 'hb.ItemID', '=', 'i.ItemID')
+            ->join('CentralInventoryBatch as c', 'hb.BatchID', '=', 'c.BatchID')
             ->join('HealthCenters as hc', 'hb.HealthCenterID', '=', 'hc.HealthCenterID');
 
         // Enforce exclusivity for Health Center Staff
@@ -35,6 +36,7 @@ class HCInventoryController extends Controller
                 'hb.UnitCost',
                 'hb.DateReceivedAtHC',
                 'hb.LotNumber',
+                'c.ExpiryDate',
                 'i.ItemName',
                 'i.ItemType',
                 'i.UnitOfMeasure',

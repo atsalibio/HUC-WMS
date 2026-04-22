@@ -214,12 +214,12 @@
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
-            class="fixed inset-0 z-[110] grid place-items-center overflow-y-auto p-4 py-12 backdrop-blur-sm scrollbar-hide bg-slate-1200/60"
+            class="fixed inset-0 z-[200] grid place-items-center overflow-y-auto p-4 py-12 backdrop-blur-sm scrollbar-hide bg-slate-1200/70"
             x-cloak @click.self="showViewModal = false">
 
             <!-- Modal Panel -->
             <div
-                class="relative z-10 bg-white dark:bg-slate-800 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700/50 flex flex-col my-auto animate-in zoom-in-95 duration-200">
+                class="relative z-10 w-full max-w-4xl bg-white dark:bg-slate-800 rounded-[3rem] shadow-2xl border border-slate-200 dark:border-slate-700/50 flex flex-col my-auto animate-in zoom-in-95 duration-200">
                 <div
                     class="px-8 pt-8 pb-6 border-b border-slate-50 dark:border-slate-700/30 flex justify-between items-center">
                     <div>
@@ -250,55 +250,65 @@
                     </div>
                 </div>
                 <!--- Batch Details and other info can be added here in the future --->
-                <table class="w-full text-left text-sm">
-                    <thead
-                        class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
-                        <tr>
-                            <th
-                                class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                Batch Number</th>
-                            <th
-                                class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">
-                                Quantity</th>
-                            <th
-                                class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">
-                                Unit Price</th>
-                            <th
-                                class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">
-                                Expiry Date</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
-                        <template x-if="itemBatches.length > 0">
-                            <template x-for="batch in itemBatches" :key="batch.BatchID">
-                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/10 transition-colors">
-                                    <td class="px-10 py-5">
-                                        <p class="font-black text-slate-800 dark:text-white text-xs"
-                                            x-text="batch.BatchNumber || 'Unknown Entity'"></p>
-                                        <p class="text-[9px] text-blue-600 font-black uppercase tracking-widest mt-0.5"
-                                            x-text="batch.LotNumber || ''"></p>
-                                    </td>
-                                    <td class="px-10 py-5 font-black text-slate-800 dark:text-white text-center text-sm"
-                                        x-text="batch.QuantityOnHand || 0"></td>
-                                    <td class="px-10 py-5 font-black text-slate-800 dark:text-white text-right text-sm"
-                                        x-text="'₱' + Number(batch.UnitCost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})">
-                                    </td>
-                                    <td class="px-10 py-5 font-black text-slate-800 dark:text-white text-right text-sm"
-                                        x-text="batch.ExpiryDate || 'N/A'">
-                                    </td>
+                <div class="p-8 space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 dark:text-white"> Batch Details </h2>
+                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1"
+                            x-text="itemBatches.length + ' Available Batches'"></p>
+                    </div>
+                    <div
+                        class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] overflow-hidden">
+                        <table class="w-full text-left text-sm">
+                            <thead
+                                class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
+                                <tr>
+                                    <th
+                                        class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase">
+                                        Batch Number</th>
+                                    <th
+                                        class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase text-center">
+                                        Quantity</th>
+                                    <th
+                                        class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase text-center">
+                                        Unit Price</th>
+                                    <th
+                                        class="px-10 py-5 text-[9px] font-black text-slate-400 uppercase text-right">
+                                        Expiry Date</th>
                                 </tr>
-                            </template>
-                        </template>
-                        <template
-                            x-if="itemBatches.length === 0">
-                            <tr>
-                                <td colspan="4"
-                                    class="px-10 py-10 text-center text-slate-300 italic text-xs uppercase tracking-widest">
-                                    No line items recorded</td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
+                                <template x-if="itemBatches.length > 0">
+                                    <template x-for="batch in itemBatches" :key="batch.BatchID">
+                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/10 transition-colors">
+                                            <td class="px-10 py-5">
+                                                <p class="font-black text-slate-800 dark:text-white text-xs"
+                                                    x-text="batch.BatchNumber || 'Unknown Entity'"></p>
+                                                <p class="text-[9px] text-blue-600 font-black uppercase tracking-widest mt-0.5"
+                                                    x-text="batch.LotNumber || ''"></p>
+                                            </td>
+                                            <td class="px-10 py-5 font-black text-slate-800 dark:text-white text-center text-sm"
+                                                x-text="batch.QuantityOnHand || 0"></td>
+                                            <td class="px-10 py-5 font-black text-slate-800 dark:text-white text-center text-sm"
+                                                x-text="'₱' + Number(batch.UnitCost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})">
+                                            </td>
+                                            <td class="px-10 py-5 font-black text-slate-800 dark:text-white text-right text-sm"
+                                                x-text="batch.ExpiryDate || 'N/A'">
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </template>
+                                <template
+                                    x-if="itemBatches.length === 0">
+                                    <tr>
+                                        <td colspan="4"
+                                            class="px-10 py-10 text-center text-slate-300 italic text-xs uppercase tracking-widest">
+                                            No Batch Information Available</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 <div class="px-8 pb-8">
                     <button @click="showViewModal = false"
                         class="w-full py-4 bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl hover:bg-slate-800 transition-all">Close
