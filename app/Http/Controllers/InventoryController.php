@@ -34,7 +34,7 @@ class InventoryController extends Controller
                 ->orderBy('ExpiryDate', 'asc')
                 ->get();
         }
-
+        //print_r(json_encode($itemBatches));
 
         $aggregatedInventory = [];
         foreach ($items as $item) {
@@ -66,7 +66,7 @@ class InventoryController extends Controller
         return view('pages.inventory', [
             'aggregatedInventory' => $aggregatedInventory,
             'batchesByItem' => $batchesByItem,
-            'ItemBatches' => $itemBatches,
+            'itemBatches' => $itemBatches,
             'currentPage' => 'inventory'
         ]);
     }

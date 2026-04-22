@@ -253,7 +253,7 @@
                     <div class="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl" :for="batch in itemBatches[selectedItem.ItemID]" :key="batch.BatchID">
                         <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Batch Number</p>
                         <p class="text-xs font-black text-slate-800 dark:text-white"
-                            x-text="batch"></p>
+                            x-text=""></p>
                     </div>
                 <div class="px-8 pb-8">
                     <button @click="showViewModal = false"
@@ -442,7 +442,7 @@
                     openViewModal(item) {
                         console.log('Opening View Modal for:', item);
                         this.selectedItem = item;
-                        this.itemBatches = this.batches[item.ItemID] || [];
+                        console.log('Batches:', this.itemBatches[toString(item.ItemID)]);
                         this.showViewModal = true;
                     },
 
