@@ -37,11 +37,30 @@ class AdjustmentController extends Controller
             ->orderBy('AdjustmentDate', 'desc')
             ->get();
 
+        $disposals = InventoryDisposal::with(['warehouse', 'user', 'item'])
+            ->orderBy('DisposalDate', 'desc')
+            ->limit(6)
+            ->get();
+
+        $returns = InventoryReturn::with(['batch.item', 'user', 'healthCenter'])
+            ->orderBy('ReturnDate', 'desc')
+            ->limit(6)
+            ->get();
+
+        $corrections = Adjustment::with(['batch.item', 'user'])
+            ->where('AdjustmentType', 'Correction')
+            ->orderBy('AdjustmentDate', 'desc')
+            ->limit(6)
+            ->get();
+
         return view('pages.adjustments', [
             'items' => $items,
             'inventory' => $inventory,
             'requisitions' => $requisitions,
             'history' => $history,
+            'disposals' => $disposals,
+            'returns' => $returns,
+            'corrections' => $corrections,
             'hcBatches' => $hcBatches,
             'currentPage' => 'adjustments'
         ]);

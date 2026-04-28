@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 
 class PageController extends Controller
 {
@@ -138,16 +140,28 @@ class PageController extends Controller
 
         if ($page === 'hc_patient_requisitions') {
             $query = \App\Models\HealthCenter\HCPatientRequisition::query();
-            $patientQuery = \App\Models\HealthCenter\HCPatient::query();
+            $patientQuery = \App\Models\HealthCenter\HCPatient::query()->with('healthCenter');
+            $selectedPatientId = request()->query('patientId');
+            $selectedPatient = null;
 
             if ($isHCStaff && $hcId) {
                 $query->where('HealthCenterID', $hcId);
                 $patientQuery->where('HealthCenterID', $hcId);
             }
 
+            if ($selectedPatientId) {
+                $selectedPatient = \App\Models\HealthCenter\HCPatient::with('healthCenter')->find($selectedPatientId);
+                if ($selectedPatient && (!$isHCStaff || $selectedPatient->HealthCenterID === $hcId)) {
+                    $query->where('PatientID', $selectedPatient->PatientID);
+                } else {
+                    $selectedPatient = null;
+                }
+            }
+
             $data['patients'] = $patientQuery->get();
+            $data['selectedPatient'] = $selectedPatient;
             $data['items'] = \App\Models\Inventory\Item::whereNotIn('ItemType', ['Utility', 'Equipment'])->get();
-            $data['requisitions'] = $query->with(['patient', 'items.item'])->latest('RequestDate')->get();
+            $data['requisitions'] = $query->with(['patient', 'healthCenter', 'items.item'])->latest('RequestDate')->get();
 
             // Fetch HC stock levels
             if ($hcId) {

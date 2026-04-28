@@ -29,91 +29,126 @@
             </div>
         </div>
 
-        <!-- Active Patient Requisitions Table -->
-        <div
-            class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700/50">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50 dark:bg-slate-900/50">
-                        <tr>
-                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Patient
-                            </th>
-                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                Requisition #</th>
-                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Items</th>
-                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status
-                            </th>
-                            <th
-                                class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
-                                Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                        @forelse($requisitions as $req)
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group">
-                                <td class="px-8 py-6">
-                                    <div class="flex items-center">
-                                        <div
-                                            class="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center font-black text-sm mr-4">
-                                            {{ substr($req->patient->FName, 0, 1) }}{{ substr($req->patient->LName, 0, 1) }}
-                                        </div>
-                                        <div>
-                                            <div class="font-black text-slate-800 dark:text-white">{{ $req->patient->FName }}
-                                                {{ $req->patient->LName }}</div>
-                                            <div class="text-[10px] text-slate-400 uppercase font-bold">
-                                                {{ $req->patient->Age }}y/o | {{ $req->patient->Gender }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6">
-                                    <div class="text-sm font-bold text-slate-700 dark:text-slate-300">
-                                        {{ $req->RequisitionNumber }}</div>
-                                    <div class="text-[10px] text-slate-400 uppercase">
-                                        {{ $req->RequestDate->format('M d, H:i') }}</div>
-                                </td>
-                                <td class="px-8 py-6">
-                                    <div class="text-xs font-bold text-slate-600 dark:text-slate-400">
-                                        {{ $req->items->count() }} line items
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6">
-                                    @php
-                                        $statusClass = match ($req->StatusType) {
-                                            'Approved' => 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
-                                            'Pending' => 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
-                                            'Completed' => 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
-                                            default => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
-                                        };
-                                    @endphp
-                                    <span
-                                        class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {{ $statusClass }}">
-                                        {{ $req->StatusType }}
-                                    </span>
-                                </td>
-                                <td class="px-8 py-6 text-right">
-                                    <button data-req="{{ json_encode($req, JSON_HEX_QUOT | JSON_HEX_APOS | JSON_HEX_TAG) }}"
-                                        @click="openDetailsModal(JSON.parse($el.dataset.req))"
-                                        class="p-2 text-slate-400 hover:text-rose-500 transition-colors">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                            </path>
-                                        </svg>
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
+        @if(empty($selectedPatient))
+            <!-- Patient List Table -->
+            <div
+                class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700/50 mb-8">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 dark:bg-slate-900/50">
                             <tr>
-                                <td colspan="5" class="px-8 py-20 text-center text-slate-400 italic font-medium">No patient
-                                    requisitions found today.</td>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Patient</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Health Center</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Age / Gender</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                            @forelse($patients as $patient)
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group">
+                                    <td class="px-8 py-6">
+                                        <div class="flex items-center">
+                                            <div
+                                                class="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center font-black text-sm mr-4">
+                                                {{ substr($patient->FName, 0, 1) }}{{ substr($patient->LName, 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <div class="font-black text-slate-800 dark:text-white">{{ $patient->FName }} {{ $patient->LName }}</div>
+                                                <div class="text-[10px] text-slate-400 uppercase font-bold">Patient ID: {{ $patient->PatientID }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="text-sm font-bold text-slate-700 dark:text-slate-300">
+                                            {{ $patient->healthCenter?->Name ?? '—' }}</div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="text-xs font-bold text-slate-600 dark:text-slate-400">
+                                            {{ $patient->Age }} y/o · {{ $patient->Gender }}</div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="text-xs text-slate-500 dark:text-slate-400">
+                                            {{ $patient->ContactNumber ?? $patient->Address ?? '—' }}</div>
+                                    </td>
+                                    <td class="px-8 py-6 text-right">
+                                        <a href="{{ route('page.show', ['page' => 'hc_patient_requisitions', 'patientId' => $patient->PatientID]) }}"
+                                            class="inline-flex items-center justify-center px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-widest rounded-3xl transition-all">
+                                            View History
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-8 py-20 text-center text-slate-400 italic font-medium">No registered patients found.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        @endif
+
+        @if(!empty($selectedPatient))
+            <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700/50 mb-8">
+                <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-700/50 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-800 dark:text-white">Requisition History</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Showing all requests for {{ $selectedPatient->FName }} {{ $selectedPatient->LName }}.</p>
+                    </div>
+                    <a href="{{ route('page.show', ['page' => 'hc_patient_requisitions']) }}"
+                        class="inline-flex items-center justify-center px-5 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-100 font-black text-xs uppercase tracking-widest rounded-3xl transition-all">
+                        Back to patients
+                    </a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 dark:bg-slate-900/50">
+                            <tr>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Requisition #</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Items</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Health Center</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                            @forelse($requisitions as $req)
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group">
+                                    <td class="px-8 py-6">
+                                        <div class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $req->RequisitionNumber }}</div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="text-xs text-slate-500 dark:text-slate-400">{{ optional($req->RequestDate)->format('M d, Y H:i') }}</div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="text-xs font-bold text-slate-600 dark:text-slate-400">{{ $req->items->count() }} item(s)</div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="text-xs text-slate-500 dark:text-slate-400">{{ $req->healthCenter?->Name ?? '—' }}</div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        @php
+                                            $statusClass = match ($req->StatusType) {
+                                                'Approved' => 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
+                                                'Pending' => 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
+                                                'Completed' => 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
+                                                default => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
+                                            };
+                                        @endphp
+                                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {{ $statusClass }}">{{ $req->StatusType }}</span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-8 py-20 text-center text-slate-400 italic font-medium">No requisitions found for this patient.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
 
         <!-- Create Patient Requisition Modal -->
         <div x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"

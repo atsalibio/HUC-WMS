@@ -76,66 +76,100 @@
 
         <!-- Disposal Tab Content -->
         <div x-show="adjustTab === 'disposal'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
-            <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8 max-w-2xl">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center font-black text-xl">
-                        🗑️
+            <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_372px] gap-8">
+                <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center font-black text-xl">
+                            🗑️
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-black text-slate-800 dark:text-white">Inventory Disposal</h4>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Damaged, Expired, or Lost stock</p>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="text-lg font-black text-slate-800 dark:text-white">Inventory Disposal</h4>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Damaged, Expired, or Lost stock</p>
-                    </div>
+
+                    <form @submit.prevent="submitDisposal" class="space-y-6">
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Select Item</label>
+                                    <select x-model="disposal.itemId" @change="updateDisposalBatches" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white">
+                                        <option value="">Choose item...</option>
+                                        <template x-for="item in items" :key="item.ItemID">
+                                            <option :value="item.ItemID" x-text="item.ItemName"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Select Batch</label>
+                                    <select x-model="disposal.batchId" required :disabled="!disposal.itemId" class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white disabled:opacity-50">
+                                        <option value="">Choose batch...</option>
+                                        <template x-for="batch in filteredDisposalBatches" :key="batch.BatchID">
+                                            <option :value="batch.BatchID" x-text="`${batch.BatchID} (${batch.QuantityOnHand} avail)`"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Qty to Dispose</label>
+                                    <input type="number" x-model="disposal.quantity" min="1" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white" placeholder="1">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Disposal Type</label>
+                                    <select x-model="disposal.disposalType" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white">
+                                        <option value="Damaged">Damaged</option>
+                                        <option value="Expired">Expired</option>
+                                        <option value="Lost">Lost</option>
+                                        <option value="Recall">Quality Recall</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Upload Proof (Photo)</label>
+                                <input type="file" @change="disposal.photo = $event.target.files[0]" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-red-50 file:text-red-700 hover:file:bg-red-100 transition-all cursor-pointer">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-red-500 hover:bg-red-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 transition-all active:scale-95">
+                            Finalize Disposal
+                        </button>
+                    </form>
                 </div>
 
-                <form @submit.prevent="submitDisposal" class="space-y-6">
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Select Item</label>
-                                <select x-model="disposal.itemId" @change="updateDisposalBatches" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white">
-                                    <option value="">Choose item...</option>
-                                    <template x-for="item in items" :key="item.ItemID">
-                                        <option :value="item.ItemID" x-text="item.ItemName"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Select Batch</label>
-                                <select x-model="disposal.batchId" required :disabled="!disposal.itemId" class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white disabled:opacity-50">
-                                    <option value="">Choose batch...</option>
-                                    <template x-for="batch in filteredDisposalBatches" :key="batch.BatchID">
-                                        <option :value="batch.BatchID" x-text="`${batch.BatchID} (${batch.QuantityOnHand} avail)`"></option>
-                                    </template>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Qty to Dispose</label>
-                                <input type="number" x-model="disposal.quantity" min="1" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white" placeholder="1">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Disposal Type</label>
-                                <select x-model="disposal.disposalType" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white">
-                                    <option value="Damaged">Damaged</option>
-                                    <option value="Expired">Expired</option>
-                                    <option value="Lost">Lost</option>
-                                    <option value="Recall">Quality Recall</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Upload Proof (Photo)</label>
-                            <input type="file" @change="disposal.photo = $event.target.files[0]" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-red-50 file:text-red-700 hover:file:bg-red-100 transition-all cursor-pointer">
-                        </div>
+                <aside class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+                    <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-700/50">
+                        <h4 class="text-base font-black text-slate-800 dark:text-white">Recent Disposals</h4>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Latest logged disposal adjustments.</p>
                     </div>
-
-                    <button type="submit" class="w-full py-4 bg-red-500 hover:bg-red-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-red-500/20 transition-all active:scale-95">
-                        Finalize Disposal
-                    </button>
-                </form>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 dark:bg-slate-900/50">
+                                <tr>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Qty</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                <template x-for="log in disposals" :key="log.DisposalID">
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors">
+                                        <td class="px-4 py-4 text-xs font-bold text-slate-700 dark:text-slate-200" x-text="log.item?.ItemName || 'Unknown'"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.QuantityDisposed"></td>
+                                        <td class="px-4 py-4 text-xs uppercase font-black tracking-widest text-red-500" x-text="log.DisposalType || 'Disposal'"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-400" x-text="new Date(log.DisposalDate).toLocaleDateString()"></td>
+                                    </tr>
+                                </template>
+                                <template x-if="disposals.length === 0">
+                                    <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-[10px] uppercase tracking-widest">No disposal history yet.</td></tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </aside>
             </div>
         </div>
 
@@ -146,100 +180,168 @@
 
         <!-- Returns Tab Content -->
         <div x-show="adjustTab === 'return'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
-            <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8 max-w-2xl">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center font-black text-xl">
-                        ↩️
+            <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_372px] gap-8">
+                <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center font-black text-xl">
+                            ↩️
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-black text-slate-800 dark:text-white">Inventory Return</h4>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Return stock from completed issuances</p>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="text-lg font-black text-slate-800 dark:text-white">Inventory Return</h4>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Return stock from completed issuances</p>
-                    </div>
+
+                    <form @submit.prevent="submitReturn" class="space-y-6">
+                        <div class="space-y-5 ">
+                            <div class="grid gap-4">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Source Health Center Batch</label>
+                                <select x-model="returnObj.hcBatch" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
+                                    <option value="">Select item...</option>
+
+                                    <template x-for="batch in hcBatches" :key="batch.HCBatchID">
+                                        <option :value="batch.HCBatchID" @change="returnObj.maxQuantity = batch.QuantityOnHand" x-text="`${batch.item.ItemName} : ${batch.HCBatchNumber != 0 ? batch.HCBatchNumber : ('Batch: ' + batch.BatchID)}`"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Qty to Dispose</label>
+                                    <input type="number" x-model="returnObj.maxQuantity" max="returnObj.maxQuantity" min="1" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white" placeholder="1">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Photo Proof</label>
+                                    <input type="file" @change="returnObj.photo = $event.target.files[0]" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-red-50 file:text-red-700 hover:file:bg-red-100 transition-all cursor-pointer">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Return Reason</label>
+                                <textarea x-model="returnObj.reason" rows="3" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="Why are these items being returned?"></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50" :disabled="!returnObj.hcBatch">
+                            Process Return
+                        </button>
+                    </form>
                 </div>
 
-                <form @submit.prevent="submitReturn" class="space-y-6">
-                    <div class="space-y-5 ">
-                        <div class="grid gap-4">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Source Health Center Batch</label>
-                            <select x-model="returnObj.hcBatch" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
-                                <option value="">Select item...</option>
-
-                                <template x-for="batch in hcBatches" :key="batch.HCBatchID">
-                                    <option :value="batch.HCBatchID" @change="returnObj.maxQuantity = batch.QuantityOnHand" x-text="`${batch.item.ItemName} : ${batch.HCBatchNumber != 0 ? batch.HCBatchNumber : ('Batch: ' + batch.BatchID)}`"></option>
-                                </template>
-                            </select>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Qty to Dispose</label>
-                                <input type="number" x-model="returnObj.maxQuantity" max="returnObj.maxQuantity" min="1" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white" placeholder="1">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Photo Proof</label>
-                                <input type="file" @change="returnObj.photo = $event.target.files[0]" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-red-50 file:text-red-700 hover:file:bg-red-100 transition-all cursor-pointer">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Return Reason</label>
-                            <textarea x-model="returnObj.reason" rows="3" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="Why are these items being returned?"></textarea>
-                        </div>
+                <aside class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+                    <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-700/50">
+                        <h4 class="text-base font-black text-slate-800 dark:text-white">Recent Returns</h4>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Latest inventory return records.</p>
                     </div>
-
-                    <button type="submit" class="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50" :disabled="!returnObj.hcBatch">
-                        Process Return
-                    </button>
-                </form>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 dark:bg-slate-900/50">
+                                <tr>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Qty</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Health Center</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                <template x-for="log in returns" :key="log.ReturnID">
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors">
+                                        <td class="px-4 py-4 text-xs font-bold text-slate-700 dark:text-slate-200" x-text="log.batch?.item?.ItemName || 'Unknown'"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.QuantityReturned"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.healthCenter?.Name || '—'"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-400" x-text="new Date(log.ReturnDate).toLocaleDateString()"></td>
+                                    </tr>
+                                </template>
+                                <template x-if="returns.length === 0">
+                                    <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-[10px] uppercase tracking-widest">No return history yet.</td></tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </aside>
             </div>
         </div>
 
         <!-- Audit Correction Tab Content -->
         <div x-show="adjustTab === 'correction'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
-            <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8 max-w-4xl">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center font-black text-xl">
-                        🔧
+            <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_372px] gap-8">
+                <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center font-black text-xl">
+                            🔧
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-black text-slate-800 dark:text-white">Audit Correction</h4>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generic stock level adjustments (Increases or Decreases)</p>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="text-lg font-black text-slate-800 dark:text-white">Audit Correction</h4>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generic stock level adjustments (Increases or Decreases)</p>
-                    </div>
+
+                    <form @submit.prevent="submitCorrection" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
+                            <div class="space-y-2">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Item</label>
+                                <select x-model="correction.itemId" @change="updateCorrectionBatches" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
+                                    <option value="">Choose item...</option>
+                                    <template x-for="item in items" :key="item.ItemID">
+                                        <option :value="item.ItemID" x-text="item.ItemName"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Batch</label>
+                                <select x-model="correction.batchId" required :disabled="!correction.itemId" class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white disabled:opacity-50">
+                                    <option value="">Choose batch...</option>
+                                    <template x-for="batch in filteredCorrectionBatches" :key="batch.BatchID">
+                                        <option :value="batch.BatchID" x-text="`${batch.BatchID} (${batch.QuantityOnHand} avail)`"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity Adjustment (+/-)</label>
+                                <input type="number" x-model="correction.quantity" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="e.g. -5 or 10">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Audit Reason</label>
+                            <input type="text" x-model="correction.reason" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="e.g. Stock count mismatch">
+                        </div>
+                        <button type="submit" class="w-full py-4 bg-slate-900 dark:bg-blue-600 hover:scale-[1.02] text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-95">
+                            Apply Correction
+                        </button>
+                    </form>
                 </div>
 
-                <form @submit.prevent="submitCorrection" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
-                        <div class="space-y-2">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Item</label>
-                            <select x-model="correction.itemId" @change="updateCorrectionBatches" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
-                                <option value="">Choose item...</option>
-                                <template x-for="item in items" :key="item.ItemID">
-                                    <option :value="item.ItemID" x-text="item.ItemName"></option>
-                                </template>
-                            </select>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Batch</label>
-                            <select x-model="correction.batchId" required :disabled="!correction.itemId" class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white disabled:opacity-50">
-                                <option value="">Choose batch...</option>
-                                <template x-for="batch in filteredCorrectionBatches" :key="batch.BatchID">
-                                    <option :value="batch.BatchID" x-text="`${batch.BatchID} (${batch.QuantityOnHand} avail)`"></option>
-                                </template>
-                            </select>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity Adjustment (+/-)</label>
-                            <input type="number" x-model="correction.quantity" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="e.g. -5 or 10">
-                        </div>
+                <aside class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+                    <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-700/50">
+                        <h4 class="text-base font-black text-slate-800 dark:text-white">Recent Corrections</h4>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Latest stock correction entries.</p>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Audit Reason</label>
-                        <input type="text" x-model="correction.reason" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="e.g. Stock count mismatch">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 dark:bg-slate-900/50">
+                                <tr>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Qty</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Reason</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                <template x-for="log in corrections" :key="log.AdjustmentID">
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors">
+                                        <td class="px-4 py-4 text-xs font-bold text-slate-700 dark:text-slate-200" x-text="log.batch?.item?.ItemName || 'Unknown'"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.AdjustmentQuantity"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400 truncate" x-text="log.Reason"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-400" x-text="new Date(log.AdjustmentDate).toLocaleDateString()"></td>
+                                    </tr>
+                                </template>
+                                <template x-if="corrections.length === 0">
+                                    <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-[10px] uppercase tracking-widest">No correction history yet.</td></tr>
+                                </template>
+                            </tbody>
+                        </table>
                     </div>
-                    <button type="submit" class="w-full py-4 bg-slate-900 dark:bg-blue-600 hover:scale-[1.02] text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-95">
-                        Apply Correction
-                    </button>
-                </form>
+                </aside>
             </div>
         </div>
     </div>
@@ -327,6 +429,9 @@ function adjustmentManager() {
         hcBatches: @json($hcBatches),
         requisitions: @json($requisitions),
         history: @json($history),
+        disposals: @json($disposals),
+        returns: @json($returns),
+        corrections: @json($corrections),
 
         disposal: { itemId: '', batchId: '', quantity: 1, disposalType: 'Damaged', remarks: '', photo: null },
         filteredDisposalBatches: [],
@@ -359,6 +464,10 @@ function adjustmentManager() {
         updateCorrectionBatches() {
             this.correction.batchId = '';
             this.filteredCorrectionBatches = this.inventory.filter(b => b.ItemID == this.correction.itemId);
+        },
+
+        filteredHistoryByType(type) {
+            return this.history.filter(log => log.AdjustmentType === type).slice(0, 6);
         },
 
         async submitDisposal() {
