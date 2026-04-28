@@ -160,7 +160,7 @@
                                     <div class="w-8 h-8 rounded-xl font-black text-[10px] flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500"
                                         x-text="i + 1"></div>
                                     <div>
-                                        <p class="text-[11px] font-black text-slate-700 dark:text-white" x-text="'HC Batch #' + batch.HCBatchID"></p>
+                                        <p class="text-[11px] font-black text-slate-700 dark:text-white" x-text="'HC Batch #' + batch.HCBatchNumber"></p>
                                         <p class="text-[9px] font-bold text-slate-400"
                                             x-text="'Received: ' + formatDate(batch.DateReceivedAtHC) + (batch.LotNumber ? ' · Lot: ' + batch.LotNumber : '')"></p>
                                     </div>
@@ -389,7 +389,7 @@
                                         <td class="px-5 py-4" colspan="2">
                                             <div class="ml-12 flex items-center gap-2">
                                                 <span class="w-5 h-5 inline-flex items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/40 text-blue-500 font-black text-[9px]">${bi + 1}</span>
-                                                <span class="font-mono text-[10px] font-black text-slate-500 dark:text-slate-400">HC Batch #${batch.HCBatchID}${lotLabel}</span>
+                                                <span class="font-mono text-[10px] font-black text-slate-500 dark:text-slate-400">${batch.HCBatchNumber}${lotLabel}</span>
                                             </div>
                                         </td>
                                         <td class="px-5 py-4 text-center">

@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HealthCenter\HCInventoryBatch;
 use Illuminate\Http\Request;
-use App\Models\Inventory\Adjustment;
+use App\Models\Inventory\Adjustment\InventoryReturn;
 use App\Models\Inventory\Batch;
 use App\Models\Inventory\Item;
+use App\Models\Inventory\Adjustment;
 use App\Models\Requisition\Requisition;
+use App\Models\Inventory\Adjustment\InventoryDisposal;
+use App\Models\Inventory\Adjustment\InventoryHCCorrection;
+use App\Models\Inventory\Adjustment\InventoryWarehouseCorrection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,7 +26,14 @@ class AdjustmentController extends Controller
             ->orderBy('RequestDate', 'desc')
             ->get();
 
-        $history = Adjustment::with(['batch.item', 'user'])
+        $hcBatches = HCInventoryBatch::with(['item'])
+            ->where('QuantityOnHand', '>', 0)
+            ->whereHas('healthCenter', function($query) {
+                $query->where('HealthCenterID', Auth::user()->HealthCenterID);
+            })
+            ->get();
+
+        $history = Adjustment::with(['batch.item', 'user', 'batch'])
             ->orderBy('AdjustmentDate', 'desc')
             ->get();
 
@@ -30,8 +42,23 @@ class AdjustmentController extends Controller
             'inventory' => $inventory,
             'requisitions' => $requisitions,
             'history' => $history,
+            'hcBatches' => $hcBatches,
             'currentPage' => 'adjustments'
         ]);
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:Approved,Rejected,Completed',
+        ]);
+
+        $adjustment = Adjustment::findOrFail($id);
+
+        $adjustment->StatusType = $request->status;
+        $adjustment->save();
+
+        return response()->json(['success' => true]);
     }
 
     public function storeDisposal(Request $request)
@@ -39,13 +66,13 @@ class AdjustmentController extends Controller
         $request->validate([
             'batchId' => 'required|exists:CentralInventoryBatch,BatchID',
             'quantity' => 'required|numeric|min:1',
-            'reason' => 'required|string',
+            'disposalType' => 'required|string',
             'photo' => 'nullable|image|max:5120',
         ]);
 
         return DB::transaction(function() use ($request) {
-            $batch = Batch::lockForUpdate()->find($request->batchId);
-            
+            $batch = Batch::find($request->batchId);
+
             if ($batch->IsLocked) {
                 return response()->json(['success' => false, 'message' => 'Batch is locked and cannot be adjusted.']);
             }
@@ -62,17 +89,16 @@ class AdjustmentController extends Controller
                 $evidencePath = 'assets/img/uploads/adjustments/' . $filename;
             }
 
-            Adjustment::create([
+            InventoryDisposal::create([
                 'BatchID' => $batch->BatchID,
+                'ItemID' => $batch->ItemID,
+                'WarehouseID' => $batch->WarehouseID,
                 'UserID' => Auth::id(),
-                'AdjustmentType' => 'Disposal',
-                'AdjustmentQuantity' => $request->quantity * -1,
-                'Reason' => $request->reason,
+                'QuantityDisposed' => $request->quantity,
+                'DisposalType' => $request->disposalType,
                 'EvidencePath' => $evidencePath,
-                'AdjustmentDate' => now(),
+                'DisposalDate' => now(),
             ]);
-
-            $batch->decrement('QuantityOnHand', $request->quantity);
 
             return response()->json(['success' => true]);
         });
@@ -80,34 +106,67 @@ class AdjustmentController extends Controller
 
     public function storeReturn(Request $request)
     {
-        $request->validate([
-            'requisitionId' => 'required|exists:Requisition,RequisitionID',
+        $data = $request->validate([
+            'hcBatchId' => 'required|exists:HCInventoryBatch,HCBatchID',
             'reason' => 'required|string',
-            'items' => 'required|array',
-            'items.*.batchId' => 'required|exists:CentralInventoryBatch,BatchID',
-            'items.*.quantity' => 'required|numeric|min:1',
+            'photo' => 'nullable|image|max:5120',
+            'quantity' => 'required|numeric|min:1',
         ]);
 
-        return DB::transaction(function() use ($request) {
-            foreach ($request->items as $item) {
-                $batch = Batch::lockForUpdate()->find($item['batchId']);
-                
+        $user = Auth::user();
+
+        try {
+
+            if ($request->hasFile('photo')) {
+                $photo = $request->file('photo');
+                $filename = time() . '_' . $photo->getClientOriginalName();
+                $photo->move(public_path('assets/img/uploads/procurement'), $filename);
+                $data['photo_path'] = 'assets/img/uploads/procurement/' . $filename;
+            }
+
+            $itemReturn = HCInventoryBatch::find($data['hcBatchId']);
+
+            InventoryReturn::create([
+                'UserID' => $user->HealthCenterID,
+                'HCID' => $user->HealthCenterID,
+                'HCBatchID' => $data['hcBatchId'],
+                'BatchID' => $itemReturn->BatchID,
+                'ItemID' => $itemReturn->ItemID,
+                'QuantityReturned' => $data['quantity'],
+                'WarehouseID' => 1,
+                'Reason' => $data['reason'],
+                'EvidencePath' => $data['photo_path'] ?? null,
+                'ReturnDate' => now(),
+            ]);
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function processReturn(int $returnId)
+    {
+        //$inventoryReturn = InventoryReturnItem::where('ReturnID', $returnId)->with('batch', 'hcBatch')->get();
+
+        return DB::transaction(function() use ($inventoryReturn) {
+            foreach ($inventoryReturn->items as $returnItem) {
+                $batch = Batch::find($returnItem->BatchID);
+                $hcBatch = HCInventoryBatch::find($returnItem->HCBatchID);
+
                 if ($batch->IsLocked) {
                     throw new \Exception("Batch {$batch->LotNumber} is locked and cannot be returned to.");
                 }
-                
-                Adjustment::create([
-                    'BatchID' => $batch->BatchID,
-                    'UserID' => Auth::id(),
-                    'AdjustmentType' => 'Return',
-                    'AdjustmentQuantity' => $item['quantity'],
-                    'Reason' => $request->reason,
-                    'RequisitionID' => $request->requisitionId,
-                    'AdjustmentDate' => now(),
-                ]);
 
-                $batch->increment('QuantityOnHand', $item['quantity']);
+                $batch->QuantityOnHand += $returnItem->QuantityReturned;
+                $batch->save();
+
+                $hcBatch->QuantityOnHand -= $returnItem->QuantityReturned;
+                $hcBatch->save();
             }
+
+            $inventoryReturn->StatusType = 'Completed';
+            $inventoryReturn->save();
 
             return response()->json(['success' => true]);
         });
@@ -117,18 +176,18 @@ class AdjustmentController extends Controller
     {
         $request->validate([
             'batchId' => 'required|exists:CentralInventoryBatch,BatchID',
-            'quantity' => 'required|numeric', // can be positive or negative
+            'beforeQuantity' => 'required|numeric|min:0',
+            'quantity' => 'required|numeric',
             'reason' => 'required|string',
         ]);
 
         return DB::transaction(function() use ($request) {
-            $batch = Batch::lockForUpdate()->find($request->batchId);
-            
+            $batch = Batch::find($request->batchId);
+
             if ($batch->IsLocked) {
                 return response()->json(['success' => false, 'message' => 'Batch is locked and cannot be corrected.']);
             }
 
-            // If decreasing, check for sufficient stock
             if ($request->quantity < 0 && $batch->QuantityOnHand < abs($request->quantity)) {
                 return response()->json(['success' => false, 'message' => 'Insufficient stock for this correction.']);
             }
@@ -141,12 +200,6 @@ class AdjustmentController extends Controller
                 'Reason' => $request->reason,
                 'AdjustmentDate' => now(),
             ]);
-
-            if ($request->quantity > 0) {
-                $batch->increment('QuantityOnHand', abs($request->quantity));
-            } else {
-                $batch->decrement('QuantityOnHand', abs($request->quantity));
-            }
 
             return response()->json(['success' => true]);
         });

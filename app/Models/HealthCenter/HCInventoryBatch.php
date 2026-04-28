@@ -14,6 +14,7 @@ class HCInventoryBatch extends Model
 
     protected $fillable = [
         'HealthCenterID',
+        'HCBatchNumber',
         'ItemID',
         'BatchID',
         'LotNumber',

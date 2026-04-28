@@ -14,6 +14,7 @@ class IssuanceItem extends Model
         'IssuanceID',
         'ItemID',
         'BatchID',
+        'HCBatchID',
         'RequisitionItemID',
         'QuantityIssued'
     ];

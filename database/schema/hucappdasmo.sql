@@ -259,6 +259,138 @@ CREATE TABLE AdjustmentItem(
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 */
 
+CREATE TABLE RedistributionOrder (
+    RedistributionOrderID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NOT NULL,
+    HCID INT NOT NULL,
+    BatchID INT NOT NULL,
+    HCBatchID INT NULL, -- Optional reference to HC batch if applicable
+    ItemID INT NOT NULL,
+    Reason VARCHAR(255),
+    QuantityForRedistribution INT NOT NULL,
+    QuantityFulfilled INT DEFAULT 0,
+    RedistributionDate DATETIME,
+    StatusType VARCHAR(50) DEFAULT 'Pending', -- Pending,Fulfilled, Completed
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE RedistributionFulfillment(
+    FulfillmentID INT AUTO_INCREMENT PRIMARY KEY,
+    RedistributionOrderID INT NOT NULL,
+    HCID INT NOT NULL,
+    QuantityFulfilled INT NOT NULL,
+    StatusType VARCHAR(50) DEFAULT 'Pending', -- Pending, Received
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (RedistributionOrderID) REFERENCES RedistributionOrder(RedistributionOrderID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE RecallOrder (
+    RecallOrderID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NOT NULL,
+    BatchID INT NOT NULL,
+    ItemID INT NOT NULL,
+    Reason VARCHAR(255),
+    QuantityOnRecall INT NOT NULL,
+    RecallDate DATETIME,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE RecallItem (
+    RecallItemID INT AUTO_INCREMENT PRIMARY KEY,
+    RecallOrderID INT NOT NULL,
+    HCID INT NOT NULL,
+    BatchID INT NOT NULL,
+    HCBatchID INT NULL, -- Optional reference to HC batch if applicable
+    ItemID INT NOT NULL,
+    EvidencePath VARCHAR(255),
+    QuantityFulfilled INT NOT NULL,
+    StatusType VARCHAR(50) DEFAULT 'Pending',
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (RecallOrderID) REFERENCES RecallOrder(RecallOrderID) ON DELETE CASCADE,
+    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
+    FOREIGN KEY (HCBatchID) REFERENCES HCInventoryBatch(HCBatchID) ON DELETE SET NULL,
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE InventoryReturn (
+    ReturnID INT AUTO_INCREMENT PRIMARY KEY,
+    HCID INT NOT NULL,
+    WarehouseID INT NOT NULL,
+    UserID INT NOT NULL,
+    HCBatchID INT NULL, -- Optional reference to HC batch if applicable
+    BatchID INT NOT NULL,
+    ItemID INT NOT NULL,
+    QuantityReturned INT NOT NULL,
+    Reason VARCHAR(255),
+    EvidencePath VARCHAR(255),
+    StatusType VARCHAR(50) DEFAULT 'Pending', -- Pending, Approved, Rejected, Completed
+    ReturnDate DATETIME,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (WarehouseID) REFERENCES Warehouse(WarehouseID) ON DELETE CASCADE,
+    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
+    FOREIGN KEY (HCBatchID) REFERENCES HCInventoryBatch(HCBatchID) ON DELETE SET NULL,
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE InventoryWarehouseCorrection (
+    CorrectionID INT AUTO_INCREMENT PRIMARY KEY,
+    WarehouseID INT NOT NULL,
+    UserID INT NOT NULL,
+    BatchID INT NOT NULL,
+    ItemID INT NOT NULL,
+    QuantityBefore INT NOT NULL,
+    QuantityCorrected INT NOT NULL,
+    Reason VARCHAR(255),
+    EvidencePath VARCHAR(255),
+    StatusType VARCHAR(50) DEFAULT 'Pending', -- Pending, Approved, Rejected, Completed
+    CorrectionDate DATETIME,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (WarehouseID) REFERENCES Warehouse(WarehouseID) ON DELETE CASCADE,
+    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE InventoryHCCorrection (
+    CorrectionID INT AUTO_INCREMENT PRIMARY KEY,
+    HealthCenterID INT NOT NULL,
+    UserID INT NOT NULL,
+    BatchID INT NOT NULL,
+    HCBatchID INT NULL, -- Optional reference to HC batch if applicable
+    ItemID INT NOT NULL,
+    QuantityCorrected INT NOT NULL,
+    QuantityBefore INT NOT NULL,
+    Reason VARCHAR(255),
+    EvidencePath VARCHAR(255),
+    StatusType VARCHAR(50) DEFAULT 'Pending', -- Pending, Approved, Rejected, Completed
+    CorrectionDate DATETIME,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (HealthCenterID) REFERENCES HealthCenters(HealthCenterID) ON DELETE CASCADE,
+    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
+    FOREIGN KEY (HCBatchID) REFERENCES HCInventoryBatch(HCBatchID) ON DELETE SET NULL,
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE InventoryDisposal (
+    DisposalID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NOT NULL,
+    WarehouseID INT NOT NULL,
+    BatchID INT NOT NULL,
+    ItemID INT NOT NULL,
+    QuantityDisposed INT NOT NULL,
+    DisposalType VARCHAR(50), -- Expired, Damaged, Lost, Other
+    EvidencePath VARCHAR(255),
+    StatusType VARCHAR(50) DEFAULT 'Pending', -- Pending, Approved, Rejected, Completed
+    DisposalDate DATETIME,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
+    FOREIGN KEY (WarehouseID) REFERENCES Warehouse(WarehouseID) ON DELETE CASCADE,
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 18. Inventory Adjustment Table (New)
 CREATE TABLE InventoryAdjustment (
     AdjustmentID INT AUTO_INCREMENT PRIMARY KEY,
@@ -266,6 +398,7 @@ CREATE TABLE InventoryAdjustment (
     UserID INT NOT NULL,
     AdjustmentType VARCHAR(50), -- Disposal, Return, Correction
     AdjustmentQuantity INT NOT NULL,
+    StatusType VARCHAR(50) DEFAULT 'Pending', -- Pending, Approved, Completed, Rejected
     Reason VARCHAR(255),
     EvidencePath VARCHAR(255),
     AdjustmentDate DATETIME,
@@ -298,6 +431,7 @@ CREATE TABLE RequisitionAdjustmentDetail (
 -- 19. Health Center Inventory Batch Table (New)
 CREATE TABLE HCInventoryBatch (
     HCBatchID INT AUTO_INCREMENT PRIMARY KEY,
+    HCBatchNumber VARCHAR(100) NULL,
     HealthCenterID INT NOT NULL,
     ItemID INT NOT NULL,
     BatchID INT, -- Reference to the original central batch

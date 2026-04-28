@@ -5,20 +5,20 @@
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 px-4">
         <div class="space-y-1">
-            <h3 class="text-4xl font-black text-slate-800 dark:text-white mt-1 uppercase tracking-tight" 
+            <h3 class="text-4xl font-black text-slate-800 dark:text-white mt-1 uppercase tracking-tight"
                 x-text="activeTab === 'perform' ? 'Stock Adjustment' : 'Correction Logs'">
             </h3>
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1.5" 
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1.5"
                x-text="activeTab === 'perform' ? 'Manage disposals and item returns' : 'History of all inventory modifications'"></p>
         </div>
 
         <div class="inline-flex p-1.5 bg-slate-200/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800">
-            <button @click="activeTab = 'perform'" 
+            <button @click="activeTab = 'perform'"
                 :class="activeTab === 'perform' ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-xl scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shadow-sm'"
                 class="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">
                 Perform Adjustment
             </button>
-            <button @click="activeTab = 'history'" 
+            <button @click="activeTab = 'history'"
                 :class="activeTab === 'history' ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-xl scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shadow-sm'"
                 class="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ml-2">
                 History Logs
@@ -40,6 +40,16 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
                 Disposal
+            </button>
+            <button @click="adjustTab = 'recall'"
+                :class="adjustTab === 'recall'
+                    ? 'bg-red-500 text-white shadow-lg shadow-red-500/30 scale-[1.03]'
+                    : 'text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10'"
+                class="flex items-center gap-2.5 px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-200">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Recall
             </button>
             <button @click="adjustTab = 'return'"
                 :class="adjustTab === 'return'
@@ -107,7 +117,7 @@
                             </div>
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Disposal Type</label>
-                                <select x-model="disposal.reason" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white">
+                                <select x-model="disposal.disposalType" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white">
                                     <option value="Damaged">Damaged</option>
                                     <option value="Expired">Expired</option>
                                     <option value="Lost">Lost</option>
@@ -129,6 +139,11 @@
             </div>
         </div>
 
+        <!-- Recall Tab Content -->
+        <div x-show="adjustTab === 'recall'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
+
+        </div>
+
         <!-- Returns Tab Content -->
         <div x-show="adjustTab === 'return'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
             <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8 max-w-2xl">
@@ -143,29 +158,27 @@
                 </div>
 
                 <form @submit.prevent="submitReturn" class="space-y-6">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Source Requisition</label>
-                            <select x-model="returnObj.requisitionId" @change="updateReturnItems" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
-                                <option value="">Select source...</option>
-                                <template x-for="req in requisitions" :key="req.RequisitionID">
-                                    <option :value="req.RequisitionID" x-text="`${req.RequisitionNumber || ('ID: ' + req.RequisitionID)} - ${req.health_center?.Name}`"></option>
+                    <div class="space-y-5 ">
+                        <div class="grid gap-4">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Source Health Center Batch</label>
+                            <select x-model="returnObj.hcBatch" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
+                                <option value="">Select item...</option>
+
+                                <template x-for="batch in hcBatches" :key="batch.HCBatchID">
+                                    <option :value="batch.HCBatchID" @change="returnObj.maxQuantity = batch.QuantityOnHand" x-text="`${batch.item.ItemName} : ${batch.HCBatchNumber != 0 ? batch.HCBatchNumber : ('Batch: ' + batch.BatchID)}`"></option>
                                 </template>
                             </select>
                         </div>
 
-                        <div x-show="returnObj.requisitionId" x-transition class="space-y-3">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Select Items to Return</label>
-                            <template x-for="item in filteredReturnItems" :key="item.id">
-                                <div class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                    <input type="checkbox" x-model="item.selected" class="w-5 h-5 rounded-lg border-none bg-white dark:bg-slate-800 text-blue-500 focus:ring-2 focus:ring-blue-500/20">
-                                    <div class="flex-1">
-                                        <p class="text-xs font-black text-slate-700 dark:text-slate-300" x-text="item.name"></p>
-                                        <p class="text-[9px] font-black text-slate-400 uppercase" x-text="'Batch: ' + item.batchId"></p>
-                                    </div>
-                                    <input type="number" x-model="item.qty" :max="item.issuedQty" min="1" class="w-20 bg-white dark:bg-slate-800 border-none rounded-xl px-3 py-2 text-center text-xs font-black dark:text-white">
-                                </div>
-                            </template>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Qty to Dispose</label>
+                                <input type="number" x-model="returnObj.maxQuantity" max="returnObj.maxQuantity" min="1" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white" placeholder="1">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Photo Proof</label>
+                                <input type="file" @change="returnObj.photo = $event.target.files[0]" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-red-50 file:text-red-700 hover:file:bg-red-100 transition-all cursor-pointer">
+                            </div>
                         </div>
 
                         <div>
@@ -174,7 +187,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50" :disabled="!returnObj.requisitionId">
+                    <button type="submit" class="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50" :disabled="!returnObj.hcBatch">
                         Process Return
                     </button>
                 </form>
@@ -242,6 +255,7 @@
                             <th class="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Target Item</th>
                             <th class="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Qty ∆</th>
                             <th class="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Reason / Date</th>
+                            <th class="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                             <th class="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Adjusted By</th>
                             <th class="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Reference</th>
                         </tr>
@@ -258,7 +272,7 @@
                                 </td>
                                 <td class="px-8 py-6">
                                     <p class="text-xs font-black text-slate-800 dark:text-white" x-text="log.batch?.item?.ItemName || 'Unknown Item'"></p>
-                                    <p class="text-[10px] font-bold text-slate-400 font-mono tracking-tighter" x-text="'Batch: ' + log.BatchID"></p>
+                                    <p class="text-[10px] font-bold text-slate-400 font-mono tracking-tighter" x-text="log.batch.BatchNumber"></p>
                                 </td>
                                 <td class="px-8 py-6 text-center">
                                     <p class="text-sm font-black" :class="log.AdjustmentQuantity < 0 ? 'text-red-500' : 'text-blue-600'" x-text="log.AdjustmentQuantity"></p>
@@ -266,6 +280,12 @@
                                 <td class="px-8 py-6">
                                     <p class="text-xs font-bold text-slate-600 dark:text-slate-400" x-text="log.Reason"></p>
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" x-text="new Date(log.AdjustmentDate).toLocaleDateString()"></p>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span
+                                        class="px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest inline-block"
+                                        :class="log ? getStatusClass(log.StatusType) : ''"
+                                        x-text="log ? log.StatusType : 'N/A'"></span>
                                 </td>
                                 <td class="px-8 py-6">
                                     <div class="flex items-center gap-2">
@@ -300,21 +320,23 @@
 <script>
 function adjustmentManager() {
     return {
-        activeTab: 'perform',
+        activeTab: 'history',
         adjustTab: 'disposal',
         items: @json($items),
         inventory: @json($inventory),
+        hcBatches: @json($hcBatches),
         requisitions: @json($requisitions),
         history: @json($history),
-        
-        disposal: { itemId: '', batchId: '', quantity: 1, reason: 'Damaged', remarks: '', photo: null },
+
+        disposal: { itemId: '', batchId: '', quantity: 1, disposalType: 'Damaged', remarks: '', photo: null },
         filteredDisposalBatches: [],
 
-        correction: { itemId: '', batchId: '', quantity: 0, reason: '', remarks: '' },
+        correction: { itemId: '', batchId: '', quantityCorrected: 1, quantity: 1, reason: ''},
         filteredCorrectionBatches: [],
-        
-        returnObj: { requisitionId: '', reason: '', items: [] },
+
+        returnObj: {hcBatch: '', reason: '', photo: null, quantity: 1, maxQuantity: 1},
         filteredReturnItems: [],
+        filteredRecallItems: [],
 
         init() {
             //
@@ -325,80 +347,57 @@ function adjustmentManager() {
             this.filteredDisposalBatches = this.inventory.filter(b => b.ItemID == this.disposal.itemId);
         },
 
+        getStatusClass(status) {
+            return {
+                'Pending': 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
+                'Approved': 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
+                'Rejected': 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400',
+                'Completed': 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
+            }[status] || 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
+        },
+
         updateCorrectionBatches() {
             this.correction.batchId = '';
             this.filteredCorrectionBatches = this.inventory.filter(b => b.ItemID == this.correction.itemId);
-        },
-
-        updateReturnItems() {
-            console.log('Selected Requisition ID:', this.returnObj.requisitionId);
-            const req = this.requisitions.find(r => r.RequisitionID == this.returnObj.requisitionId);
-            console.log('Full Requisition Data:', req);
-
-            if (req && req.issuances && req.issuances.length > 0) {
-                this.filteredReturnItems = req.issuances.flatMap(iss => 
-                    iss.items.map(i => ({
-                        id: i.IssuanceItemID,
-                        name: i.batch?.item?.ItemName || 'Item',
-                        batchId: i.BatchID,
-                        issuedQty: i.QuantityIssued,
-                        qty: i.QuantityIssued,
-                        selected: true
-                    }))
-                );
-            } else if (req && req.items) {
-                // Fallback to requisition items if no issuance found (though BatchID will be missing)
-                console.warn('No issuances found for this requisition, falling back to basic items');
-                this.filteredReturnItems = req.items.map(i => ({
-                    id: i.RequisitionItemID || Math.random(),
-                    name: i.item?.ItemName || 'Item',
-                    batchId: null,
-                    issuedQty: i.QuantityRequested,
-                    qty: i.QuantityRequested,
-                    selected: true
-                }));
-            } else {
-                this.filteredReturnItems = [];
-            }
-            console.log('Mapped Return Items:', this.filteredReturnItems);
         },
 
         async submitDisposal() {
             const formData = new FormData();
             formData.append('batchId', this.disposal.batchId);
             formData.append('quantity', this.disposal.quantity);
-            formData.append('reason', this.disposal.reason);
+            formData.append('disposalType', this.disposal.disposalType);
             formData.append('remarks', this.disposal.remarks);
             if (this.disposal.photo) formData.append('photo', this.disposal.photo);
 
             try {
                 const response = await fetch('/adjustments/disposal', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json'
                     },
                     body: formData
                 });
                 const result = await response.json();
-                if (response.ok && result.success) { 
-                    alert('Disposal logged!'); 
-                    location.reload(); 
-                } else { 
-                    alert('Error: ' + (result.message || 'Validation failed. Check file size/type.')); 
+                if (response.ok && result.success) {
+                    alert('Disposal logged!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (result.message || 'Validation failed. Check file size/type.'));
                     console.error(result.errors);
                 }
             } catch (e) { alert('Connection error'); }
         },
 
         async submitReturn() {
-            const selected = this.filteredReturnItems.filter(i => i.selected);
-            if (selected.length === 0) { alert('Select items to return'); return; }
+
+            console.log('Submitting return with data:', this.returnObj);
 
             const payload = {
-                requisitionId: this.returnObj.requisitionId,
+                hcBatchId: this.returnObj.hcBatch,
                 reason: this.returnObj.reason,
-                items: selected.map(i => ({ batchId: i.batchId, quantity: i.qty }))
+                photo: this.returnObj.photo,
+                quantity: this.returnObj.quantity,
             };
 
             try {
@@ -408,14 +407,14 @@ function adjustmentManager() {
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-                if (result.success) { alert('Return processed!'); location.reload(); }
+                if (result.success) { alert('Return Request submitted!'); location.reload(); }
                 else { alert('Error: ' + result.message); }
-            } catch (e) { alert('Connection error'); }
+            } catch (e) { alert(e); }
         },
 
         async submitCorrection() {
             if (this.correction.quantity == 0) { alert('Adjustment quantity cannot be zero'); return; }
-            
+
             const payload = {
                 batchId: this.correction.batchId,
                 quantity: this.correction.quantity,

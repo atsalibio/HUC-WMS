@@ -87,6 +87,7 @@ class IssuanceService
                     if ($hcId) {
                         HCInventoryBatch::updateOrCreate(
                             [
+                                'HCBatchNumber' => 'HC-' . $hcId . '-' . $centralBatch->BatchNumber,
                                 'HealthCenterID' => $hcId,
                                 'ItemID' => $centralBatch->ItemID,
                                 'BatchID' => $batchId,
@@ -129,6 +130,7 @@ class IssuanceService
                         'IssuanceID' => $issuance->IssuanceID,
                         'ItemID' => $centralBatch->ItemID,
                         'BatchID' => $batchId,
+                        'HCBatchID' => $allocatedBatch->HCBatchID ?? null,
                         'RequisitionItemID' => $planItem['reqItemId'] ?? null,
                         'QuantityIssued' => $qtyToIssue,
                     ]);

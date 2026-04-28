@@ -38,7 +38,7 @@ class ProcurementService
                 'SupplierID' => $data['supplier_id'],
                 'HealthCenterID' => $data['health_center_id'] ?? null,
                 'ContractID' => $contractId,
-                'PONumber' => 'PO-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
+                'PONumber' => $data['contract_number'],
                 'PODate' => Carbon::now(),
                 'StatusType' => 'Pending',
                 'DocumentType' => $data['document_type'] ?? 'PO',

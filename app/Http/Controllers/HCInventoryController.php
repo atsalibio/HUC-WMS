@@ -29,6 +29,7 @@ class HCInventoryController extends Controller
             ->where('hb.QuantityOnHand', '>', 0)
             ->select(
                 'hb.HCBatchID',
+                'hb.HCBatchNumber',
                 'hb.BatchID',
                 'hb.ItemID',
                 'hb.HealthCenterID',
@@ -37,6 +38,7 @@ class HCInventoryController extends Controller
                 'hb.DateReceivedAtHC',
                 'hb.LotNumber',
                 'c.ExpiryDate',
+                'c.BatchNumber',
                 'i.ItemName',
                 'i.ItemType',
                 'i.UnitOfMeasure',
