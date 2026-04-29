@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('Receiving', function (Blueprint $table) {
-            $table->string('StatusType')->default('Received')->after('UserID');
+            if (!Schema::hasColumn('Receiving', 'StatusType')) {
+                $table->string('StatusType')->default('Received')->after('UserID');
+            }
         });
     }
 

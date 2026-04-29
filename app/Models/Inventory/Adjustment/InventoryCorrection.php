@@ -9,7 +9,7 @@ use App\Models\Inventory\Batch;
 use App\Models\Inventory\Item;
 use App\Models\Procurement\Warehouse;
 
-class InventoryWarehouseCorrection extends Model
+class InventoryCorrection extends Model
 {
     protected $table = 'InventoryCorrection';
     protected $primaryKey = 'CorrectionID';
@@ -24,7 +24,6 @@ class InventoryWarehouseCorrection extends Model
         'QuantityBefore',
         'QuantityCorrected',
         'Reason',
-        'EvidencePath',
         'StatusType',
         'CorrectionDate'
     ];

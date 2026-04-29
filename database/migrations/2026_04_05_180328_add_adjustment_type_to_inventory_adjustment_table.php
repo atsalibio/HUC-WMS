@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('InventoryAdjustment', function (Blueprint $table) {
-            $table->string('AdjustmentType')->after('UserID'); // 'Disposal', 'Return', 'Correction' etc.
+            if (!Schema::hasColumn('InventoryAdjustment', 'AdjustmentType')) {
+                $table->string('AdjustmentType')->after('UserID'); // 'Disposal', 'Return', 'Correction' etc.
+            }
         });
     }
 

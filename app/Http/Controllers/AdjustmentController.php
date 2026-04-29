@@ -10,8 +10,9 @@ use App\Models\Inventory\Item;
 use App\Models\Inventory\Adjustment;
 use App\Models\Requisition\Requisition;
 use App\Models\Inventory\Adjustment\InventoryDisposal;
-use App\Models\Inventory\Adjustment\InventoryHCCorrection;
-use App\Models\Inventory\Adjustment\InventoryWarehouseCorrection;
+use App\Models\Inventory\Adjustment\InventoryCorrection;
+use App\Models\Inventory\Adjustment\RecallOrder;
+use App\Models\Inventory\Adjustment\RecallFulfillment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -56,10 +57,19 @@ class AdjustmentController extends Controller
             ->orderBy('ReturnDate', 'desc')
             ->get();
 
-        $corrections = Adjustment::with(['batch.item', 'user'])
-            ->where('AdjustmentType', 'Correction')
-            ->orderBy('AdjustmentDate', 'desc')
-            ->limit(6)
+        $corrections = InventoryCorrection::with(['batch.item', 'user', 'healthCenter', 'warehouse'])
+            ->when(Auth::user()->HealthCenterID, function($query) {
+                return $query->where('HealthCenterID', Auth::user()->HealthCenterID);
+            })
+            ->when(!Auth::user()->HealthCenterID, function($query) {
+                return $query->where('WarehouseID', 1);
+            })
+            ->orderBy('CorrectionDate', 'desc')
+            ->get();
+
+        $recalls = RecallOrder::with(['batch.item', 'user'])
+            ->orderBy('RecallDate', 'desc')
+            ->limit(10)
             ->get();
 
         return view('pages.adjustments', [
@@ -70,6 +80,7 @@ class AdjustmentController extends Controller
             'disposals' => $disposals,
             'returns' => $returns,
             'corrections' => $corrections,
+            'recalls' => $recalls,
             'currentPage' => 'adjustments'
         ]);
     }
@@ -84,6 +95,57 @@ class AdjustmentController extends Controller
 
         $adjustment->StatusType = $request->status;
         $adjustment->save();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function updateDisposalStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:Approved,Rejected,Completed',
+        ]);
+
+        if (Auth::user()->Role !== 'Head Pharmacist') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Only Head Pharmacists can approve/reject disposals.'], 403);
+        }
+
+        $disposal = InventoryDisposal::findOrFail($id);
+        $disposal->StatusType = $request->status;
+        $disposal->save();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function updateReturnStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:Approved,Rejected,Completed',
+        ]);
+
+        if (Auth::user()->Role !== 'Head Pharmacist') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Only Head Pharmacists can approve/reject returns.'], 403);
+        }
+
+        $return = InventoryReturn::findOrFail($id);
+        $return->StatusType = $request->status;
+        $return->save();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function updateCorrectionStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:Approved,Rejected,Completed',
+        ]);
+
+        if (Auth::user()->Role !== 'Head Pharmacist') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Only Head Pharmacists can approve/reject corrections.'], 403);
+        }
+
+        $correction = InventoryCorrection::findOrFail($id);
+        $correction->StatusType = $request->status;
+        $correction->save();
 
         return response()->json(['success' => true]);
     }
@@ -202,33 +264,163 @@ class AdjustmentController extends Controller
     public function storeCorrection(Request $request)
     {
         $request->validate([
-            'batchId' => 'required|exists:CentralInventoryBatch,BatchID',
-            'beforeQuantity' => 'required|numeric|min:0',
+            'batchId' => ['required', function ($attribute, $value, $fail) {
+                $existsInCentral = Batch::where('BatchID', $value)->exists();
+                $existsInHC = HCInventoryBatch::where('HCBatchID', $value)->exists();
+
+                if (! $existsInCentral && ! $existsInHC) {
+                    $fail('The selected batch ID is invalid.');
+                }
+            }],
             'quantity' => 'required|numeric',
             'reason' => 'required|string',
         ]);
 
         return DB::transaction(function() use ($request) {
-            $batch = Batch::find($request->batchId);
+            $user = Auth::user();
+            $hcBatch = HCInventoryBatch::find($request->batchId);
+            $batch = $hcBatch ? Batch::find($hcBatch->BatchID) : Batch::find($request->batchId);
+
+            if (! $batch) {
+                return response()->json(['success' => false, 'message' => 'Batch not found.']);
+            }
 
             if ($batch->IsLocked) {
                 return response()->json(['success' => false, 'message' => 'Batch is locked and cannot be corrected.']);
             }
 
-            if ($request->quantity < 0 && $batch->QuantityOnHand < abs($request->quantity)) {
-                return response()->json(['success' => false, 'message' => 'Insufficient stock for this correction.']);
+            $quantityBefore = $hcBatch ? $hcBatch->QuantityOnHand : $batch->QuantityOnHand;
+
+            $correctionData = [
+                'UserID' => Auth::id(),
+                'BatchID' => $batch->BatchID,
+                'ItemID' => $hcBatch ? $hcBatch->ItemID : $batch->ItemID,
+                'QuantityBefore' => $quantityBefore,
+                'QuantityCorrected' => $request->quantity,
+                'Reason' => $request->reason,
+                'StatusType' => 'Pending',
+                'CorrectionDate' => now(),
+            ];
+
+            if ($user->HealthCenterID) {
+                $correctionData['HealthCenterID'] = $user->HealthCenterID;
+                $correctionData['WarehouseID'] = null;
+            } else {
+                $correctionData['WarehouseID'] = 1;
+                $correctionData['HealthCenterID'] = null;
             }
 
-            Adjustment::create([
-                'BatchID' => $batch->BatchID,
-                'UserID' => Auth::id(),
-                'AdjustmentType' => 'Correction',
-                'AdjustmentQuantity' => $request->quantity,
-                'Reason' => $request->reason,
-                'AdjustmentDate' => now(),
-            ]);
+            InventoryCorrection::create($correctionData);
 
             return response()->json(['success' => true]);
         });
+    }
+
+    public function getHealthCentersForBatch($batchId)
+    {
+        $healthCenters = \App\Models\HealthCenter\HCInventoryBatch::with('healthCenter')
+            ->where('BatchID', $batchId)
+            ->where('QuantityOnHand', '>', 0)
+            ->get()
+            ->map(function($hcBatch) {
+                return [
+                    'HCBatchID' => $hcBatch->HCBatchID,
+                    'HealthCenterID' => $hcBatch->HealthCenterID,
+                    'Name' => $hcBatch->healthCenter->Name,
+                    'QuantityOnHand' => $hcBatch->QuantityOnHand,
+                ];
+            });
+
+        return response()->json(['success' => true, 'healthCenters' => $healthCenters]);
+    }
+
+    public function storeRecall(Request $request)
+    {
+        $request->validate([
+            'batchId' => 'required|exists:CentralInventoryBatch,BatchID',
+            'reason' => 'required|string',
+            'selectedHCBatches' => 'required|array',
+            'selectedHCBatches.*' => 'exists:HCInventoryBatch,HCBatchID',
+        ]);
+
+        // Check if user is Head Pharmacist
+        if (Auth::user()->Role !== 'Head Pharmacist') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Only Head Pharmacists can create recall orders.']);
+        }
+
+        return DB::transaction(function() use ($request) {
+            $batch = \App\Models\Inventory\Batch::find($request->batchId);
+            $totalQuantity = 0;
+
+            // Calculate total quantity being recalled
+            foreach ($request->selectedHCBatches as $hcBatchId) {
+                $hcBatch = \App\Models\HealthCenter\HCInventoryBatch::find($hcBatchId);
+                $totalQuantity += $hcBatch->QuantityOnHand;
+            }
+
+            // Create recall order
+            $recallOrder = RecallOrder::create([
+                'UserID' => Auth::id(),
+                'BatchID' => $batch->BatchID,
+                'ItemID' => $batch->ItemID,
+                'Reason' => $request->reason,
+                'QuantityOnRecall' => $totalQuantity,
+                'StatusType' => 'Dispatched',
+                'RecallDate' => now(),
+            ]);
+
+            return response()->json(['success' => true, 'recallOrderId' => $recallOrder->RecallOrderID]);
+        });
+    }
+
+    public function storeRecallFulfillment(Request $request)
+    {
+        $request->validate([
+            'recallOrderId' => 'required|exists:RecallOrder,RecallOrderID',
+            'hcBatchId' => 'required|exists:HCInventoryBatch,HCBatchID',
+            'quantityFulfilled' => 'required|numeric|min:1',
+            'photo' => 'nullable|image|max:5120',
+        ]);
+
+        $user = Auth::user();
+        if (!$user->HealthCenterID) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Only health center staff can fulfill recalls.']);
+        }
+
+        $hcBatch = HCInventoryBatch::find($request->hcBatchId);
+        if (!$hcBatch || $hcBatch->HealthCenterID != $user->HealthCenterID) {
+            return response()->json(['success' => false, 'message' => 'Selected batch does not belong to your health center.']);
+        }
+
+        $recallOrder = RecallOrder::find($request->recallOrderId);
+        if (!$recallOrder || $recallOrder->BatchID != $hcBatch->BatchID) {
+            return response()->json(['success' => false, 'message' => 'Selected recall order does not match the inventory batch.']);
+        }
+
+        if ($request->quantityFulfilled > $hcBatch->QuantityOnHand) {
+            return response()->json(['success' => false, 'message' => 'Fulfilled quantity cannot exceed current batch quantity on hand.']);
+        }
+
+        $evidencePath = null;
+        if ($request->hasFile('photo')) {
+            $photo = $request->file('photo');
+            $filename = time() . '_' . $photo->getClientOriginalName();
+            $photo->move(public_path('assets/img/uploads/adjustments'), $filename);
+            $evidencePath = 'assets/img/uploads/adjustments/' . $filename;
+        }
+
+        RecallFulfillment::create([
+            'RecallOrderID' => $recallOrder->RecallOrderID,
+            'HCID' => $user->HealthCenterID,
+            'HCBatchID' => $hcBatch->HCBatchID,
+            'BatchID' => $hcBatch->BatchID,
+            'ItemID' => $hcBatch->ItemID,
+            'QuantityFulfilled' => $request->quantityFulfilled,
+            'EvidencePath' => $evidencePath,
+            'StatusType' => 'Pending',
+            'CreatedAt' => now(),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

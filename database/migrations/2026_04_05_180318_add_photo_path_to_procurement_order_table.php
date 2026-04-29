@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ProcurementOrder', function (Blueprint $table) {
-            $table->string('PhotoPath')->nullable()->after('DocumentType');
+            if (!Schema::hasColumn('ProcurementOrder', 'PhotoPath')) {
+                $table->string('PhotoPath')->nullable()->after('DocumentType');
+            }
         });
     }
 

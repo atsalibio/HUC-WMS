@@ -293,22 +293,23 @@ CREATE TABLE RecallOrder (
     ItemID INT NOT NULL,
     Reason VARCHAR(255),
     QuantityOnRecall INT NOT NULL,
+    StatusType VARCHAR(50) DEFAULT 'Dispatched',
     RecallDate DATETIME,
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
     FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
     FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE RecallItem (
-    RecallItemID INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE RecallFulfillment (
+    RecallFulfillmentID INT AUTO_INCREMENT PRIMARY KEY,
     RecallOrderID INT NOT NULL,
     HCID INT NOT NULL,
     BatchID INT NOT NULL,
-    HCBatchID INT NULL, -- Optional reference to HC batch if applicable
+    HCBatchID INT NULL,
     ItemID INT NOT NULL,
     EvidencePath VARCHAR(255),
     QuantityFulfilled INT NOT NULL,
-    StatusType VARCHAR(50) DEFAULT 'Pending',
+    StatusType VARCHAR(50) DEFAULT 'Fulfilled',
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (RecallOrderID) REFERENCES RecallOrder(RecallOrderID) ON DELETE CASCADE,
     FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,

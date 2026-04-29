@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('notifications', function (Blueprint $table) {
-            if (!Schema::hasColumn('notifications', 'CreatedAt')) {
+        Schema::table('Notifications', function (Blueprint $table) {
+            if (!Schema::hasColumn('Notifications', 'CreatedAt')) {
                 $table->timestamps();
             }
         });
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('notifications', function (Blueprint $table) {
+        Schema::table('Notifications', function (Blueprint $table) {
             //
         });
     }

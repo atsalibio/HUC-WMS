@@ -9,20 +9,22 @@ use App\Models\Inventory\Batch;
 use App\Models\Inventory\Item;
 use App\Models\Procurement\Warehouse;
 
-class RecallOrder extends Model
+class RecallFulfillment extends Model
 {
-    protected $table = 'RecallOrder';
-    protected $primaryKey = 'RecallOrderID';
+    protected $table = 'RecallFulfillment';
+    protected $primaryKey = 'RecallFulfillmentID';
     public $timestamps = false;
 
     protected $fillable = [
-        'UserID',
+        'RecallOrderID',
+        'HCID',
         'BatchID',
+        'HCBatchID',
         'ItemID',
-        'Reason',
-        'QuantityOnRecall',
+        'EvidencePath',
+        'QuantityFulfilled',
         'StatusType',
-        'RecallDate'
+        'CreatedAt',
     ];
 
     public function warehouse()

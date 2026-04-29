@@ -78,8 +78,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/pages/adjustments', [AdjustmentController::class, 'index'])->name('pages.adjustments');
     Route::post('/adjustments/disposal', [AdjustmentController::class, 'storeDisposal']);
+    Route::patch('/adjustments/disposal/{id}/status', [AdjustmentController::class, 'updateDisposalStatus']);
     Route::post('/adjustments/return', [AdjustmentController::class, 'storeReturn']);
+    Route::patch('/adjustments/return/{id}/status', [AdjustmentController::class, 'updateReturnStatus']);
     Route::post('/adjustments/correction', [AdjustmentController::class, 'storeCorrection']);
+    Route::patch('/adjustments/correction/{id}/status', [AdjustmentController::class, 'updateCorrectionStatus']);
+    Route::get('/adjustments/recall/health-centers/{batchId}', [AdjustmentController::class, 'getHealthCentersForBatch']);
+    Route::post('/adjustments/recall', [AdjustmentController::class, 'storeRecall']);
+    Route::post('/adjustments/recall/fulfillment', [AdjustmentController::class, 'storeRecallFulfillment']);
 
     Route::get('/pages/history', [MonitoringController::class, 'index'])->name('pages.history');
     Route::post('/history/data', [MonitoringController::class, 'getHistory']);

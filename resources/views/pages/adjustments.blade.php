@@ -42,12 +42,13 @@
                 Disposal
             </button>
             <button @click="adjustTab = 'recall'"
+                x-show="'{{ Auth::user()->Role }}' === 'Head Pharmacist' || '{{ Auth::user()->HealthCenterID }}'"
                 :class="adjustTab === 'recall'
-                    ? 'bg-red-500 text-white shadow-lg shadow-red-500/30 scale-[1.03]'
-                    : 'text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10'"
+                    ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30 scale-[1.03]'
+                    : 'text-slate-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/10'"
                 class="flex items-center gap-2.5 px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-200">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 Recall
             </button>
@@ -152,6 +153,7 @@
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantity</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Details</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
@@ -161,10 +163,11 @@
                                         <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.QuantityDisposed"></td>
                                         <td class="px-4 py-4 text-xs uppercase font-black tracking-widest text-red-500" x-text="log.DisposalType || 'Disposal'"></td>
                                         <td class="px-4 py-4 text-xs text-slate-400" x-text="new Date(log.DisposalDate).toLocaleDateString()"></td>
+                                        <td class="px-4 py-4 text-center"><button @click="openDisposalDetail(log)" class="inline-flex items-center justify-center w-6 h-6 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button></td>
                                     </tr>
                                 </template>
                                 <template x-if="disposals.length === 0">
-                                    <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-[10px] uppercase tracking-widest">No disposal history yet.</td></tr>
+                                    <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400 text-[10px] uppercase tracking-widest">No disposal history yet.</td></tr>
                                 </template>
                             </tbody>
                         </table>
@@ -175,7 +178,197 @@
 
         <!-- Recall Tab Content -->
         <div x-show="adjustTab === 'recall'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2">
+            <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_372px] gap-8">
+                <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-orange-500 flex items-center justify-center font-black text-xl">
+                            ⚠️
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-black text-slate-800 dark:text-white">Product Recall</h4>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recall products from health centers</p>
+                        </div>
+                    </div>
 
+                    @if(Auth::user()->Role === 'Head Pharmacist')
+                    <form @submit.prevent="submitRecall" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                            <div class="space-y-2">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Item</label>
+                                <select x-model="recall.itemId" @change="updateRecallBatches" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-orange-500/20 transition-all dark:text-white">
+                                    <option value="">Choose item...</option>
+                                    <template x-for="item in items" :key="item.ItemID">
+                                        <option :value="item.ItemID" x-text="item.ItemName"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Batch</label>
+                                <select x-model="recall.batchId" @change="getHealthCentersForRecall" required :disabled="!recall.itemId" class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-orange-500/20 transition-all dark:text-white disabled:opacity-50">
+                                    <option value="">Choose batch...</option>
+                                    <template x-for="batch in filteredRecallBatches" :key="batch.BatchID">
+                                        <option :value="batch.BatchID" x-text="`${batch.BatchID} (${batch.QuantityOnHand} avail)`"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Health Centers with This Batch</label>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 max-h-48 overflow-y-auto">
+                                <template x-if="recallHealthCenters.length === 0 && recall.batchId">
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 text-center py-4">No health centers have this batch.</p>
+                                </template>
+                                <template x-if="recallHealthCenters.length > 0">
+                                    <div class="space-y-2">
+                                        <template x-for="hc in recallHealthCenters" :key="hc.HCBatchID">
+                                            <label class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                                                <input type="checkbox" :value="hc.HCBatchID" x-model="recall.selectedHCBatches" class="rounded border-slate-300 text-orange-500 focus:ring-orange-500">
+                                                <div class="flex-1">
+                                                    <span class="text-xs font-bold text-slate-700 dark:text-slate-200" x-text="hc.Name"></span>
+                                                    <span class="text-[10px] text-slate-500 dark:text-slate-400 ml-2" x-text="`(${hc.QuantityOnHand} units)`"></span>
+                                                </div>
+                                            </label>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Recall Reason</label>
+                            <textarea x-model="recall.reason" rows="3" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-orange-500/20 transition-all dark:text-white" placeholder="Why is this product being recalled?"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-orange-500/20 transition-all active:scale-95 disabled:opacity-50" :disabled="!recall.batchId || recall.selectedHCBatches.length === 0">
+                            Initiate Recall Order
+                        </button>
+                    </form>
+                    @endif
+
+                    <div class="bg-slate-50 dark:bg-slate-900/50 rounded-[2rem] p-6 border border-slate-200/60 dark:border-slate-700/60">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h4 class="text-sm font-black text-slate-800 dark:text-white">Recall Orders</h4>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">All recall orders and their details.</p>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-[10px]">
+                                <thead class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                                    <tr>
+                                        <th class="px-3 py-3 font-black text-slate-400 uppercase tracking-widest">Item</th>
+                                        <th class="px-3 py-3 font-black text-slate-400 uppercase tracking-widest">Batch</th>
+                                        <th class="px-3 py-3 font-black text-slate-400 uppercase tracking-widest">Qty</th>
+                                        <th class="px-3 py-3 font-black text-slate-400 uppercase tracking-widest">Reason</th>
+                                        <th class="px-3 py-3 font-black text-slate-400 uppercase tracking-widest">Requested By</th>
+                                        <th class="px-3 py-3 font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                                    <template x-for="recall in recalls" :key="recall.RecallOrderID">
+                                        <tr class="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                            <td class="px-3 py-3 text-xs font-bold text-slate-700 dark:text-slate-200" x-text="recall.item?.ItemName || 'Unknown'"></td>
+                                            <td class="px-3 py-3 text-xs text-slate-500 dark:text-slate-400" x-text="recall.BatchID"></td>
+                                            <td class="px-3 py-3 text-xs text-slate-500 dark:text-slate-400" x-text="recall.QuantityOnRecall"></td>
+                                            <td class="px-3 py-3 text-xs text-slate-500 dark:text-slate-400" x-text="recall.Reason || 'N/A'"></td>
+                                            <td class="px-3 py-3 text-xs text-slate-500 dark:text-slate-400" x-text="recall.user?.Name || 'System'"></td>
+                                            <td class="px-3 py-3 text-xs text-slate-400" x-text="new Date(recall.RecallDate).toLocaleDateString()"></td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="recalls.length === 0">
+                                        <tr><td colspan="6" class="px-3 py-6 text-center text-slate-400 uppercase tracking-widest">No recall orders yet.</td></tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @if(Auth::user()->HealthCenterID)
+                    <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden p-10 space-y-8">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center font-black text-xl">
+                                📦
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-black text-slate-800 dark:text-white">Recall Fulfillment</h4>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fulfill recall orders from your health center inventory.</p>
+                            </div>
+                        </div>
+                        <form @submit.prevent="submitRecallFulfillment" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                                <div class="space-y-2">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Recall Order</label>
+                                    <select x-model="recallFulfillment.recallOrderId" @change="updateRecallFulfillmentOrders" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
+                                        <option value="">Choose recall order...</option>
+                                        <template x-for="order in availableRecallOrders" :key="order.RecallOrderID">
+                                            <option :value="order.RecallOrderID" x-text="`${order.item?.ItemName || 'Unknown'} — ${order.BatchID} (${order.QuantityOnRecall} qty)`"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Inventory Batch</label>
+                                    <select x-model="recallFulfillment.hcBatchId" @change="updateRecallFulfillmentQuantity" required :disabled="filteredFulfillmentHCBatches.length === 0" class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white disabled:opacity-50">
+                                        <option value="">Choose batch...</option>
+                                        <template x-for="batch in filteredFulfillmentHCBatches" :key="batch.HCBatchID">
+                                            <option :value="batch.HCBatchID" x-text="`${batch.HCBatchID} (${batch.QuantityOnHand} on hand)`"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Quantity Fulfilled</label>
+                                    <input type="number" x-model.number="recallFulfillment.quantityFulfilled" min="1" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="Quantity fulfilled">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Upload Photo</label>
+                                    <input type="file" @change="recallFulfillment.photo = $event.target.files[0]" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50" :disabled="!recallFulfillment.recallOrderId || !recallFulfillment.hcBatchId || !recallFulfillment.quantityFulfilled">
+                                Submit Recall Fulfillment
+                            </button>
+                        </form>
+                        <template x-if="availableRecallOrders.length === 0">
+                            <p class="text-xs text-slate-500 dark:text-slate-400">No recall orders are currently available for your inventory.</p>
+                        </template>
+                    </div>
+                    @endif
+
+                <aside class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+                    <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-700/50">
+                        <h4 class="text-base font-black text-slate-800 dark:text-white">Recent Recalls</h4>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Latest recall orders.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 dark:bg-slate-900/50">
+                                <tr>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Batch</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantity</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                <template x-for="recall in recalls" :key="recall.RecallOrderID">
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors">
+                                        <td class="px-4 py-4 text-xs font-bold text-slate-700 dark:text-slate-200" x-text="recall.item?.ItemName || 'Unknown'"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="recall.BatchID"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="recall.QuantityOnRecall"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-400" x-text="new Date(recall.RecallDate).toLocaleDateString()"></td>
+                                    </tr>
+                                </template>
+                                <template x-if="recalls.length === 0">
+                                    <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-[10px] uppercase tracking-widest">No recall orders yet.</td></tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </aside>
+            </div>
         </div>
 
         <!-- Returns Tab Content -->
@@ -251,6 +444,7 @@
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Qty</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Health Center</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Details</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
@@ -260,10 +454,11 @@
                                         <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.QuantityReturned"></td>
                                         <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.health_center?.Name || '—'"></td>
                                         <td class="px-4 py-4 text-xs text-slate-400" x-text="new Date(log.ReturnDate).toLocaleDateString()"></td>
+                                        <td class="px-4 py-4 text-center"><button @click="openReturnDetail(log)" class="inline-flex items-center justify-center w-6 h-6 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button></td>
                                     </tr>
                                 </template>
                                 <template x-if="returns.length === 0">
-                                    <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-[10px] uppercase tracking-widest">No return history yet.</td></tr>
+                                    <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400 text-[10px] uppercase tracking-widest">No return history yet.</td></tr>
                                 </template>
                             </tbody>
                         </table>
@@ -334,6 +529,7 @@
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Qty</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Reason</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Details</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
@@ -343,10 +539,11 @@
                                         <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.AdjustmentQuantity"></td>
                                         <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400 truncate" x-text="log.Reason"></td>
                                         <td class="px-4 py-4 text-xs text-slate-400" x-text="new Date(log.AdjustmentDate).toLocaleDateString()"></td>
+                                        <td class="px-4 py-4 text-center"><button @click="openCorrectionDetail(log)" class="inline-flex items-center justify-center w-6 h-6 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button></td>
                                     </tr>
                                 </template>
                                 <template x-if="corrections.length === 0">
-                                    <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-[10px] uppercase tracking-widest">No correction history yet.</td></tr>
+                                    <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400 text-[10px] uppercase tracking-widest">No correction history yet.</td></tr>
                                 </template>
                             </tbody>
                         </table>
@@ -429,6 +626,178 @@
     </div>
 </div>
 
+<!-- Detail Modal -->
+<div x-show="detailModal.isOpen" x-cloak class="fixed inset-0 bg-slate-900/50 dark:bg-slate-900/70 z-50 flex items-center justify-center p-4" @click.self="closeDetailModal()">
+    <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" @click.stop>
+        <!-- Disposal Detail Modal -->
+        <template x-if="detailModal.type === 'disposal' && detailModal.data">
+            <div class="p-8 space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-6">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 dark:text-white">Disposal Details</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">View and manage this disposal record</p>
+                    </div>
+                    <button @click="closeDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Item</label>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.item?.ItemName || 'Unknown'"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Quantity Disposed</label>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.QuantityDisposed"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Disposal Type</label>
+                        <p class="text-sm font-bold text-red-500 uppercase" x-text="detailModal.data.DisposalType"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Date</label>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="new Date(detailModal.data.DisposalDate).toLocaleDateString()"></p>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Remarks</label>
+                        <p class="text-sm text-slate-700 dark:text-slate-200" x-text="detailModal.data.Remarks || 'No remarks'"></p>
+                    </div>
+                    <template x-if="detailModal.data.EvidencePath">
+                        <div class="col-span-2">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Evidence Photo</label>
+                            <img :src="'/' + detailModal.data.EvidencePath" class="max-h-64 rounded-xl border border-slate-200 dark:border-slate-700">
+                        </div>
+                    </template>
+                </div>
+                <template x-if="userRole === 'Head Pharmacist' && detailModal.data.StatusType === 'Pending'">
+                    <div class="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <button @click="updateTransactionStatus(detailModal.data.DisposalID, 'Approved', 'disposal')" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                            Approve
+                        </button>
+                        <button @click="updateTransactionStatus(detailModal.data.DisposalID, 'Rejected', 'disposal')" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                            Reject
+                        </button>
+                    </div>
+                </template>
+                <template x-if="!userHealthCenterID && detailModal.data.StatusType === 'Approved'">
+                    <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <button @click="updateTransactionStatus(detailModal.data.DisposalID, 'Completed', 'disposal')" class="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                            Mark as Completed
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Return Detail Modal -->
+        <template x-if="detailModal.type === 'return' && detailModal.data">
+            <div class="p-8 space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-6">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 dark:text-white">Return Details</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">View and manage this return record</p>
+                    </div>
+                    <button @click="closeDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Item</label>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.batch?.item?.ItemName || 'Unknown'"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Quantity Returned</label>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.QuantityReturned"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Health Center</label>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.health_center?.Name || '—'"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Date</label>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="new Date(detailModal.data.ReturnDate).toLocaleDateString()"></p>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Reason</label>
+                        <p class="text-sm text-slate-700 dark:text-slate-200" x-text="detailModal.data.Reason || 'No reason provided'"></p>
+                    </div>
+                    <template x-if="detailModal.data.EvidencePath">
+                        <div class="col-span-2">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Evidence Photo</label>
+                            <img :src="'/' + detailModal.data.EvidencePath" class="max-h-64 rounded-xl border border-slate-200 dark:border-slate-700">
+                        </div>
+                    </template>
+                </div>
+                <template x-if="userRole === 'Head Pharmacist' && detailModal.data.StatusType === 'Pending'">
+                    <div class="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <button @click="updateTransactionStatus(detailModal.data.ReturnID, 'Approved', 'return')" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                            Approve
+                        </button>
+                        <button @click="updateTransactionStatus(detailModal.data.ReturnID, 'Rejected', 'return')" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                            Reject
+                        </button>
+                    </div>
+                </template>
+                <template x-if="!userHealthCenterID && detailModal.data.StatusType === 'Approved'">
+                    <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <button @click="updateTransactionStatus(detailModal.data.ReturnID, 'Completed', 'return')" class="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                            Mark as Completed
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Correction Detail Modal -->
+        <template x-if="detailModal.type === 'correction' && detailModal.data">
+            <div class="p-8 space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-6">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 dark:text-white">Correction Details</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">View and manage this correction record</p>
+                    </div>
+                    <button @click="closeDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Item</label>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.batch?.item?.ItemName || 'Unknown'"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Adjustment Quantity</label>
+                        <p class="text-sm font-bold" :class="detailModal.data.AdjustmentQuantity < 0 ? 'text-red-500' : 'text-green-500'" x-text="detailModal.data.AdjustmentQuantity"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Quantity Before</label>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.QuantityBefore"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Date</label>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="new Date(detailModal.data.AdjustmentDate).toLocaleDateString()"></p>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Reason</label>
+                        <p class="text-sm text-slate-700 dark:text-slate-200" x-text="detailModal.data.Reason || 'No reason provided'"></p>
+                    </div>
+                </div>
+                <template x-if="userRole === 'Head Pharmacist' && detailModal.data.StatusType === 'Pending'">
+                    <div class="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <button @click="updateTransactionStatus(detailModal.data.AdjustmentID, 'Approved', 'correction')" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                            Approve
+                        </button>
+                        <button @click="updateTransactionStatus(detailModal.data.AdjustmentID, 'Rejected', 'correction')" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                            Reject
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+</div>
+
 <script>
 function adjustmentManager() {
     return {
@@ -441,6 +810,7 @@ function adjustmentManager() {
         disposals: @json($disposals),
         returns: @json($returns),
         corrections: @json($corrections),
+        recalls: @json($recalls),
 
         disposal: { itemId: '', batchId: '', quantity: 1, disposalType: 'Damaged', remarks: '', photo: null },
         filteredDisposalBatches: [],
@@ -452,8 +822,19 @@ function adjustmentManager() {
         filteredReturnBatches: [],
         filteredRecallItems: [],
 
+        recall: { itemId: '', batchId: '', selectedHCBatches: [], reason: '' },
+        filteredRecallBatches: [],
+        recallHealthCenters: [],
+        availableRecallOrders: [],
+        recallFulfillment: { recallOrderId: '', hcBatchId: '', quantityFulfilled: 0, photo: null },
+        filteredFulfillmentHCBatches: [],
+
+        detailModal: { isOpen: false, type: null, data: null },
+        userRole: '{{ Auth::user()->Role }}',
+        userHealthCenterID: {{ Auth::user()->HealthCenterID ?? 'null' }},
+
         init() {
-            //
+            this.refreshRecallFulfillmentOrders();
         },
 
         updateDisposalBatches() {
@@ -555,7 +936,157 @@ function adjustmentManager() {
                 const result = await response.json();
                 if (result.success) { alert('Correction applied!'); /*location.reload();*/ }
                 else { alert('Error: ' + result.message); }
-            } catch (e) { alert('Connection error'); }
+            } catch (e) { alert(e); }
+        },
+
+        updateRecallBatches() {
+            this.recall.batchId = '';
+            this.recall.selectedHCBatches = [];
+            this.recallHealthCenters = [];
+            this.filteredRecallBatches = this.inventory.filter(b => b.ItemID == this.recall.itemId);
+        },
+
+        refreshRecallFulfillmentOrders() {
+            const inventoryBatchIds = this.inventory.map(batch => batch.BatchID);
+            this.availableRecallOrders = this.recalls.filter(order => inventoryBatchIds.includes(order.BatchID));
+        },
+
+        updateRecallFulfillmentOrders() {
+            this.recallFulfillment.hcBatchId = '';
+            this.recallFulfillment.quantityFulfilled = 0;
+
+            const order = this.recalls.find(r => r.RecallOrderID == this.recallFulfillment.recallOrderId);
+            this.filteredFulfillmentHCBatches = order ? this.inventory.filter(batch => batch.BatchID == order.BatchID) : [];
+        },
+
+        updateRecallFulfillmentQuantity() {
+            const hcBatch = this.inventory.find(batch => batch.HCBatchID == this.recallFulfillment.hcBatchId);
+            this.recallFulfillment.quantityFulfilled = hcBatch ? hcBatch.QuantityOnHand : 0;
+        },
+
+        async submitRecallFulfillment() {
+            if (!this.recallFulfillment.recallOrderId || !this.recallFulfillment.hcBatchId) {
+                alert('Please select a recall order and an inventory batch.');
+                return;
+            }
+
+            if (this.recallFulfillment.quantityFulfilled < 1) {
+                alert('Quantity fulfilled must be at least 1.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('recallOrderId', this.recallFulfillment.recallOrderId);
+            formData.append('hcBatchId', this.recallFulfillment.hcBatchId);
+            formData.append('quantityFulfilled', this.recallFulfillment.quantityFulfilled);
+            if (this.recallFulfillment.photo) {
+                formData.append('photo', this.recallFulfillment.photo);
+            }
+
+            try {
+                const response = await fetch('/adjustments/recall/fulfillment', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('Recall fulfillment submitted successfully!');
+                    this.recallFulfillment = { recallOrderId: '', hcBatchId: '', quantityFulfilled: 0, photo: null };
+                    this.filteredFulfillmentHCBatches = [];
+                } else {
+                    alert('Error: ' + (result.message || 'Validation failed.'));
+                }
+            } catch (e) {
+                alert('Connection error');
+            }
+        },
+
+        async getHealthCentersForRecall() {
+            if (!this.recall.batchId) return;
+
+            try {
+                const response = await fetch(`/adjustments/recall/health-centers/${this.recall.batchId}`);
+                const result = await response.json();
+                if (result.success) {
+                    this.recallHealthCenters = result.healthCenters;
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (e) { alert(e); }
+        },
+
+        async submitRecall() {
+            if (this.recall.selectedHCBatches.length === 0) { alert('Please select at least one health center'); return; }
+
+            const payload = {
+                batchId: this.recall.batchId,
+                selectedHCBatches: this.recall.selectedHCBatches,
+                reason: this.recall.reason
+            };
+
+            try {
+                const response = await fetch('/adjustments/recall', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Recall order created successfully!');
+                    this.recall = { itemId: '', batchId: '', selectedHCBatches: [], reason: '' };
+                    this.recallHealthCenters = [];
+                    // Optionally refresh recalls list
+                    // location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (e) { alert(e); }
+        },
+
+        openDisposalDetail(disposal) {
+            this.detailModal.type = 'disposal';
+            this.detailModal.data = disposal;
+            this.detailModal.isOpen = true;
+        },
+
+        openReturnDetail(returnRecord) {
+            this.detailModal.type = 'return';
+            this.detailModal.data = returnRecord;
+            this.detailModal.isOpen = true;
+        },
+
+        openCorrectionDetail(correction) {
+            this.detailModal.type = 'correction';
+            this.detailModal.data = correction;
+            this.detailModal.isOpen = true;
+        },
+
+        closeDetailModal() {
+            this.detailModal.isOpen = false;
+            this.detailModal.type = null;
+            this.detailModal.data = null;
+        },
+
+        async updateTransactionStatus(transactionId, status, type) {
+            try {
+                const response = await fetch(`/adjustments/${type}/${transactionId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ status: status })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert(`Transaction ${status.toLowerCase()}!`);
+                    this.closeDetailModal();
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (e) {
+                alert('Error updating transaction status');
+            }
         }
     }
 }
