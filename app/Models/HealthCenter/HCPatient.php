@@ -12,7 +12,6 @@ class HCPatient extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'HealthCenterID',
         'FName',
         'MName',
         'LName',
@@ -21,11 +20,6 @@ class HCPatient extends Model
         'Address',
         'ContactNumber',
     ];
-
-    public function healthCenter()
-    {
-        return $this->belongsTo(HealthCenter::class, 'HealthCenterID');
-    }
 
     public function requisitions()
     {

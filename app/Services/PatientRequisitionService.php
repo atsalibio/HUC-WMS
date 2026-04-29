@@ -32,10 +32,6 @@ class PatientRequisitionService
     {
         $q = HCPatient::query();
 
-        if ($role === 'Health Center Staff') {
-            $q->where('HealthCenterID', $healthCenterId);
-        }
-
         if ($query) {
             $q->where(function ($sub) use ($query) {
                 $sub->where('FName', 'LIKE', "%{$query}%")

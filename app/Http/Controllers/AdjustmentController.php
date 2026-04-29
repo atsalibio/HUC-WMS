@@ -38,13 +38,17 @@ class AdjustmentController extends Controller
             ->get();
 
         $disposals = InventoryDisposal::with(['warehouse', 'user', 'item'])
+            ->where('StatusType', '!=', 'Completed')
+            ->where('StatusType', '!=', 'Rejected')
             ->orderBy('DisposalDate', 'desc')
             ->limit(6)
             ->get();
 
         $returns = InventoryReturn::with(['batch.item', 'user', 'healthCenter'])
+            ->where('HCID', Auth::user()->HealthCenterID)
+            ->where('StatusType', '!=', 'Completed')
+            ->where('StatusType', '!=', 'Rejected')
             ->orderBy('ReturnDate', 'desc')
-            ->limit(6)
             ->get();
 
         $corrections = Adjustment::with(['batch.item', 'user'])

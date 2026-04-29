@@ -21,7 +21,6 @@ class PatientRequisitionController extends Controller
         $user = Auth::user();
 
         $data = $request->validate([
-            'HealthCenterID' => 'nullable|integer',
             'FName' => 'required|string',
             'MName' => 'nullable|string',
             'LName' => 'required|string',
@@ -30,13 +29,6 @@ class PatientRequisitionController extends Controller
             'Address' => 'nullable|string',
             'ContactNumber' => 'nullable|string',
         ]);
-
-        // Enforce HealthCenterID exclusivity
-        if ($user->Role === 'Health Center Staff') {
-            $data['HealthCenterID'] = $user->HealthCenterID;
-        } elseif (!$data['HealthCenterID']) {
-            return response()->json(['success' => false, 'message' => 'Health Center ID is required for administrative staff'], 400);
-        }
 
         try {
             $patient = $this->patientRequisitionService->createPatient($data, $user->UserID);

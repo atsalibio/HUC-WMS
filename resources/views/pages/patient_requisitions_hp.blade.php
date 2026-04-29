@@ -5,7 +5,7 @@
     <!-- Header -->
     <div class="mb-12">
         <p class="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] mb-2">Final Verification</p>
-        <h1 class="text-4xl font-black text-slate-800 dark:text-white tracking-tight">Patient Prescription Approval</h1>
+        <h1 class="text-4xl font-black text-slate-800 dark:text-white tracking-tight">Patient Prescription Management</h1>
         <p class="text-slate-500 dark:text-slate-400 mt-2">Validate and authorize medication release for health center patients.</p>
     </div>
 
@@ -79,7 +79,10 @@
                 <!-- Decision Footer -->
                 @if($req->StatusType === 'Approved')
                 <div class="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700 flex gap-4">
-                    <button @click="dispenseStock({{ $req->PatientReqID }})" class="flex-[2] py-4 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-rose-500/20 transition-all active:scale-95">
+                    <button @click="updateStatus({{ $req->PatientReqID }}, 'Rejected')" class="flex-1 py-4 bg-slate-50 dark:bg-slate-900 text-slate-400 hover:text-red-500 font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all border border-transparent hover:border-red-500/20">
+                        Deny Request
+                    </button>
+                    <button @click="dispenseStock({{ $req->PatientReqID }})" class="flex-[2] py-4 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-rose-500/20 transition-all active:scale-95">
                         Dispense & Finalize Release
                     </button>
                 </div>

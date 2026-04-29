@@ -336,9 +336,10 @@ CREATE TABLE InventoryReturn (
     FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE InventoryWarehouseCorrection (
+CREATE TABLE InventoryCorrection (
     CorrectionID INT AUTO_INCREMENT PRIMARY KEY,
-    WarehouseID INT NOT NULL,
+    WarehouseID INT DEFAULT NULL,
+    HealthCenterID INT DEFAULT NULL,
     UserID INT NOT NULL,
     BatchID INT NOT NULL,
     ItemID INT NOT NULL,
@@ -350,27 +351,8 @@ CREATE TABLE InventoryWarehouseCorrection (
     CorrectionDate DATETIME,
     FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
     FOREIGN KEY (WarehouseID) REFERENCES Warehouse(WarehouseID) ON DELETE CASCADE,
-    FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
-    FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE InventoryHCCorrection (
-    CorrectionID INT AUTO_INCREMENT PRIMARY KEY,
-    HealthCenterID INT NOT NULL,
-    UserID INT NOT NULL,
-    BatchID INT NOT NULL,
-    HCBatchID INT NULL, -- Optional reference to HC batch if applicable
-    ItemID INT NOT NULL,
-    QuantityCorrected INT NOT NULL,
-    QuantityBefore INT NOT NULL,
-    Reason VARCHAR(255),
-    EvidencePath VARCHAR(255),
-    StatusType VARCHAR(50) DEFAULT 'Pending', -- Pending, Approved, Rejected, Completed
-    CorrectionDate DATETIME,
-    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
     FOREIGN KEY (HealthCenterID) REFERENCES HealthCenters(HealthCenterID) ON DELETE CASCADE,
     FOREIGN KEY (BatchID) REFERENCES CentralInventoryBatch(BatchID) ON DELETE CASCADE,
-    FOREIGN KEY (HCBatchID) REFERENCES HCInventoryBatch(HCBatchID) ON DELETE SET NULL,
     FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -526,7 +508,7 @@ CREATE TABLE Notifications (
 -- 26. Patient Table
 CREATE TABLE HCPatient (
     PatientID INT AUTO_INCREMENT PRIMARY KEY,
-    HealthCenterID INT NOT NULL,
+    PatientIDNumber VARCHAR(20) UNIQUE,
     FName VARCHAR(100) NOT NULL,
     MName VARCHAR(100),
     LName VARCHAR(100) NOT NULL,

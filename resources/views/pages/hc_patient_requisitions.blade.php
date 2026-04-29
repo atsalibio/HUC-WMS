@@ -110,6 +110,7 @@
                                 <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Items</th>
                                 <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Health Center</th>
                                 <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
@@ -137,6 +138,15 @@
                                             };
                                         @endphp
                                         <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {{ $statusClass }}">{{ $req->StatusType }}</span>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <button @click="openDetailsModal('{{ $req }}')"
+                                            class="w-10 h-10 inline-flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:border-blue-500/30 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                        </button>
                                     </td>
                                 </tr>
                             @empty
@@ -511,7 +521,7 @@
                                             </div>
                                             <div class="text-right">
                                                 <p class="text-lg font-black text-slate-800 dark:text-white"
-                                                    x-text="item.Quantity"></p>
+                                                    x-text="item.QuantityRequested"></p>
                                                 <p
                                                     class="text-[9px] font-black text-slate-400 uppercase tracking-widest uppercase">
                                                     Units</p>
@@ -572,12 +582,6 @@
                                 class="px-10 py-5 bg-white dark:bg-slate-700 text-slate-600 dark:text-white font-black text-xs uppercase tracking-widest rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 transition-all active:scale-95">
                                 Close
                             </button>
-                            <template x-if="activeReq.StatusType === 'Approved'">
-                                <button @click="dispenseStock(activeReq.PatientReqID)"
-                                    class="px-10 py-5 bg-slate-900 dark:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-[2rem] shadow-xl transition-all hover:bg-blue-500 active:scale-95">
-                                    Finalize Dispensing
-                                </button>
-                            </template>
                         </div>
                     </div>
                 </div>
@@ -636,10 +640,10 @@
                     }
                 },
                 openDetailsModal(req) {
-                    console.log("Opening details for Req:", req);
                     // Deep clone to avoid modifying original until saved
-                    this.activeReq = JSON.parse(JSON.stringify(req));
+                    this.activeReq = JSON.parse(req);
                     // Initialize ItemStatus for each item if not set
+
                     if (this.activeReq.items) {
                         this.activeReq.items.forEach(item => {
                             if (!item.ItemStatus) item.ItemStatus = 'Approved';
@@ -648,6 +652,8 @@
 
                     this.decisionRemarks = '';
                     this.showDetailsModal = true;
+
+                    console.log("Opening details for Req:", this.activeReq);
                 },
                 closeDetailsModal() {
                     this.showDetailsModal = false;
@@ -740,27 +746,6 @@
                         } else {
                             alert('Error: ' + (result.message || 'Validation failed. Check file size/type.'));
                             console.error(result.errors);
-                        }
-                    } catch (error) {
-                        alert('Connection error');
-                    }
-                },
-                async dispenseStock(reqId) {
-                    if (!confirm('Finalize medicine dispensing for this patient?')) return;
-                    try {
-                        const response = await fetch(`/patient-requisitions/${reqId}/dispense`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            }
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            alert('Dispensing completed!');
-                            location.reload();
-                        } else {
-                            alert('Error: ' + result.message);
                         }
                     } catch (error) {
                         alert('Connection error');

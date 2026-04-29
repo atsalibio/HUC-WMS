@@ -36,7 +36,7 @@ class PageController extends Controller
         'dashboard' => ['Administrator', 'Head Pharmacist', 'Health Center Staff', 'Warehouse Staff', 'Accounting Office User', 'CMO/GSO/COA User'],
         'requisitions' => ['Administrator', 'Head Pharmacist', 'Health Center Staff'],
         'hc_patient_requisitions' => ['Administrator', 'Health Center Staff', 'Head Pharmacist'],
-        'patient_requisitions_hp' => ['Administrator', 'Head Pharmacist'],
+        'patient_requisitions_hp' => ['Health Center Staff'],
         'procurement_orders' => ['Administrator', 'Head Pharmacist', 'Warehouse Staff'],
         'procurement-orders' => ['Administrator', 'Head Pharmacist', 'Warehouse Staff'],
         'receiving' => ['Administrator', 'Warehouse Staff'],
@@ -140,18 +140,17 @@ class PageController extends Controller
 
         if ($page === 'hc_patient_requisitions') {
             $query = \App\Models\HealthCenter\HCPatientRequisition::query();
-            $patientQuery = \App\Models\HealthCenter\HCPatient::query()->with('healthCenter');
+            $patientQuery = \App\Models\HealthCenter\HCPatient::query();
             $selectedPatientId = request()->query('patientId');
             $selectedPatient = null;
 
             if ($isHCStaff && $hcId) {
                 $query->where('HealthCenterID', $hcId);
-                $patientQuery->where('HealthCenterID', $hcId);
             }
 
             if ($selectedPatientId) {
-                $selectedPatient = \App\Models\HealthCenter\HCPatient::with('healthCenter')->find($selectedPatientId);
-                if ($selectedPatient && (!$isHCStaff || $selectedPatient->HealthCenterID === $hcId)) {
+                $selectedPatient = \App\Models\HealthCenter\HCPatient::find($selectedPatientId);
+                if ($selectedPatient) {
                     $query->where('PatientID', $selectedPatient->PatientID);
                 } else {
                     $selectedPatient = null;
@@ -178,6 +177,7 @@ class PageController extends Controller
 
         if ($page === 'patient_requisitions_hp') {
             $data['requisitions'] = \App\Models\HealthCenter\HCPatientRequisition::where('StatusType', 'Pending')
+                ->OrWhere('StatusType', 'Approved')
                 ->with(['patient', 'healthCenter', 'items.item'])
                 ->get();
         }
