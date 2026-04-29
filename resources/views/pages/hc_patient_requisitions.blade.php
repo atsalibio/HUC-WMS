@@ -650,10 +650,13 @@
                         });
                     }
 
-                    this.decisionRemarks = '';
-                    this.showDetailsModal = true;
-
-                    console.log("Opening details for Req:", this.activeReq);
+                    if(('{{ Auth::user()->HealthCenterID }}' == this.activeReq.HealthCenterID) || !('{{ Auth::user()->HealthCenterID }}')){
+                        this.decisionRemarks = '';
+                        this.showDetailsModal = true;
+                    }
+                    else{
+                        alert('You can only view reqisitions from your own health center');
+                    }
                 },
                 closeDetailsModal() {
                     this.showDetailsModal = false;

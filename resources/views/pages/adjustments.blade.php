@@ -149,7 +149,7 @@
                             <thead class="bg-slate-50 dark:bg-slate-900/50">
                                 <tr>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
-                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Qty</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantity</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
                                 </tr>
@@ -194,21 +194,31 @@
 
                     <form @submit.prevent="submitReturn" class="space-y-6">
                         <div class="space-y-5 ">
-                            <div class="grid gap-4">
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Source Health Center Batch</label>
-                                <select x-model="returnObj.hcBatch" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white">
-                                    <option value="">Select item...</option>
-
-                                    <template x-for="batch in hcBatches" :key="batch.HCBatchID">
-                                        <option :value="batch.HCBatchID" @change="returnObj.maxQuantity = batch.QuantityOnHand" x-text="`${batch.item.ItemName} : ${batch.HCBatchNumber != 0 ? batch.HCBatchNumber : ('Batch: ' + batch.BatchID)}`"></option>
-                                    </template>
-                                </select>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Select Item</label>
+                                    <select x-model="returnObj.itemId" @change="updateReturnBatches" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white">
+                                        <option value="">Choose item...</option>
+                                        <template x-for="item in items" :key="item.ItemID">
+                                            <option :value="item.ItemID" x-text="item.ItemName"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Select Batch</label>
+                                    <select x-model="returnObj.hcBatch" required :disabled="!returnObj.itemId" class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white disabled:opacity-50">
+                                        <option value="">Choose batch...</option>
+                                        <template x-for="batch in filteredReturnBatches" :key="batch.HCBatchID">
+                                            <option :value="batch.HCBatchID" x-text="`${batch.BatchID} (${batch.QuantityOnHand} avail)`"></option>
+                                        </template>
+                                    </select>
+                                </div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Qty to Dispose</label>
-                                    <input type="number" x-model="returnObj.maxQuantity" max="returnObj.maxQuantity" min="1" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white" placeholder="1">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Quantity to Return</label>
+                                    <input type="number" x-model="returnObj.quantity" min="1" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-red-500/20 transition-all dark:text-white" placeholder="1">
                                 </div>
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Photo Proof</label>
@@ -248,7 +258,7 @@
                                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors">
                                         <td class="px-4 py-4 text-xs font-bold text-slate-700 dark:text-slate-200" x-text="log.batch?.item?.ItemName || 'Unknown'"></td>
                                         <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.QuantityReturned"></td>
-                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.healthCenter?.Name || '—'"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.health_center?.Name || '—'"></td>
                                         <td class="px-4 py-4 text-xs text-slate-400" x-text="new Date(log.ReturnDate).toLocaleDateString()"></td>
                                     </tr>
                                 </template>
@@ -297,8 +307,8 @@
                                 </select>
                             </div>
                             <div class="space-y-2">
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity Adjustment (+/-)</label>
-                                <input type="number" x-model="correction.quantity" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="e.g. -5 or 10">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Correction</label>
+                                <input type="number" x-model="correction.quantity" required class="w-full bg-slate-50 dark:bg-slate-900/50 border-none rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-500/20 transition-all dark:text-white" placeholder="New Value">
                             </div>
                         </div>
                         <div>
@@ -426,7 +436,6 @@ function adjustmentManager() {
         adjustTab: 'disposal',
         items: @json($items),
         inventory: @json($inventory),
-        hcBatches: @json($hcBatches),
         requisitions: @json($requisitions),
         history: @json($history),
         disposals: @json($disposals),
@@ -439,8 +448,8 @@ function adjustmentManager() {
         correction: { itemId: '', batchId: '', quantityCorrected: 1, quantity: 1, reason: ''},
         filteredCorrectionBatches: [],
 
-        returnObj: {hcBatch: '', reason: '', photo: null, quantity: 1, maxQuantity: 1},
-        filteredReturnItems: [],
+        returnObj: {itemId: '', hcBatch: '', reason: '', photo: null, quantity: 1, maxQuantity: 1},
+        filteredReturnBatches: [],
         filteredRecallItems: [],
 
         init() {
@@ -450,6 +459,12 @@ function adjustmentManager() {
         updateDisposalBatches() {
             this.disposal.batchId = '';
             this.filteredDisposalBatches = this.inventory.filter(b => b.ItemID == this.disposal.itemId);
+        },
+
+        updateReturnBatches() {
+            this.returnObj.hcBatch = '';
+            this.filteredReturnBatches = this.inventory.filter(b => b.ItemID == this.returnObj.itemId);
+            console.log('filtered', this.filteredReturnBatches);
         },
 
         getStatusClass(status) {
@@ -500,7 +515,7 @@ function adjustmentManager() {
 
         async submitReturn() {
 
-            console.log('Submitting return with data:', this.returnObj);
+            console.log("return:", this.returnObj);
 
             const payload = {
                 hcBatchId: this.returnObj.hcBatch,
@@ -516,7 +531,7 @@ function adjustmentManager() {
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-                if (result.success) { alert('Return Request submitted!'); location.reload(); }
+                if (result.success) { alert('Return Request submitted!'); /*location.reload();*/ }
                 else { alert('Error: ' + result.message); }
             } catch (e) { alert(e); }
         },
@@ -538,7 +553,7 @@ function adjustmentManager() {
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-                if (result.success) { alert('Correction applied!'); location.reload(); }
+                if (result.success) { alert('Correction applied!'); /*location.reload();*/ }
                 else { alert('Error: ' + result.message); }
             } catch (e) { alert('Connection error'); }
         }

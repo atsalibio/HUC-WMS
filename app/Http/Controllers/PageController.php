@@ -144,10 +144,6 @@ class PageController extends Controller
             $selectedPatientId = request()->query('patientId');
             $selectedPatient = null;
 
-            if ($isHCStaff && $hcId) {
-                $query->where('HealthCenterID', $hcId);
-            }
-
             if ($selectedPatientId) {
                 $selectedPatient = \App\Models\HealthCenter\HCPatient::find($selectedPatientId);
                 if ($selectedPatient) {
@@ -176,8 +172,10 @@ class PageController extends Controller
         }
 
         if ($page === 'patient_requisitions_hp') {
-            $data['requisitions'] = \App\Models\HealthCenter\HCPatientRequisition::where('StatusType', 'Pending')
-                ->OrWhere('StatusType', 'Approved')
+            $data['requisitions'] = \App\Models\HealthCenter\HCPatientRequisition::where('HealthCenterID', Auth::user()->HealthCenterID)
+                ->where(function ($q) {
+                    $q->where('StatusType', 'Approved')->orWhere('StatusType', 'Pending');
+                })
                 ->with(['patient', 'healthCenter', 'items.item'])
                 ->get();
         }

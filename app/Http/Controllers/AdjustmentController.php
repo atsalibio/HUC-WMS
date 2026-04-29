@@ -19,19 +19,24 @@ class AdjustmentController extends Controller
 {
     public function index()
     {
-        $items = Item::all();
-        $inventory = Batch::where('QuantityOnHand', '>', 0)->where('IsLocked', false)->get();
         $requisitions = Requisition::with(['healthCenter', 'user', 'items.item', 'issuances.items.batch.item'])
             ->whereIn('StatusType', ['Completed', 'Issued'])
             ->orderBy('RequestDate', 'desc')
             ->get();
 
-        $hcBatches = HCInventoryBatch::with(['item'])
-            ->where('QuantityOnHand', '>', 0)
-            ->whereHas('healthCenter', function($query) {
-                $query->where('HealthCenterID', Auth::user()->HealthCenterID);
-            })
-            ->get();
+        if(!Auth::user()->HealthCenterID){
+            $inventory = Batch::where('QuantityOnHand', '>', 0)->where('IsLocked', false)->get();
+        }
+        else{
+            $inventory = HCInventoryBatch::with(['item'])
+                ->where('QuantityOnHand', '>', 0)
+                ->whereHas('healthCenter', function($query) {
+                    $query->where('HealthCenterID', Auth::user()->HealthCenterID);
+                })
+                ->get();
+        }
+
+        $items = Item::whereIn('ItemID', $inventory->select('ItemID'))->get();
 
         $history = Adjustment::with(['batch.item', 'user', 'batch'])
             ->orderBy('AdjustmentDate', 'desc')
@@ -65,7 +70,6 @@ class AdjustmentController extends Controller
             'disposals' => $disposals,
             'returns' => $returns,
             'corrections' => $corrections,
-            'hcBatches' => $hcBatches,
             'currentPage' => 'adjustments'
         ]);
     }
