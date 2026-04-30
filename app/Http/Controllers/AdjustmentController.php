@@ -43,15 +43,19 @@ class AdjustmentController extends Controller
             ->orderBy('AdjustmentDate', 'desc')
             ->get();
 
-        $disposals = InventoryDisposal::with(['warehouse', 'user', 'item'])
+        $disposals = InventoryDisposal::with(['batch', 'warehouse', 'user', 'item'])
             ->where('StatusType', '!=', 'Completed')
             ->where('StatusType', '!=', 'Rejected')
             ->orderBy('DisposalDate', 'desc')
-            ->limit(6)
             ->get();
 
         $returns = InventoryReturn::with(['batch.item', 'user', 'healthCenter'])
-            ->where('HCID', Auth::user()->HealthCenterID)
+            ->when(Auth::user()->HealthCenterID, function($query) {
+                return $query->where('HCID', Auth::user()->HealthCenterID);
+            })
+            ->when(Auth::user()->Role == 'Warehouse Staff', function($query) {
+                return $query->where('StatusType', 'Approved');
+            })
             ->where('StatusType', '!=', 'Completed')
             ->where('StatusType', '!=', 'Rejected')
             ->orderBy('ReturnDate', 'desc')
@@ -105,11 +109,24 @@ class AdjustmentController extends Controller
             'status' => 'required|in:Approved,Rejected,Completed',
         ]);
 
-        if (Auth::user()->Role !== 'Head Pharmacist') {
-            return response()->json(['success' => false, 'message' => 'Unauthorized. Only Head Pharmacists can approve/reject disposals.'], 403);
+        $disposal = InventoryDisposal::findOrFail($id);
+        $mainInventoryBatch = Batch::findOrFail($disposal->BatchID);
+
+        if($request->status === 'Approved' || $request->status === 'Rejected'){
+            if ((Auth::user()->Role !== 'Head Pharmacist')) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized. Only Head Pharmacists can approve/reject disposals.'], 403);
+            }
+        }
+        else{
+            if ((Auth::user()->Role !== 'Warehouse Staff')) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized. Only Warehouse Staff can confirm completed disposals.'], 403);
+            }
+
+            $mainInventoryBatch->QuantityOnHand -= $disposal->QuantityDisposed;
+            $mainInventoryBatch->save();
+
         }
 
-        $disposal = InventoryDisposal::findOrFail($id);
         $disposal->StatusType = $request->status;
         $disposal->save();
 
@@ -122,11 +139,30 @@ class AdjustmentController extends Controller
             'status' => 'required|in:Approved,Rejected,Completed',
         ]);
 
-        if (Auth::user()->Role !== 'Head Pharmacist') {
-            return response()->json(['success' => false, 'message' => 'Unauthorized. Only Head Pharmacists can approve/reject returns.'], 403);
+        $return = InventoryReturn::findOrFail($id);
+        $mainInventoryBatch = Batch::findOrFail($return->BatchID);
+        $hcInventoryBatch = HCInventoryBatch::findOrFail($return->HCBatchID);
+
+        if($hcInventoryBatch->QuantityOnHand < $return->QuantityReturned){
+            return response()->json(['success' => false, 'message' => 'Not enough stocks in Health Center Inventory to complete return'], 403);
         }
 
-        $return = InventoryReturn::findOrFail($id);
+        if($request->status === 'Approved' || $request->status === 'Rejected'){
+            if ((Auth::user()->Role !== 'Head Pharmacist')) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized. Only Head Pharmacists can approve/reject returns.'], 403);
+            }
+        }
+        else{
+            if ((Auth::user()->Role !== 'Warehouse Staff')) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized. Only Warehouse Staff can confirm completed returns.'], 403);
+            }
+
+            $mainInventoryBatch->QuantityOnHand += $return->QuantityReturned;
+            $mainInventoryBatch->save();
+            $hcInventoryBatch->QuantityOnHand -= $return->QuantityReturned;
+            $hcInventoryBatch->save();
+        }
+
         $return->StatusType = $request->status;
         $return->save();
 
@@ -144,8 +180,27 @@ class AdjustmentController extends Controller
         }
 
         $correction = InventoryCorrection::findOrFail($id);
-        $correction->StatusType = $request->status;
-        $correction->save();
+
+        if ($request->status === 'Rejected'){
+            $correction->StatusType = $request->status;
+            $correction->save();
+            return response()->json(['success' => true]);
+        }
+
+        try{
+            if(!$correction->HealthCenterID){
+                $correctionItem = Batch::findOrFail($correction->BatchID);
+            }
+            else{
+                $correctionItem = HCInventoryBatch::findOrFail($correction->BatchID);
+            }
+
+            $correctionItem->QuantityOnHand = $correction->QuantityCorrected;
+            $correction->StatusType = $request->status;
+            $correction->save();
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
 
         return response()->json(['success' => true]);
     }
@@ -178,7 +233,7 @@ class AdjustmentController extends Controller
                 $evidencePath = 'assets/img/uploads/adjustments/' . $filename;
             }
 
-            InventoryDisposal::create([
+            $disposal = InventoryDisposal::create([
                 'BatchID' => $batch->BatchID,
                 'ItemID' => $batch->ItemID,
                 'WarehouseID' => $batch->WarehouseID,
@@ -188,6 +243,9 @@ class AdjustmentController extends Controller
                 'EvidencePath' => $evidencePath,
                 'DisposalDate' => now(),
             ]);
+
+            $disposal->ReferrenceNo = 'DIS-' . now()->format('Ymd') . $disposal->DisposalID;
+            $disposal->save();
 
             return response()->json(['success' => true]);
         });
@@ -215,7 +273,7 @@ class AdjustmentController extends Controller
 
             $itemReturn = HCInventoryBatch::find($data['hcBatchId']);
 
-            InventoryReturn::create([
+            $return = InventoryReturn::create([
                 'UserID' => $user->HealthCenterID,
                 'HCID' => $user->HealthCenterID,
                 'HCBatchID' => $data['hcBatchId'],
@@ -227,6 +285,9 @@ class AdjustmentController extends Controller
                 'EvidencePath' => $data['photo_path'] ?? null,
                 'ReturnDate' => now(),
             ]);
+
+            $return->ReferrenceNo = 'RET-' . 'HC' . $return->HCID . '-' . now()->format('Ymd') . $return->ReturnID;
+            $return->save();
 
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
@@ -310,7 +371,11 @@ class AdjustmentController extends Controller
                 $correctionData['HealthCenterID'] = null;
             }
 
-            InventoryCorrection::create($correctionData);
+            $correction = InventoryCorrection::create($correctionData);
+            $originID = $correction->WarehouseID ? 'WH-' . $correction->WarehouseID : 'HC-' . $correction->HealthCenterID;
+
+            $correction->ReferrenceNo = 'COR-' . $originID . '-' . now()->format('Ymd') . $correction->CorrectionID;
+            $correction->save();
 
             return response()->json(['success' => true]);
         });

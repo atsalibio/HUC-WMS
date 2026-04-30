@@ -8,6 +8,7 @@ use App\Models\System\HealthCenter;
 use App\Models\Procurement\Warehouse;
 use App\Models\Inventory\Item;
 use App\Models\Requisition\Requisition;
+use App\Models\Inventory\Batch;
 
 class InventoryDisposal extends Model
 {
@@ -16,6 +17,7 @@ class InventoryDisposal extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'ReferrenceNo',
         'UserID',
         'WarehouseID',
         'BatchID',
@@ -41,4 +43,10 @@ class InventoryDisposal extends Model
     {
         return $this->belongsTo(User::class, 'UserID');
     }
+
+    public function batch()
+    {
+        return $this->belongsTo(Batch::class, 'BatchID');
+    }
+
 }

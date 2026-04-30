@@ -16,6 +16,7 @@ class RecallFulfillment extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'ReferrenceNo',
         'RecallOrderID',
         'HCID',
         'BatchID',

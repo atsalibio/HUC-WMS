@@ -16,6 +16,7 @@ class InventoryCorrection extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'ReferrenceNo',
         'WarehouseID',
         'HealthCenterID',
         'UserID',

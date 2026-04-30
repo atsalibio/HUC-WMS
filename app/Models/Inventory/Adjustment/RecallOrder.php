@@ -16,6 +16,7 @@ class RecallOrder extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'ReferrenceNo',
         'UserID',
         'BatchID',
         'ItemID',

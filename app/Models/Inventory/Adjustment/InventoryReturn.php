@@ -15,6 +15,7 @@ class InventoryReturn extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'ReferrenceNo',
         'HCID',
         'WarehouseID',
         'UserID',

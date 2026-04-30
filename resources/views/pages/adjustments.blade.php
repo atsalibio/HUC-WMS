@@ -149,8 +149,9 @@
                         <table class="w-full text-left">
                             <thead class="bg-slate-50 dark:bg-slate-900/50">
                                 <tr>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Disposal Ref No</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
-                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantity</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Details</th>
@@ -159,8 +160,9 @@
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                                 <template x-for="log in disposals" :key="log.DisposalID">
                                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors">
-                                        <td class="px-4 py-4 text-xs font-bold text-slate-700 dark:text-slate-200" x-text="log.item?.ItemName || 'Unknown'"></td>
-                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.QuantityDisposed"></td>
+                                        <td class="px-4 py-4 text-xs font-bold text-slate-700 dark:text-slate-200" x-text="log.ReferrenceNo"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.item?.ItemName || 'Unknown'"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.StatusType"></td>
                                         <td class="px-4 py-4 text-xs uppercase font-black tracking-widest text-red-500" x-text="log.DisposalType || 'Disposal'"></td>
                                         <td class="px-4 py-4 text-xs text-slate-400" x-text="new Date(log.DisposalDate).toLocaleDateString()"></td>
                                         <td class="px-4 py-4 text-center"><button @click="openDisposalDetail(log)" class="inline-flex items-center justify-center w-6 h-6 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button></td>
@@ -336,6 +338,7 @@
                         </template>
                     </div>
                     @endif
+                </div>
 
                 <aside class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
                     <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-700/50">
@@ -440,9 +443,9 @@
                         <table class="w-full text-left">
                             <thead class="bg-slate-50 dark:bg-slate-900/50">
                                 <tr>
-                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
-                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Qty</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Return Ref No</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Health Center</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Details</th>
                                 </tr>
@@ -525,9 +528,10 @@
                         <table class="w-full text-left">
                             <thead class="bg-slate-50 dark:bg-slate-900/50">
                                 <tr>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Correction Ref No.</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Origin</th>
+                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item</th>
-                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Qty</th>
-                                    <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Reason</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
                                     <th class="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Details</th>
                                 </tr>
@@ -535,9 +539,10 @@
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                                 <template x-for="log in corrections" :key="log.AdjustmentID">
                                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors">
-                                        <td class="px-4 py-4 text-xs font-bold text-slate-700 dark:text-slate-200" x-text="log.batch?.item?.ItemName || 'Unknown'"></td>
-                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.AdjustmentQuantity"></td>
-                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400 truncate" x-text="log.Reason"></td>
+                                        <td class="px-4 py-4 text-xs font-bold text-slate-700 dark:text-slate-200" x-text="log.ReferrenceNo"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400" x-text="log.WarehouseID ? log.warehouse?.WarehouseName : log.health_center?.Name"></td>
+                                        <td class="px-4 py-4 text-xs font-bold text-slate-700 dark:text-slate-200" x-text="log.StatusType"></td>
+                                        <td class="px-4 py-4 text-xs text-slate-500 dark:text-slate-400 truncate" x-text="log.batch?.item?.ItemName || 'Unknown'"></td>
                                         <td class="px-4 py-4 text-xs text-slate-400" x-text="new Date(log.AdjustmentDate).toLocaleDateString()"></td>
                                         <td class="px-4 py-4 text-center"><button @click="openCorrectionDetail(log)" class="inline-flex items-center justify-center w-6 h-6 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button></td>
                                     </tr>
@@ -624,177 +629,178 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- Detail Modal -->
-<div x-show="detailModal.isOpen" x-cloak class="fixed inset-0 bg-slate-900/50 dark:bg-slate-900/70 z-50 flex items-center justify-center p-4" @click.self="closeDetailModal()">
-    <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" @click.stop>
-        <!-- Disposal Detail Modal -->
-        <template x-if="detailModal.type === 'disposal' && detailModal.data">
-            <div class="p-8 space-y-6">
-                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-6">
-                    <div>
-                        <h2 class="text-2xl font-black text-slate-800 dark:text-white">Disposal Details</h2>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">View and manage this disposal record</p>
+
+    <!-- Detail Modal -->
+    <div x-show="detailModal.isOpen" x-cloak class="fixed inset-0 bg-slate-900/50 dark:bg-slate-900/70 z-50 flex items-center justify-center p-4" @click.self="closeDetailModal()">
+        <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" @click.stop>
+            <!-- Disposal Detail Modal -->
+            <template x-if="detailModal.type === 'disposal' && detailModal.data">
+                <div class="p-8 space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 dark:text-white">Disposal Details</h2>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">View and manage this disposal record</p>
+                        </div>
+                        <button @click="closeDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
                     </div>
-                    <button @click="closeDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
-                <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Item</label>
-                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.item?.ItemName || 'Unknown'"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Quantity Disposed</label>
-                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.QuantityDisposed"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Disposal Type</label>
-                        <p class="text-sm font-bold text-red-500 uppercase" x-text="detailModal.data.DisposalType"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Date</label>
-                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="new Date(detailModal.data.DisposalDate).toLocaleDateString()"></p>
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Remarks</label>
-                        <p class="text-sm text-slate-700 dark:text-slate-200" x-text="detailModal.data.Remarks || 'No remarks'"></p>
-                    </div>
-                    <template x-if="detailModal.data.EvidencePath">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Item</label>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.item?.ItemName || 'Unknown'"></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Quantity Disposed</label>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.QuantityDisposed"></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Disposal Type</label>
+                            <p class="text-sm font-bold text-red-500 uppercase" x-text="detailModal.data.DisposalType"></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Date</label>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="new Date(detailModal.data.DisposalDate).toLocaleDateString()"></p>
+                        </div>
                         <div class="col-span-2">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Evidence Photo</label>
-                            <img :src="'/' + detailModal.data.EvidencePath" class="max-h-64 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Remarks</label>
+                            <p class="text-sm text-slate-700 dark:text-slate-200" x-text="detailModal.data.Remarks || 'No remarks'"></p>
+                        </div>
+                        <template x-if="detailModal.data.EvidencePath">
+                            <div class="col-span-2">
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Evidence Photo</label>
+                                <img :src="'/' + detailModal.data.EvidencePath" class="max-h-64 rounded-xl border border-slate-200 dark:border-slate-700">
+                            </div>
+                        </template>
+                    </div>
+                    <template x-if="userRole === 'Head Pharmacist' && detailModal.data.StatusType === 'Pending'">
+                        <div class="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <button @click="updateTransactionStatus(detailModal.data.DisposalID, 'Approved', 'disposal')" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                                Approve
+                            </button>
+                            <button @click="updateTransactionStatus(detailModal.data.DisposalID, 'Rejected', 'disposal')" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                                Reject
+                            </button>
+                        </div>
+                    </template>
+                    <template x-if="!userHealthCenterID && detailModal.data.StatusType === 'Approved'">
+                        <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <button @click="updateTransactionStatus(detailModal.data.DisposalID, 'Completed', 'disposal')" class="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                                Mark as Completed
+                            </button>
                         </div>
                     </template>
                 </div>
-                <template x-if="userRole === 'Head Pharmacist' && detailModal.data.StatusType === 'Pending'">
-                    <div class="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-                        <button @click="updateTransactionStatus(detailModal.data.DisposalID, 'Approved', 'disposal')" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
-                            Approve
-                        </button>
-                        <button @click="updateTransactionStatus(detailModal.data.DisposalID, 'Rejected', 'disposal')" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
-                            Reject
-                        </button>
-                    </div>
-                </template>
-                <template x-if="!userHealthCenterID && detailModal.data.StatusType === 'Approved'">
-                    <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
-                        <button @click="updateTransactionStatus(detailModal.data.DisposalID, 'Completed', 'disposal')" class="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
-                            Mark as Completed
-                        </button>
-                    </div>
-                </template>
-            </div>
-        </template>
+            </template>
 
-        <!-- Return Detail Modal -->
-        <template x-if="detailModal.type === 'return' && detailModal.data">
-            <div class="p-8 space-y-6">
-                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-6">
-                    <div>
-                        <h2 class="text-2xl font-black text-slate-800 dark:text-white">Return Details</h2>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">View and manage this return record</p>
+            <!-- Return Detail Modal -->
+            <template x-if="detailModal.type === 'return' && detailModal.data">
+                <div class="p-8 space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 dark:text-white">Return Details</h2>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">View and manage this return record</p>
+                        </div>
+                        <button @click="closeDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
                     </div>
-                    <button @click="closeDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
-                <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Item</label>
-                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.batch?.item?.ItemName || 'Unknown'"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Quantity Returned</label>
-                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.QuantityReturned"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Health Center</label>
-                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.health_center?.Name || '—'"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Date</label>
-                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="new Date(detailModal.data.ReturnDate).toLocaleDateString()"></p>
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Reason</label>
-                        <p class="text-sm text-slate-700 dark:text-slate-200" x-text="detailModal.data.Reason || 'No reason provided'"></p>
-                    </div>
-                    <template x-if="detailModal.data.EvidencePath">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Item</label>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.batch?.item?.ItemName || 'Unknown'"></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Quantity Returned</label>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.QuantityReturned"></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Health Center</label>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.health_center?.Name || '—'"></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Date</label>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="new Date(detailModal.data.ReturnDate).toLocaleDateString()"></p>
+                        </div>
                         <div class="col-span-2">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Evidence Photo</label>
-                            <img :src="'/' + detailModal.data.EvidencePath" class="max-h-64 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Reason</label>
+                            <p class="text-sm text-slate-700 dark:text-slate-200" x-text="detailModal.data.Reason || 'No reason provided'"></p>
+                        </div>
+                        <template x-if="detailModal.data.EvidencePath">
+                            <div class="col-span-2">
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Evidence Photo</label>
+                                <img :src="'/' + detailModal.data.EvidencePath" class="max-h-64 rounded-xl border border-slate-200 dark:border-slate-700">
+                            </div>
+                        </template>
+                    </div>
+                    <template x-if="userRole === 'Head Pharmacist' && detailModal.data.StatusType === 'Pending'">
+                        <div class="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <button @click="updateTransactionStatus(detailModal.data.ReturnID, 'Approved', 'return')" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                                Approve
+                            </button>
+                            <button @click="updateTransactionStatus(detailModal.data.ReturnID, 'Rejected', 'return')" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                                Reject
+                            </button>
+                        </div>
+                    </template>
+                    <template x-if="!userHealthCenterID && detailModal.data.StatusType === 'Approved'">
+                        <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <button @click="updateTransactionStatus(detailModal.data.ReturnID, 'Completed', 'return')" class="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                                Mark as Completed
+                            </button>
                         </div>
                     </template>
                 </div>
-                <template x-if="userRole === 'Head Pharmacist' && detailModal.data.StatusType === 'Pending'">
-                    <div class="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-                        <button @click="updateTransactionStatus(detailModal.data.ReturnID, 'Approved', 'return')" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
-                            Approve
-                        </button>
-                        <button @click="updateTransactionStatus(detailModal.data.ReturnID, 'Rejected', 'return')" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
-                            Reject
-                        </button>
-                    </div>
-                </template>
-                <template x-if="!userHealthCenterID && detailModal.data.StatusType === 'Approved'">
-                    <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
-                        <button @click="updateTransactionStatus(detailModal.data.ReturnID, 'Completed', 'return')" class="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
-                            Mark as Completed
-                        </button>
-                    </div>
-                </template>
-            </div>
-        </template>
+            </template>
 
-        <!-- Correction Detail Modal -->
-        <template x-if="detailModal.type === 'correction' && detailModal.data">
-            <div class="p-8 space-y-6">
-                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-6">
-                    <div>
-                        <h2 class="text-2xl font-black text-slate-800 dark:text-white">Correction Details</h2>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">View and manage this correction record</p>
-                    </div>
-                    <button @click="closeDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
-                <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Item</label>
-                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.batch?.item?.ItemName || 'Unknown'"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Adjustment Quantity</label>
-                        <p class="text-sm font-bold" :class="detailModal.data.AdjustmentQuantity < 0 ? 'text-red-500' : 'text-green-500'" x-text="detailModal.data.AdjustmentQuantity"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Quantity Before</label>
-                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.QuantityBefore"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Date</label>
-                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="new Date(detailModal.data.AdjustmentDate).toLocaleDateString()"></p>
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Reason</label>
-                        <p class="text-sm text-slate-700 dark:text-slate-200" x-text="detailModal.data.Reason || 'No reason provided'"></p>
-                    </div>
-                </div>
-                <template x-if="userRole === 'Head Pharmacist' && detailModal.data.StatusType === 'Pending'">
-                    <div class="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-                        <button @click="updateTransactionStatus(detailModal.data.AdjustmentID, 'Approved', 'correction')" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
-                            Approve
-                        </button>
-                        <button @click="updateTransactionStatus(detailModal.data.AdjustmentID, 'Rejected', 'correction')" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
-                            Reject
+            <!-- Correction Detail Modal -->
+            <template x-if="detailModal.type === 'correction' && detailModal.data">
+                <div class="p-8 space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 dark:text-white">Correction Details</h2>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">View and manage this correction record</p>
+                        </div>
+                        <button @click="closeDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
-                </template>
-            </div>
-        </template>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Item</label>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.batch?.item?.ItemName || 'Unknown'"></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Adjustment Quantity</label>
+                            <p class="text-sm font-bold" :class="detailModal.data.QuantityCorrected < 0 ? 'text-red-500' : 'text-green-500'" x-text="detailModal.data.QuantityCorrected"></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Quantity Before</label>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="detailModal.data.QuantityBefore"></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Date</label>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200" x-text="new Date(detailModal.data.CorrectionDate).toLocaleDateString()"></p>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Reason</label>
+                            <p class="text-sm text-slate-700 dark:text-slate-200" x-text="detailModal.data.Reason || 'No reason provided'"></p>
+                        </div>
+                    </div>
+                    <template x-if="userRole === 'Head Pharmacist' && detailModal.data.StatusType === 'Pending'">
+                        <div class="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <button @click="updateTransactionStatus(detailModal.data.CorrectionID, 'Approved', 'correction')" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                                Approve
+                            </button>
+                            <button @click="updateTransactionStatus(detailModal.data.CorrectionID, 'Rejected', 'correction')" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all">
+                                Reject
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
     </div>
 </div>
 
@@ -831,7 +837,7 @@ function adjustmentManager() {
 
         detailModal: { isOpen: false, type: null, data: null },
         userRole: '{{ Auth::user()->Role }}',
-        userHealthCenterID: {{ Auth::user()->HealthCenterID ?? 'null' }},
+        userHealthCenterID: '{{ Auth::user()->HealthCenterID }}' ?? null,
 
         init() {
             this.refreshRecallFulfillmentOrders();
@@ -1061,6 +1067,8 @@ function adjustmentManager() {
             this.detailModal.type = 'correction';
             this.detailModal.data = correction;
             this.detailModal.isOpen = true;
+
+            console.log(this.detailModal)
         },
 
         closeDetailModal() {
@@ -1074,7 +1082,8 @@ function adjustmentManager() {
                 const response = await fetch(`/adjustments/${type}/${transactionId}/status`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ status: status })
+                    body:
+                        JSON.stringify({ status: status })
                 });
                 const result = await response.json();
                 if (result.success) {
@@ -1085,7 +1094,7 @@ function adjustmentManager() {
                     alert('Error: ' + result.message);
                 }
             } catch (e) {
-                alert('Error updating transaction status');
+                alert('Error: ' + result.message);
             }
         }
     }
